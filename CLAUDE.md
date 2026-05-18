@@ -1,0 +1,198 @@
+# SlushFund — Government Spending Tracker
+
+**What it is:** A civic-tech investigative tool tracking federal contracts awarded to politically connected vendors — Trump family, Elon Musk companies, Trump allies, and GOP donors.
+
+**Live at:** https://slushfund.net
+**Repo:** `~/Documents/Apex/BRANDS/government-spending-tracker/`
+
+---
+
+## The Mission
+
+We track where tax dollars go and who they flow through. Every no-bid contract, every sole-source award, every inflated price — surfaced and searchable. The goal is investigative journalism infrastructure: something reporters, researchers, and concerned citizens can use to hold power accountable.
+
+**Core thesis:** The Trump administration is routing federal spending to politically connected companies at above-market rates, using emergency designations and sole-source contracts to bypass competitive bidding. We document it. We quantify it. We make it searchable.
+
+---
+
+## Data Architecture
+
+### Sources
+- **USAspending.gov API** (`https://api.usaspending.gov/api/v2`) — primary source for federal contracts
+- **FPDS.gov** — Federal Procurement Data System (more granular)
+- **OpenSecrets.org** — political donation tracking
+- **FEC.gov** — campaign finance records
+
+### Database (Supabase)
+- Project: `FollowTheMoney` (FTM) in Supabase us-east-1
+- Schema: `supabase/schema.sql` — run this first when deploying
+- Tables: `contracts`, `political_entities`, `flagged_awards`
+- All tables have RLS disabled for public read access
+
+### Sync Pipeline
+1. `src/lib/usaspending.ts` — API client for USAspending.gov
+2. `src/lib/political-entities.ts` — 50+ entity connection database (SpaceX, Tesla, Palantir, Anduril, Trump Organization, etc.)
+3. `src/lib/sync.ts` — backfill + incremental sync
+4. `src/scripts/sync-cli.ts` — CLI to trigger sync (`npx ts-node src/scripts/sync-cli.ts --full`)
+5. `/api/sync` — POST endpoint to trigger sync from anywhere
+
+### API Routes
+- `GET /api/contracts` — query contracts (filters: connection, flag, search, sort, pagination)
+- `POST /api/contracts` — insert contract (admin)
+- `GET /api/alerts` — aggregate stats (totals, breakdown by connection, no-bid count)
+- `POST /api/sync` — trigger USAspending backfill (one-shot or full)
+
+---
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `src/lib/usaspending.ts` | USAspending.gov API client |
+| `src/lib/political-entities.ts` | Political entity database — names, aliases, connection types, sources |
+| `src/lib/sync.ts` | Contract sync engine — fetches from USAspending, maps to DB schema |
+| `src/lib/mock-data.ts` | Demo data (10 seeded contracts with real descriptions) |
+| `src/lib/supabase.ts` | Supabase client (demo-safe when env vars absent) |
+| `src/lib/utils.ts` | Formatters, risk scoring, flag detection |
+| `src/lib/types.ts` | TypeScript interfaces for all data shapes |
+| `supabase/schema.sql` | Full DB schema — run in Supabase SQL editor |
+| `supabase/seed.ts` | Seed script — populates political entities + initial contracts |
+| `src/app/dashboard/page.tsx` | Main dashboard (filters, table, stats, sidebar) |
+| `src/app/contract/[id]/page.tsx` | Contract detail — political connection card, flags, timeline |
+| `src/app/api/contracts/route.ts` | GET/POST contracts endpoint |
+| `src/app/api/alerts/route.ts` | Stats/aggregate endpoint |
+| `src/app/api/sync/route.ts` | Backfill trigger endpoint |
+
+---
+
+## Connection Types (Political Entity Database)
+
+```
+trump_family    → Trump, Eric Trump, Trump Organization, Trump Winery
+elon_musk       → SpaceX, Tesla, Starlink, xAI, The Boring Company, Neuralink
+trump_ally      → Palantir (Thiel), Anduril, OpenAI (Altman), Oracle (Ellison),
+                  Amazon, Google, Meta, Microsoft, Andreessen Horowitz, Sequoia
+gop_donor       → Koch Industries, major GOP donors with federal contracts
+lobbyist        → Brownstein Hyatt Farber Schreck, K Street firms
+mar-a-lago      → Trump-aligned PACs and orgs
+none            → No known political connection
+```
+
+Always add `sources: []` array to every entity — news articles, Wikipedia, OpenSecrets links. This is investigative journalism; every claim needs a source.
+
+---
+
+## Contract Flags
+
+```
+no_bid          → Awarded without competitive process
+sole_source     → Only one vendor capable (requires justification)
+related_party   → Vendor directly connected to Trump admin
+inflated        → Price significantly above market rate
+no_compete      → Contract not opened to competition
+emergency       → Emergency designation invoked (often abused)
+large_award     → $100M+ award
+```
+
+---
+
+## Environment Variables (Vercel)
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+```
+
+Get these from: Supabase → Settings → API
+
+---
+
+## Deployment Workflow
+
+### First-time setup (when starting fresh):
+1. Create Supabase project
+2. Run `supabase/schema.sql` in SQL editor
+3. `cp .env.local.example .env.local` → fill in Supabase credentials
+4. `npx ts-node supabase/seed.ts` → seed political entities + contracts
+5. Set env vars in Vercel project settings
+6. Push to GitHub → Vercel auto-deploys
+
+### Regular deploy:
+```bash
+git add . && git commit -m "describe changes" && git push
+# Vercel auto-deploys from GitHub repo
+```
+
+### Manual data sync:
+```bash
+# Trigger via API (from anywhere with the URL):
+curl -X POST https://slushfund.net/api/sync?full=true
+
+# Or locally:
+npx ts-node src/scripts/sync-cli.ts --full
+```
+
+### Weekly cron job:
+Set up a cron job (OpenClaw or Vercel cron) to call `POST /api/sync` once a week to pull latest contracts.
+
+---
+
+## Code Standards
+
+- **No hardcoded real data in mock-data.ts** — the 10 seeded contracts are realistic but illustrative (real contracts with verified amounts from public sources)
+- **Always include `notes` and `sources`** on every contract — this is journalism, needs citations
+- **When adding new connection types** — update `src/lib/political-entities.ts` with aliases + sources first
+- **Demo mode** — if Supabase isn't wired, the site falls back to mock data seamlessly. Never block the UI.
+- **Build before push** — always `npm run build` locally to catch type errors
+
+---
+
+## Design Rules
+
+- Dark theme always — investigative/civic tech feel
+- Green = good/data present, Amber = warning, Red = danger/high suspicion
+- Political connection badges use color coding: Purple=Musk, Red=Trump, Blue=Ally, Gray=None
+- Flag badges use muted warm colors — red/orange/amber for flags
+- Tables sortable by: Amount, Date, Vendor, Agency
+- Filters: Connection type, Flag type, Search, Pagination
+
+---
+
+## Adding New Entities
+
+When you find a new politically connected vendor:
+
+1. Add to `src/lib/political-entities.ts`:
+   - `entity_name` — primary name
+   - `aliases` — company names, subsidiaries, acronyms
+   - `connection_category` — trump_family | elon_musk | trump_ally | gop_donor | lobbyist | mar-a-lago | none
+   - `description` — who they are, connection to admin, why flagged
+   - `sources` — URLs to news, Wikipedia, OpenSecrets
+
+2. Add demo contract to `src/lib/mock-data.ts` if illustrating a pattern
+
+3. If it's a real contract in the DB, the connection engine auto-matches on the next sync
+
+---
+
+## What We're Building Next
+
+1. **Real USAspending sync** — wire the sync engine to pull live contracts nightly
+2. **Alert system** — flag new suspicious awards within 24h of posting
+3. **Vendor detail pages** — all contracts for a single company
+4. **Agency breakdown pages** — DOD, DHS, GSA, DOE spending by agency
+5. **Campaign contributions overlay** — cross-reference vendor PAC donations
+6. **Inflation detection** — flag contracts where price significantly exceeds GAO estimates
+7. **Export tool** — CSV/JSON export for reporters
+8. **Email alerts** — notify when new high-value contracts hit to flagged vendors
+
+---
+
+## Important Rules
+
+- **Never exfiltrate private data** — this is public government data, but be careful with API keys
+- **Always cite sources** — every political connection claim needs a news article, Wikipedia, or FEC filing
+- **`trash` > `rm`** — don't delete files without checking they have backups
+- **Build before push** — `npm run build` catches TypeScript errors before they hit production
+- **When in doubt, ask** — Colin's the business owner, this is civic infrastructure, accuracy matters

@@ -1,0 +1,38 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg-primary: #0b0f1a;
+  --bg-card: #111827;
+  --accent: #10b981;
+  --accent-warning: #f59e0b;
+  --accent-danger: #ef4444;
+  --border: #1f2937;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg-primary);
+  color: #e2e8f0;
+}
+
+.font-mono { font-family: 'JetBrains Mono', monospace; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0b0f1a; }
+::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+
+/* Flag badges */
+.flag-no_bid { background: #7f1d1d; color: #fca5a5; border: 1px solid #b91c1c; }
+.flag-sole_source { background: #78350f; color: #fcd34d; border: 1px solid #d97706; }
+.flag-related_party { background: #4a1d96; color: #c4b5fd; border: 1px solid #7c3aed; }
+.flag-inflated { background: #9f1239; color: #fda4af; border: 1px solid #be123c; }
+.flag-emergency { background: #1e3a5f; color: #93c5fd; border: 1px solid #2563eb; }
+
+/* Glow effects */
+.glow-green { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+.glow-red { box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
+.glow-amber { box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); }
