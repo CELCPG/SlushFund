@@ -131,8 +131,16 @@ export default function DashboardPage() {
   const [sortKey, setSortKey] = useState('dollar_amount');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
-  const [stats, setStats] = useState(MOCK_STATS);
-  const [connectionBreakdown, setConnectionBreakdown] = useState(CONNECTION_BREAKDOWN);
+  const [stats, setStats] = useState<DashboardStats>({
+    total_awards: 0,
+    total_dollars: 0,
+    contract_count: 0,
+    grant_count: 0,
+    connected_dollars: 0,
+    flagged_dollars: 0,
+    no_bid_dollars: 0,
+  });
+  const [connectionBreakdown, setConnectionBreakdown] = useState<Array<{ type: string; label: string; total: number; count: number }>>([]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
