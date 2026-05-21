@@ -15,7 +15,9 @@ const NAV_SECTIONS = [
     color: 'text-emerald-400',
     links: [
       { href: '/dashboard', label: 'All Spending', icon: <Database size={12} /> },
+      { href: '/compare', label: 'Era Comparison', icon: <BarChart3 size={12} /> },
       { href: '/defense', label: 'Defense Contracts', icon: <Shield size={12} /> },
+      { href: '/covid', label: 'COVID Deep Dive', icon: <AlertTriangle size={12} /> },
       { href: '/tech', label: 'Tech & AI', icon: <Activity size={12} /> },
     ],
   },

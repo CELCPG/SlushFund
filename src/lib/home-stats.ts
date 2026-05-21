@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { ERA_FYS, type Era } from '@/lib/types';
 
 /** Headline figures shown on the landing page. */
 export interface HomeStats {
@@ -16,6 +17,23 @@ export interface HomeStats {
   // Crypto & influence (curated — no aggregate endpoint yet)
   cryptoPacDollars: number;
   politiciansHoldingBtc: number;
+  // Era context
+  era: Era | 'all';
+}
+
+/**
+ * Build date range from era FYs.
+ * FY runs Oct 1 – Sep 30, so FY2019 = 2018-10-01 to 2019-09-30.
+ */
+function eraDateRange(era: Era): { start: string; end: string } {
+  const fys = ERA_FYS[era];
+  const today = new Date().toISOString().split('T')[0];
+  const ranges = fys.map((fy) => {
+    if (fy === 2026) return { start: `${fy - 1}-10-01`, end: today };
+    if (fy === 2019) return { start: '2018-10-01', end: '2019-09-30' };
+    return { start: `${fy - 1}-10-01`, end: `${fy}-09-30` };
+  });
+  return { start: ranges[0].start, end: ranges[ranges.length - 1].end };
 }
 
 /**
@@ -33,22 +51,32 @@ export const CURATED_STATS: HomeStats = {
   contractorOverlap: 129,
   cryptoPacDollars: 178_000_000,
   politiciansHoldingBtc: 21,
+  era: 'all',
 };
 
 /**
  * Fetch landing-page headline stats. Queries Supabase for federal-spending
  * aggregates; on missing config or any error, returns CURATED_STATS so the
  * page never blocks. Mirrors the aggregate logic in /api/alerts.
+ *
+ * @param era - Optional era to filter stats. Defaults to 'all'.
  */
-export async function getHomeStats(): Promise<HomeStats> {
-  if (!supabase) return CURATED_STATS;
+export async function getHomeStats(era: Era | 'all' = 'all'): Promise<HomeStats> {
+  if (!supabase) return { ...CURATED_STATS, era };
 
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('awards')
-      .select('dollar_amount, connection_type, flags, competition_status');
+      .select('dollar_amount, connection_type, flags, competition_status, posted_date');
 
-    if (error || !data || data.length === 0) return CURATED_STATS;
+    if (era && era !== 'all') {
+      const { start, end } = eraDateRange(era);
+      query = query.gte('posted_date', start).lte('posted_date', end);
+    }
+
+    const { data, error } = await query;
+
+    if (error || !data || data.length === 0) return { ...CURATED_STATS, era };
 
     const num = (v: unknown) => Number(v) || 0;
 
@@ -70,9 +98,10 @@ export async function getHomeStats(): Promise<HomeStats> {
       connectedDollars,
       noBidDollars,
       flaggedCount,
+      era,
     };
   } catch {
-    return CURATED_STATS;
+    return { ...CURATED_STATS, era };
   }
 }
 

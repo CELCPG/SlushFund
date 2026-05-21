@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { FY_DATE_RANGES } from '@/app/api/backfill/route';
-import { ERA_FYS, type Era } from '@/app/api/era-stats/route';
+import { ERA_FYS, type Era } from '@/lib/types';
 
 // GET /api/alerts — aggregate stats for the dashboard
 export async function GET(request: NextRequest) {

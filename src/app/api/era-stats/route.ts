@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { FY_DATE_RANGES } from '@/app/api/backfill/route';
-
-export type Era = 'trump_1' | 'covid' | 'biden' | 'trump_2';
-
-export const ERA_FYS: Record<Era, number[]> = {
-  trump_1: [2017, 2018, 2019, 2020],
-  covid:   [2020, 2021],
-  biden:  [2021, 2022, 2023, 2024],
-  trump_2: [2025, 2026],
-};
+import { ERA_FYS, type Era } from '@/lib/types';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);

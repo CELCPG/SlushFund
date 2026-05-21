@@ -12,8 +12,9 @@ import {
   Scale, Zap, Eye
 } from 'lucide-react';
 import { fmt, CONNECTION_LABELS } from '@/lib/utils';
-import type { Award, ConnectionType } from '@/lib/types';
+import type { Award, ConnectionType, Era } from '@/lib/types';
 import { MOCK_AWARDS } from '@/lib/mock-data-new';
+import EraToggle from '@/components/home/EraToggle';
 
 const CONNECTION_COLORS: Record<string, string> = {
   elon_musk: '#a855f7',
@@ -472,6 +473,7 @@ export default function DashboardPage() {
 
   const [search, setSearch] = useState('');
   const [connectionFilter, setConnectionFilter] = useState('all');
+  const [eraFilter, setEraFilter] = useState<Era | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [flagFilter, setFlagFilter] = useState('all');
   const [sortKey, setSortKey] = useState('dollar_amount');
@@ -505,6 +507,7 @@ export default function DashboardPage() {
       if (categoryFilter !== 'all') q.set('category', categoryFilter);
       if (flagFilter !== 'all') q.set('flag', flagFilter);
       if (search) q.set('search', search);
+      if (eraFilter !== 'all') q.set('era', eraFilter);
 
       const res = await fetch(`/api/contracts?${q.toString()}`);
       const data = await res.json();
@@ -537,7 +540,7 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, connectionFilter, categoryFilter, flagFilter, search, sortKey, sortDir]);
+  }, [currentPage, connectionFilter, eraFilter, categoryFilter, flagFilter, search, sortKey, sortDir]);
 
   useEffect(() => {
     loadStats();
@@ -633,6 +636,7 @@ export default function DashboardPage() {
                 <option value="trump_family">Trump Family</option>
                 <option value="trump_ally">Trump Ally</option>
               </select>
+              <EraToggle currentEra={eraFilter} onChange={v => { setEraFilter(v); setCurrentPage(1); }} size="sm" />
               <select value={categoryFilter} onChange={e => { setCategoryFilter(e.target.value); setCurrentPage(1); }} className="bg-slate-800 border border-slate-700 text-slate-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-emerald-500">
                 <option value="all">All Types</option>
                 <option value="contract">Contract</option>
