@@ -1,8 +1,8 @@
 # SlushFund 2020 Backfill — Phase Plan
 **Project:** slushfund.net — expand data from FY2024-26 → FY2019-2026 (7 FYs)
 **Created:** 2026-05-21
-**Owner:** Apex (main session)
-**Status:** Batch 1 in progress
+**Owner:** Apex (coordinating Sage, Forge, Echo, Hunter)
+**Status:** Phase 1–5 COMPLETE — Awaiting Batch 3 (backfill)
 
 ---
 
@@ -29,57 +29,103 @@ const ALL_FYS = [2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026];
 
 ---
 
-## Phase Structure
+## ✅ Phase 1: Foundation (Schema + Sync + Entities)
+**Status:** COMPLETE — committed + deployed
+**Commit:** `d567428` (2026-05-21)
 
-### Batch 1: Foundation (Schema + Sync + Entities)
-**Prerequisite for all other phases.**
+- [x] schema.sql — era_snapshots + covid_spending_summary tables, new indexes, date floors removed from views
+- [x] types.ts — pandemic_emergency/covid_inflated/ppp_related flags, Era type, ERA_FYS, ALL_FYS
+- [x] sync.ts — FY_DATE_RANGES (2019-2026), detectEra(), isPPPRelated(), era tagging on awards, fullBackfill(fys?)
+- [x] political-entities.ts — 11 new entities (COVID suppliers, Affinity/Kushner, America First Legal, PPP lenders)
 
-- [ ] Phase 1a: schema.sql — new indexes, updated views, new tables
-- [ ] Phase 1b: political-entities.ts — COVID + Biden-era entities added
-- [ ] Phase 1c: types.ts + sync.ts — new flags, FY2019-2023 constants, era detection
+## ✅ Phase 2: API Layer
+**Status:** COMPLETE — committed + deployed
+**Commit:** `d567428`
 
-### Batch 2: API Layer
-**Prerequisite for all UI phases.**
+- [x] POST /api/backfill — isolated FY backfill trigger
+- [x] GET /api/era-stats?era=X&fy=Y — era-aware stats
+- [x] GET /api/covid-stats — COVID breakdown by agency/vendor/quarter
+- [x] GET /api/alerts — era + fy filtering added
 
-- [ ] Phase 2a: /api/backfill endpoint (isolated, long-running)
-- [ ] Phase 2b: /api/era-stats + /api/covid-stats endpoints
-- [ ] Phase 2c: /api/alerts updated with era filter
+---
 
-### Batch 3: UI — Era System
-- [ ] Phase 3a: Era toggle on LiveStatsBand (homepage)
-- [ ] Phase 3b: Era filter on dashboard
-- [ ] Phase 3c: home-stats.ts updated for era-aware queries
+## ✅ Phase 3: UI — Era System
+**Status:** COMPLETE — committed + deployed
+**Commit:** `0b1a008` (2026-05-21)
 
-### Batch 4: UI — COVID Dashboard
-- [ ] Phase 4a: /covid page with timeline chart
-- [ ] Phase 4b: COVID contracts table + top COVID contractors
-- [ ] Phase 4c: Biden vs Trump COVID comparison
+- [x] EraToggle.tsx — reusable era selector (All/T1/COVID/Biden/T2)
+- [x] LiveStatsBand — era-aware stat fetching via /api/era-stats
+- [x] home-stats.ts — getHomeStats(era?) with era date range filtering
+- [x] dashboard — era filter in filter bar + ?era= URL param
 
-### Batch 5: UI — Compare Page
-- [ ] Phase 5a: /compare page — side-by-side era stats
-- [ ] Phase 5b: Per-entity trend lines (SpaceX, Palantir, etc. over 7 years)
+## ✅ Phase 4: UI — COVID Dashboard
+**Status:** COMPLETE — committed + deployed
+**Commit:** `0b1a008`
 
-### Batch 6: Data Backfill
-**Run locally, one FY at a time. Monitor in Supabase after each.**
+- [x] /covid page — COVID deep dive, quarterly timeline, no-bid stats, agency breakdown, top 20 vendors
+- [x] TimelineChart.tsx — CSS-only bar chart (no chart library)
+- [x] Navbar — /covid link
 
-- [ ] Phase 6a: FY2023 backfill (pilot — smallest post-COVID year)
-- [ ] Phase 6b: FY2022 backfill
-- [ ] Phase 6c: FY2020 backfill
-- [ ] Phase 6d: FY2019 backfill
-- [ ] Phase 6e: FY2021 backfill (COVID peak — save for last, largest)
+## ✅ Phase 5: UI — Compare Page
+**Status:** COMPLETE — committed + deployed
+**Commit:** `0b1a008`
 
-### Batch 7: QA
-- [ ] Phase 7a: Spot-check awards from each new FY
-- [ ] Phase 7b: Verify COVID flagging
-- [ ] Phase 7c: Test Biden/Trump era filtering
-- [ ] Phase 7d: Test compare page with real data
-- [ ] Phase 7e: Confirm no duplicate awards
+- [x] /compare page — era comparison cards, key findings, entity trend table
+- [x] Navbar — /compare link
+
+---
+
+## 🔜 Phase 6: Data Backfill
+**Status:** PENDING — run locally, one FY at a time
+
+Run via CLI from ~/Documents/Apex/BRANDS/government-spending-tracker/:
+
+```bash
+# Each FY runs separately. Monitor in Supabase after each run.
+npx ts-node src/scripts/sync-cli.ts --full  # defaults to FY2024-2026
+
+# To backfill specific FYs:
+npx ts-node -e "
+import { fullBackfill } from './src/lib/sync';
+fullBackfill([2023]).then(r => console.log('FY2023 done', JSON.stringify(r)));
+"
+
+# Or via API (one FY at a time, check /api/backfill after each):
+curl -X POST https://slushfund.net/api/backfill -H "Content-Type: application/json" -d '{"fys": [2023]}'
+```
+
+**Recommended backfill order:**
+
+| Order | FY | Est. Awards | Est. Time | Notes |
+|---|---|---|---|---|
+| 1st | FY2023 | 18K–30K | 2–3 hrs | Smallest post-COVID year |
+| 2nd | FY2022 | 20K–35K | 2–3 hrs | IRA starts |
+| 3rd | FY2020 | 25K–40K | 2–3 hrs | COVID begins |
+| 4th | FY2019 | 12K–18K | 1–2 hrs | Baseline |
+| 5th | FY2021 | 40K–70K | 4–6 hrs | COVID peak — last |
+
+**After each FY backfill:**
+1. Check Supabase `awards` table row count
+2. Spot-check a few awards: `select award_id, recipient_name, dollar_amount, posted_date from awards order by random() limit 5;`
+3. Verify COVID flagging: `select count(*) from awards where 'covid_related' = any(flags);`
+4. Commit a snapshot of era_snapshots if data looks good
+
+## 🔜 Phase 7: QA
+**Status:** PENDING**
+
+- [ ] Spot-check awards from each new FY
+- [ ] Verify COVID flagging is working (covid_obligations > 0 → covid_related flag)
+- [ ] Test Biden/Trump era filtering on dashboard
+- [ ] Test /compare page with real data
+- [ ] Test /covid page — quarterly timeline should populate
+- [ ] Confirm no duplicate awards (award_id uniqueness)
+- [ ] Verify political entity matching for COVID-era entities
 
 ---
 
 ## Entity Additions
 
-### COVID-Specific (Priority 1)
+### COVID-Specific (Priority 1) ✅ Done
 | Entity | Connection | Notes |
 |---|---|---|
 | McKesson | none | Largest COVID medical supply contractor |
@@ -87,70 +133,23 @@ const ALL_FYS = [2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026];
 | Medline Industries | none | GAO flagged inflated COVID prices |
 | Cardinal Health | none | COVID medical supply |
 | HCA Healthcare | gop_donor | COVID provider relief funds |
-
-### Biden-Era (Priority 1)
-| Entity | Connection | Notes |
-|---|---|---|
-| America First Legal | trump_ally | Trump org litigation against Biden |
 | Change Healthcare | none | $400M+ COVID loan, later breached |
 
-### Kushner/Affinity (Priority 0 — was missing)
+### Kushner/Affinity ✅ Done
 | Entity | Connection | Notes |
 |---|---|---|
-| Affinity Partners | trump_family | $2B Saudi PIF seed, $6.1B AUM, 99% foreign |
-| Jared Kushner | trump_family | Runs Affinity — exempt from disclosure |
+| Affinity Partners | trump_family | $2B Saudi PIF seed, $6.1B AUM |
+| Jared Kushner | trump_family | Runs Affinity, exempt from disclosure |
 
-### New Flags to Add
-```typescript
-type StructuralFlag = 'covid_related' | 'infrastructure' | 'emergency' | 'pass_through' | 'pandemic_emergency' | 'covid_inflated' | 'ppp_related';
-```
+### Biden-Era ✅ Done
+| Entity | Connection | Notes |
+|---|---|---|
+| America First Legal | trump_ally | Trump litigation org against Biden |
 
----
-
-## New Schema Objects
-
-### Updated Views (remove hardcoded date floors)
-- `agency_spending_summary` — remove `posted_date >= '2024-10-01'`
-- `top_vendors` — remove `posted_date >= '2024-10-01'`
-- `monthly_spending_trend` — already ok (no floor)
-
-### New Tables
-```sql
--- Era snapshots (pre-computed for fast homepage stats)
-create table era_snapshots (
-  era text primary key,
-  total_awards int,
-  total_dollars bigint,
-  connected_dollars bigint,
-  flagged_count int,
-  no_bid_count int,
-  no_bid_dollars bigint,
-  computed_at timestamptz default now()
-);
-
--- COVID summary (denormalized)
-create table covid_spending_summary (
-  id uuid primary key default gen_random_uuid(),
-  fiscal_year int,
-  quarter text,
-  agency text,
-  agency_code text,
-  total_covid_obligations bigint,
-  total_covid_outlays bigint,
-  covid_contract_count int,
-  covid_no_bid_count int,
-  covid_no_bid_dollars bigint,
-  top_vendor text,
-  top_vendor_dollars bigint,
-  updated_at timestamptz default now()
-);
-```
-
-### New Indexes
-```sql
-create index if not exists awards_fy_idx on awards(date_trunc('year', posted_date));
-create index if not exists awards_covid_idx on awards(covid_obligations) where covid_obligations > 0;
-```
+### PPP Lenders ✅ Done
+| Entity | Connection | Notes |
+|---|---|---|
+| Cross River Bank | none | $3B+ PPP processed |
 
 ---
 
@@ -183,19 +182,4 @@ const FY = {
 
 ---
 
-## File Ownership
-
-| File | Owner |
-|---|---|
-| schema.sql, sync.ts, usaspending.ts | Forge |
-| political-entities.ts, sources.ts | Sage |
-| types.ts | Forge |
-| API routes (/api/*) | Forge |
-| Homepage + LiveStatsBand | Hunter |
-| Dashboard | Hunter |
-| /covid page | Echo |
-| /compare page | Echo |
-
----
-
-_Last updated: 2026-05-21 11:44 EDT_
+_Last updated: 2026-05-21 11:58 EDT_
