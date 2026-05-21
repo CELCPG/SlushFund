@@ -85,19 +85,57 @@ body {
 
 .font-mono { font-family: 'JetBrains Mono', monospace; }
 
-/* scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #0b0f1a; }
-::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+/* ─── Home page animations ─── */
 
-/* Flag badges */
-.flag-no_bid { background: #7f1d1d; color: #fca5a5; border: 1px solid #b91c1c; }
-.flag-sole_source { background: #78350f; color: #fcd34d; border: 1px solid #d97706; }
-.flag-related_party { background: #4a1d96; color: #c4b5fd; border: 1px solid #7c3aed; }
-.flag-inflated { background: #9f1239; color: #fda4af; border: 1px solid #be123c; }
-.flag-emergency { background: #1e3a5f; color: #93c5fd; border: 1px solid #2563eb; }
+/* Slow drift for the hero background glow */
+@keyframes slush-hero-glow {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.08); }
+}
+.animate-hero-glow {
+  animation: slush-hero-glow 9s ease-in-out infinite;
+}
 
-/* Glow effects */
-.glow-green { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
-.glow-red { box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
-.glow-amber { box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); }
+/* Continuous rotation for the Loop diagram orbit ring */
+@keyframes slush-spin-slow {
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: slush-spin-slow 28s linear infinite;
+}
+
+/* Dashed flow line for the Loop diagram */
+@keyframes slush-dash-flow {
+  to { stroke-dashoffset: -24; }
+}
+.animate-dash-flow {
+  animation: slush-dash-flow 1.2s linear infinite;
+}
+
+/* Staggered node pulse for the Loop diagram */
+@keyframes slush-node-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+.animate-node-pulse {
+  animation: slush-node-pulse 2.4s ease-in-out infinite;
+}
+
+/* Gentle rise-in for sections */
+@keyframes slush-rise-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-rise-in {
+  animation: slush-rise-in 0.6s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-hero-glow,
+  .animate-spin-slow,
+  .animate-dash-flow,
+  .animate-node-pulse,
+  .animate-rise-in {
+    animation: none;
+  }
+}

@@ -4,9 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   BarChart3, Landmark, DollarSign, PieChart, Bitcoin, Home,
-  ChevronDown, ChevronRight, Shield, TrendingUp, Database,
-  Activity, AlertTriangle, FileText, ArrowRight, TrendingDown,
-  Scale, Network
+  ChevronDown, Shield, TrendingUp, Database,
+  Activity, AlertTriangle, FileText, ArrowRight, Scale, Network, Menu, X, Search
 } from 'lucide-react';
 
 const NAV_SECTIONS = [
@@ -75,12 +74,14 @@ export default function Navbar() {
   const pathname = usePathname();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [mobileSection, setMobileSection] = useState<string | null>(null);
+  const navRef = useRef<HTMLDivElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Close on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
         setOpenDropdown(null);
       }
     }
@@ -92,31 +93,41 @@ export default function Navbar() {
   useEffect(() => {
     setOpenDropdown(null);
     setMobileOpen(false);
+    setMobileSection(null);
   }, [pathname]);
 
   function isActive(href: string) {
     if (href === '/') return pathname === '/';
-    return pathname.startsWith(href.split('?')[0]);
+    return pathname.startsWith(href.split('?')[0].split('#')[0]);
+  }
+
+  // Hover handlers — open on hover, close after a short delay (desktop)
+  function openOnHover(label: string) {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    setOpenDropdown(label);
+  }
+  function closeOnLeave() {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => setOpenDropdown(null), 140);
   }
 
   return (
-    <nav className="sticky top-0 z-[9998] bg-slate-950/95 backdrop-blur border-b border-slate-800" ref={dropdownRef}>
+    <nav className="sticky top-0 z-[9998] bg-slate-950/95 backdrop-blur border-b border-slate-800" ref={navRef}>
       <div className="max-w-7xl mx-auto px-4 lg:px-6">
-        <div className="flex items-center h-14 gap-0">
+        <div className="flex items-center h-14 gap-1">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 mr-6 shrink-0">
-            <img 
-              src="/slushfund-logo.png" 
-              alt="SlushFund" 
-              className="h-9 w-auto object-contain" 
+          <Link href="/" className="flex items-center gap-2 mr-4 shrink-0">
+            <img
+              src="/slushfund-logo.png"
+              alt="SlushFund"
+              className="h-9 w-auto object-contain"
               style={{ imageRendering: 'crisp-edges' }}
             />
           </Link>
 
           {/* Desktop nav */}
-          <div className="hidden lg:flex items-center gap-0 flex-1">
-            {/* Home */}
+          <div className="hidden lg:flex items-center gap-0.5 flex-1">
             <Link
               href="/"
               className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
@@ -127,12 +138,16 @@ export default function Navbar() {
               <span>Home</span>
             </Link>
 
-            {/* Section dropdowns */}
             {NAV_SECTIONS.map((section) => {
               const active = section.links.some(l => isActive(l.href));
               const open = openDropdown === section.label;
               return (
-                <div key={section.label} className="relative">
+                <div
+                  key={section.label}
+                  className="relative"
+                  onMouseEnter={() => openOnHover(section.label)}
+                  onMouseLeave={closeOnLeave}
+                >
                   <button
                     onClick={() => setOpenDropdown(open ? null : section.label)}
                     className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
@@ -146,30 +161,31 @@ export default function Navbar() {
                     <ChevronDown size={11} className={`text-slate-500 transition-transform ${open ? 'rotate-180' : ''}`} />
                   </button>
 
-                  {/* Dropdown */}
                   {open && (
-                    <div className="absolute top-full left-0 mt-1 w-56 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl shadow-black/80 overflow-hidden z-[9999] will-change-transform">
-                      <div className="px-3 py-2 border-b border-slate-800">
-                        <span className={`text-xs font-bold uppercase tracking-widest ${section.color}`}>{section.label}</span>
-                      </div>
-                      <div className="py-1">
-                        {section.links.map((link) => (
-                          <Link
-                            key={link.href}
-                            href={link.href}
-                            className={`flex items-center gap-2.5 px-3 py-2 text-sm transition-colors ${
-                              isActive(link.href)
-                                ? 'text-white bg-slate-800'
-                                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                            }`}
-                          >
-                            {link.icon && <span className="text-slate-500">{link.icon}</span>}
-                            <span>{link.label}</span>
-                            {isActive(link.href) && (
-                              <ArrowRight size={11} className="ml-auto text-slate-500" />
-                            )}
-                          </Link>
-                        ))}
+                    <div className="absolute top-full left-0 pt-1.5 w-56 z-[9999]">
+                      <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl shadow-black/80 overflow-hidden">
+                        <div className="px-3 py-2 border-b border-slate-800">
+                          <span className={`text-xs font-bold uppercase tracking-widest ${section.color}`}>{section.label}</span>
+                        </div>
+                        <div className="py-1">
+                          {section.links.map((link) => (
+                            <Link
+                              key={link.href}
+                              href={link.href}
+                              className={`flex items-center gap-2.5 px-3 py-2 text-sm transition-colors ${
+                                isActive(link.href)
+                                  ? 'text-white bg-slate-800'
+                                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                              }`}
+                            >
+                              {link.icon && <span className="text-slate-500">{link.icon}</span>}
+                              <span>{link.label}</span>
+                              {isActive(link.href) && (
+                                <ArrowRight size={11} className="ml-auto text-slate-500" />
+                              )}
+                            </Link>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -180,48 +196,86 @@ export default function Navbar() {
 
           {/* Right side */}
           <div className="ml-auto flex items-center gap-2">
-            {/* Live indicator */}
-            <div className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-900 border border-slate-800">
+            <div className="hidden xl:flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-900 border border-slate-800">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-slate-400 text-xs">Live Data</span>
             </div>
 
+            {/* Primary CTA */}
+            <Link
+              href="/dashboard"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-sm font-bold bg-[var(--slush-red)] hover:bg-[var(--slush-red-dark)] text-white transition-colors"
+            >
+              <Search size={13} /> Explore Data
+            </Link>
+
             {/* Mobile menu button */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 transition-colors border border-slate-800"
+              aria-label="Toggle menu"
+              className="lg:hidden flex items-center justify-center w-9 h-9 rounded-md text-slate-300 hover:text-white hover:bg-slate-800/50 transition-colors border border-slate-800"
             >
-              {mobileOpen ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-              <span>Menu</span>
+              {mobileOpen ? <X size={16} /> : <Menu size={16} />}
             </button>
           </div>
         </div>
 
-        {/* Mobile menu */}
+        {/* Mobile menu — per-section accordion */}
         {mobileOpen && (
           <div className="lg:hidden border-t border-slate-800 py-3 space-y-1">
-            <Link href="/" className={`flex items-center gap-2 px-3 py-2 text-sm rounded-md ${pathname === '/' ? 'text-white bg-slate-800' : 'text-slate-400 hover:text-white'}`}>
-              <Home size={13} /> Home
+            <Link
+              href="/"
+              className={`flex items-center gap-2 px-3 py-2.5 text-sm rounded-md ${
+                pathname === '/' ? 'text-white bg-slate-800' : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              <Home size={14} /> Home
             </Link>
-            {NAV_SECTIONS.map((section) => (
-              <div key={section.label}>
-                <div className={`flex items-center gap-2 px-3 py-2 text-xs font-bold uppercase tracking-widest ${section.color}`}>
-                  {section.icon} {section.label}
-                </div>
-                {section.links.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={`flex items-center gap-2 pl-8 pr-3 py-2 text-sm rounded-md ${
-                      isActive(link.href) ? 'text-white bg-slate-800' : 'text-slate-400 hover:text-white'
+
+            {NAV_SECTIONS.map((section) => {
+              const expanded = mobileSection === section.label;
+              const active = section.links.some(l => isActive(l.href));
+              return (
+                <div key={section.label} className="rounded-md overflow-hidden">
+                  <button
+                    onClick={() => setMobileSection(expanded ? null : section.label)}
+                    className={`w-full flex items-center gap-2 px-3 py-2.5 text-sm font-semibold transition-colors ${
+                      expanded || active ? `${section.color} bg-slate-800/60` : 'text-slate-300 hover:bg-slate-800/40'
                     }`}
                   >
-                    {link.icon && <span className="text-slate-500">{link.icon}</span>}
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
-            ))}
+                    <span className={section.color}>{section.icon}</span>
+                    <span>{section.label}</span>
+                    <ChevronDown
+                      size={14}
+                      className={`ml-auto text-slate-500 transition-transform ${expanded ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+                  {expanded && (
+                    <div className="py-1 bg-slate-900/60">
+                      {section.links.map((link) => (
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          className={`flex items-center gap-2 pl-9 pr-3 py-2 text-sm rounded-md ${
+                            isActive(link.href) ? 'text-white bg-slate-800' : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          {link.icon && <span className="text-slate-500">{link.icon}</span>}
+                          {link.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            <Link
+              href="/dashboard"
+              className="mt-2 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-md text-sm font-bold bg-[var(--slush-red)] hover:bg-[var(--slush-red-dark)] text-white transition-colors"
+            >
+              <Search size={14} /> Explore Data
+            </Link>
           </div>
         )}
       </div>
