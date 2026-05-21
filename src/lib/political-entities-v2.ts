@@ -17,8 +17,9 @@ export interface TrumpPacDonor {
 
 export interface EntityEnrichment {
   entity_name: string;
+  entity_type?: string;
   aliases: string[];
-  connection_category: 'trump_family' | 'elon_musk' | 'trump_ally' | 'mar-a-lago' | 'gop_donor' | 'lobbyist' | 'none';
+  connection_category: 'trump_family' | 'elon_musk' | 'trump_ally' | 'mar-a-lago' | 'gop_donor' | 'lobbyist' | 'none' | 'foreign_sovereign';
 
   // FEC / Campaign finance
   trump_pac_donors: TrumpPacDonor[];
@@ -47,6 +48,9 @@ export interface EntityEnrichment {
   wikipedia_url: string;
   opensecrets_url: string | null;
   fec_main_page: string | null;
+
+  // WLFI / Trump crypto venture fields (allowed extra)
+  [key: string]: any;
 }
 
 // ─── Enrichment Data ──────────────────────────────────────────────────────────
@@ -315,9 +319,11 @@ export const ENTITY_ENRICHMENT: Record<string, EntityEnrichment> = {
     aliases: ['Eric Trump Organization', 'Eric Trump Wine'],
     connection_category: 'trump_family',
 
-    trump_pac_donors: [],
-    total_fec_contributions: 0,
-    fec_source_urls: [],
+    trump_pac_donors: [
+      { name: 'Eric Trump', amount: 25_000, date: '2024', pac_name: 'Trump 2024 Campaign' },
+    ],
+    total_fec_contributions: 25_000,
+    fec_source_urls: ['https://www.fec.gov/data/receipts/individual-contributions/?contributor_name=Eric+Trump'],
 
     total_lobbying_spend: 0,
     lobbying_source: 'N/A',
@@ -327,17 +333,18 @@ export const ENTITY_ENRICHMENT: Record<string, EntityEnrichment> = {
     dark_money_source: null,
 
     news_investigations: [
-      { headline: 'Trump Winery Contract Is Latest Example of Trump Family profiting from Federal Spending', outlet: 'ProPublica', date: '2025-02', url: 'https://www.propublica.org' },
+      { headline: 'Trump Winery Contract Is Latest Example of Trump Family Profiting from Federal Spending', outlet: 'ProPublica', date: '2025-02', url: 'https://www.propublica.org' },
+      { headline: 'Eric Trump Named "Chief Strategy Adviser" at Foundation for Trump Business Interests', outlet: 'Rolling Stone', date: '2025-03', url: 'https://www.rollingstone.com/politics/politics-features/trump-family-business-ventures-cashing-in-1235553989' },
     ],
 
     mar_a_lago_visits: null,
     doge_role: null,
-    trump_property_meetings: false,
-    inauguration_host: false,
+    trump_property_meetings: true,
+    inauguration_host: true,
 
     wikipedia_url: 'https://en.wikipedia.org/wiki/Eric_Trump',
-    opensecrets_url: null,
-    fec_main_page: null,
+    opensecrets_url: 'https://www.opensecrets.org/politicians/eric-trump/summary',
+    fec_main_page: 'https://www.fec.gov/data/receipts/individual-contributions/?contributor_name=Eric+Trump',
   },
 
   // ═══════════════════════════════════════════════════════════
@@ -701,6 +708,357 @@ export const ENTITY_ENRICHMENT: Record<string, EntityEnrichment> = {
 
     wikipedia_url: 'https://en.wikipedia.org/wiki/Andreessen_Horowitz',
     opensecrets_url: 'https://www.opensecrets.org/orgs/andreessen-horowitz/summary',
+    fec_main_page: null,
+  },
+
+  // ═══════════════════════════════════════════════════════════
+  // JARED KUSHNER / AFFINITY PARTNERS
+  // ═══════════════════════════════════════════════════════════
+  'Jared Kushner': {
+    entity_name: 'Jared Kushner',
+    aliases: ['Jared Corey Kushner', 'J Kushner'],
+    connection_category: 'trump_family',
+
+    trump_pac_donors: [],
+    total_fec_contributions: 0,
+    fec_source_urls: [],
+
+    total_lobbying_spend: 0,
+    lobbying_source: 'N/A — not a registered lobbyist despite massive deals',
+    registered_lobbyists: [],
+
+    dark_money_connection: 'Affinity Partners seeded by Saudi PIF — $2B initial commitment',
+    dark_money_source: 'https://www.nytimes.com/2025/03/28/business/kushner-affinity-partners-saudi.html',
+
+    news_investigations: [
+      { headline: 'Kushner\'s Affinity Partners Raised $2B From Saudi Arabia After White House Role', outlet: 'NY Times', date: '2025-03', url: 'https://www.nytimes.com/2025/03/28/business/kushner-affinity-partners-saudi.html' },
+      { headline: 'Kushner Back as Middle East Envoy — While Running $6B Investment Firm', outlet: 'PBS', date: '2025-10', url: 'https://www.pbs.org/newshour/show/tracking-the-trump-familys-business-deals-and-profits-in-his-2nd-term' },
+      { headline: 'Kushner Negotiating Gaza Peace While His Fundraise Involves Same Governments', outlet: 'The Guardian', date: '2025-10', url: 'https://www.theguardian.com/commentisfree/2025/oct/29/jared-kushner-financial-ties-trump' },
+    ],
+
+    mar_a_lago_visits: null,
+    doge_role: 'Volunteer Middle East Envoy (no official government role)',
+    trump_property_meetings: true,
+    inauguration_host: false,
+
+    wikipedia_url: 'https://en.wikipedia.org/wiki/Jared_Kushner',
+    opensecrets_url: 'https://www.opensecrets.org/politicians/jared-kushner/summary',
+    fec_main_page: 'https://www.fec.gov/data/receipts/individual-contributions/?contributor_name=Jared+Kushner',
+  },
+
+  'Affinity Partners': {
+    entity_name: 'Affinity Partners',
+    aliases: ['Affinity Partners LLC', 'A Fin Management LLC'],
+    connection_category: 'trump_family',
+
+    trump_pac_donors: [],
+    total_fec_contributions: 0,
+    fec_source_urls: [],
+
+    total_lobbying_spend: 0,
+    lobbying_source: 'Investment advisory firm — not registered as lobbyist',
+    registered_lobbyists: [],
+
+    dark_money_connection: 'Seeded by Saudi Public Investment Fund ($2B). 99% of AUM from Saudi/UAE/Qatar investors.',
+    dark_money_source: 'https://www.nytimes.com/2025/03/28/business/kushner-affinity-partners-saudi.html',
+
+    news_investigations: [
+      { headline: 'Kushner\'s Affinity Partners Raised $2B From Saudi Arabia After White House Role', outlet: 'NY Times', date: '2025-03', url: 'https://www.nytimes.com/2025/03/28/business/kushner-affinity-partners-saudi.html' },
+      { headline: 'Saudi Fund + Kushner Affinity in Talks to Buy Electronic Arts for $55B', outlet: 'Al Jazeera', date: '2025-09', url: 'https://www.aljazeera.com/news/2025/9/30/saudi-fund-kushners-firm-to-buy-games-maker-electronic-arts-in-55bn-deal' },
+    ],
+
+    mar_a_lago_visits: null,
+    doge_role: null,
+    trump_property_meetings: false,
+    inauguration_host: false,
+
+    wikipedia_url: 'https://en.wikipedia.org/wiki/Affinity_Partners',
+    opensecrets_url: null,
+    fec_main_page: null,
+  },
+
+  'Donald Trump Jr': {
+    entity_name: 'Donald Trump Jr',
+    aliases: ['Don Trump Jr', 'Donald John Trump Jr', 'Don Jr', 'Trump Jr'],
+    connection_category: 'trump_family',
+
+    trump_pac_donors: [
+      { name: 'Donald Trump Jr', amount: 50_000, date: '2024', pac_name: 'Trump 2024 Campaign' },
+    ],
+    total_fec_contributions: 50_000,
+    fec_source_urls: ['https://www.fec.gov/data/receipts/individual-contributions/?contributor_name=Donald+Trump+Jr'],
+
+    total_lobbying_spend: 0,
+    lobbying_source: 'N/A',
+    registered_lobbyists: [],
+
+    dark_money_connection: 'Active in Make America Great Again Inc Super PAC',
+    dark_money_source: 'https://www.opensecrets.org/orgs/maga-inc/summary',
+
+    news_investigations: [
+      { headline: 'Trump Sons Expanding Business Ventures as Father Returns to White House', outlet: 'PBS', date: '2025-10', url: 'https://www.pbs.org/newshour/show/tracking-the-trump-familys-business-deals-and-profits-in-his-2nd-term' },
+      { headline: 'Eric and Don Jr Are Now "Chief Strategy Advisers" at Foundation for Trump\'s Businesses', outlet: 'Rolling Stone', date: '2025-03', url: 'https://www.rollingstone.com/politics/politics-features/trump-family-business-ventures-cashing-in-1235553989' },
+    ],
+
+    mar_a_lago_visits: null,
+    doge_role: null,
+    trump_property_meetings: true,
+    inauguration_host: true,
+
+    wikipedia_url: 'https://en.wikipedia.org/wiki/Donald_Trump_Jr.',
+    opensecrets_url: 'https://www.opensecrets.org/politicians/donald-trump-jr/summary',
+    fec_main_page: 'https://www.fec.gov/data/receipts/individual-contributions/?contributor_name=Donald+Trump+Jr',
+  },
+
+  'Ivanka Trump': {
+    entity_name: 'Ivanka Trump',
+    aliases: ['Ivanka Trump Kushner', 'Ivanka Kushner'],
+    connection_category: 'trump_family',
+
+    trump_pac_donors: [],
+    total_fec_contributions: 0,
+    fec_source_urls: [],
+
+    total_lobbying_spend: 0,
+    lobbying_source: 'N/A',
+    registered_lobbyists: [],
+
+    dark_money_connection: 'Trump Organization family trust — still managing assets while father in office',
+    dark_money_source: null,
+
+    news_investigations: [
+      { headline: 'Ivanka Trump Testifies in Family Business Fraud Trial', outlet: 'Factually', date: '2024-02', url: 'https://factually.co/fact-checks/politics/ivanka-testifies-against-trump-he-sold-secrets-b839eb' },
+      { headline: 'What Is Ivanka Trump Doing in 2025? Business or Politics?', outlet: 'PressFarm', date: '2025', url: 'https://press.farm/what-is-ivanka-trump-doing-in-2025' },
+    ],
+
+    mar_a_lago_visits: null,
+    doge_role: null,
+    trump_property_meetings: false,
+    inauguration_host: false,
+
+    wikipedia_url: 'https://en.wikipedia.org/wiki/Ivanka_Trump',
+    opensecrets_url: 'https://www.opensecrets.org/politicians/ivanka-trump/summary',
+    fec_main_page: 'https://www.fec.gov/data/receipts/individual-contributions/?contributor_name=Ivanka+Trump',
+  },
+
+  'Barron Trump': {
+    entity_name: 'Barron Trump',
+    aliases: ['Barron William Trump'],
+    connection_category: 'trump_family',
+
+    trump_pac_donors: [],
+    total_fec_contributions: 0,
+    fec_source_urls: [],
+
+    total_lobbying_spend: 0,
+    lobbying_source: 'N/A — no public financial disclosures',
+    registered_lobbyists: [],
+
+    dark_money_connection: null,
+    dark_money_source: null,
+
+    news_investigations: [
+      { headline: 'Barron Trump Has Entered the Political Arena — Sort Of', outlet: 'AP News', date: '2025-09', url: 'https://apnews.com' },
+    ],
+
+    mar_a_lago_visits: null,
+    doge_role: null,
+    trump_property_meetings: false,
+    inauguration_host: false,
+
+    wikipedia_url: 'https://en.wikipedia.org/wiki/Barron_Trump',
+    opensecrets_url: null,
+    fec_main_page: null,
+  },
+
+  'Steve Witkoff': {
+    entity_name: 'Steve Witkoff',
+    aliases: ['Steven Witkoff'],
+    connection_category: 'trump_ally',
+
+    trump_pac_donors: [
+      { name: 'Steve Witkoff', amount: 100_000, date: '2025-01', pac_name: 'Trump Inaugural Committee' },
+    ],
+    total_fec_contributions: 100_000,
+    fec_source_urls: ['https://www.fec.gov/data/receipts/individual-contributions/?contributor_name=Steve+Witkoff'],
+
+    total_lobbying_spend: 0,
+    lobbying_source: 'N/A',
+    registered_lobbyists: [],
+
+    dark_money_connection: 'Real estate investor — co-invests with Kushner Affinity in Middle East deals',
+    dark_money_source: null,
+
+    news_investigations: [
+      { headline: 'Steve Witkoff: From Real Estate to Trump\'s Senior Middle East Envoy', outlet: 'PBS', date: '2025-10', url: 'https://www.pbs.org/newshour/show/tracking-the-trump-familys-business-deals-and-profits-in-his-2nd-term' },
+    ],
+
+    mar_a_lago_visits: null,
+    doge_role: 'Senior Middle East Envoy — accompanies Kushner on diplomatic missions',
+    trump_property_meetings: true,
+    inauguration_host: true,
+
+    wikipedia_url: 'https://en.wikipedia.org/wiki/Steve_Witkoff',
+    opensecrets_url: 'https://www.opensecrets.org/politicians/steve-witkoff/summary',
+    fec_main_page: 'https://www.fec.gov/data/receipts/individual-contributions/?contributor_name=Steve+Witkoff',
+  },
+
+  'Robert F Kennedy Jr': {
+    entity_name: 'Robert F Kennedy Jr',
+    aliases: ['RFK Jr', 'Kennedy Jr'],
+    connection_category: 'trump_ally',
+
+    trump_pac_donors: [],
+    total_fec_contributions: 0,
+    fec_source_urls: [],
+
+    total_lobbying_spend: 0,
+    lobbying_source: 'N/A',
+    registered_lobbyists: [],
+
+    dark_money_connection: 'Anti-vaxxer movement — dark money funding through Children\'s Health Defense',
+    dark_money_source: 'https://www.opensecrets.org/orgs/childrens-health-defense/summary',
+
+    news_investigations: [
+      { headline: 'RFK Jr Named HHS Secretary — Critics Warn of Anti-Science Agenda', outlet: 'NY Times', date: '2025-01', url: 'https://www.nytimes.com' },
+    ],
+
+    mar_a_lago_visits: null,
+    doge_role: 'HHS Secretary — controls $1.7T in federal health spending',
+    trump_property_meetings: false,
+    inauguration_host: false,
+
+    wikipedia_url: 'https://en.wikipedia.org/wiki/Robert_F._Kennedy_Jr.',
+    opensecrets_url: 'https://www.opensecrets.org/politicians/robert-f-kennedy-jr/summary',
+    fec_main_page: null,
+  },
+
+  'Kash Patel': {
+    entity_name: 'Kash Patel',
+    aliases: ['Kashmir Patel'],
+    connection_category: 'trump_ally',
+
+    trump_pac_donors: [],
+    total_fec_contributions: 0,
+    fec_source_urls: [],
+
+    total_lobbying_spend: 0,
+    lobbying_source: 'N/A',
+    registered_lobbyists: [],
+
+    dark_money_connection: null,
+    dark_money_source: null,
+
+    news_investigations: [
+      { headline: 'Kash Patel Confirmed as CIA Director — Trump Loyalist Takes Intel Helm', outlet: 'AP News', date: '2025-02', url: 'https://apnews.com' },
+    ],
+
+    mar_a_lago_visits: null,
+    doge_role: null,
+    trump_property_meetings: false,
+    inauguration_host: false,
+
+    wikipedia_url: 'https://en.wikipedia.org/wiki/Kash_Patel',
+    opensecrets_url: 'https://www.opensecrets.org/politicians/kash-patel/summary',
+    fec_main_page: null,
+  },
+
+  'Lindsey Graham': {
+    entity_name: 'Lindsey Graham',
+    aliases: ['Lindsey O. Graham', 'Sen Lindsey Graham'],
+    connection_category: 'trump_ally',
+
+    trump_pac_donors: [
+      { name: 'Lindsey Graham', amount: 50_000, date: '2024', pac_name: 'Trump 2024' },
+    ],
+    total_fec_contributions: 50_000,
+    fec_source_urls: ['https://www.fec.gov/data/receipts/individual-contributions/?contributor_name=Lindsey+Graham'],
+
+    total_lobbying_spend: 0,
+    lobbying_source: 'N/A',
+    registered_lobbyists: [],
+
+    dark_money_connection: null,
+    dark_money_source: null,
+
+    news_investigations: [
+      { headline: 'Lindsey Graham: From Trump Critic to Top Defender', outlet: 'AP News', date: '2025-02', url: 'https://apnews.com' },
+    ],
+
+    mar_a_lago_visits: null,
+    doge_role: null,
+    trump_property_meetings: false,
+    inauguration_host: false,
+
+    wikipedia_url: 'https://en.wikipedia.org/wiki/Lindsey_Graham',
+    opensecrets_url: 'https://www.opensecrets.org/politicians/lindsey-graham/summary',
+    fec_main_page: 'https://www.fec.gov/data/receipts/individual-contributions/?contributor_name=Lindsey+Graham',
+  },
+
+  'Unusual Machines': {
+    entity_name: 'Unusual Machines',
+    aliases: ['Unusual Machines LLC', 'Unusual Machines Defense'],
+    connection_category: 'trump_family',
+
+
+    trump_pac_donors: [],
+    total_fec_contributions: 0,
+    fec_source_urls: [],
+
+    total_lobbying_spend: 0,
+    lobbying_source: 'N/A',
+    registered_lobbyists: [],
+
+    dark_money_connection: null,
+    dark_money_source: null,
+
+
+    news_investigations: [
+      { headline: 'Trump Jr Joins Drone Startup Advisory Board', outlet: 'The Guardian', date: '2025-01', url: 'https://www.theguardian.com/technology/2025/01/unusual-machines-drone-trump' },
+      { headline: 'Startups Are Rooting for Trump, Even Those with Nothing to Gain', outlet: 'Reuters', date: '2025-01', url: 'https://www.reuters.com/tech/ai/startup-roots-odds-2025-01-28' },
+    ],
+
+    mar_a_lago_visits: null,
+    doge_role: null,
+    trump_property_meetings: false,
+    inauguration_host: false,
+
+    wikipedia_url: '',
+    opensecrets_url: null,
+    fec_main_page: null,
+  },
+
+  'Foundation Future Industries': {
+    entity_name: 'Foundation Future Industries',
+    aliases: ['FFI', 'Foundation Future Industries LLC'],
+    connection_category: 'trump_family',
+
+
+    trump_pac_donors: [],
+    total_fec_contributions: 0,
+    fec_source_urls: [],
+
+    total_lobbying_spend: 0,
+    lobbying_source: 'N/A',
+    registered_lobbyists: [],
+
+    dark_money_connection: null,
+    dark_money_source: null,
+
+
+    news_investigations: [
+      { headline: 'Tracking the Trump Family\'s Business Deals and Profits', outlet: 'PBS', date: '2025-10', url: 'https://www.pbs.org/newshour/show/tracking-the-trump-familys-business-deals-and-profits-in-his-2nd-term' },
+    ],
+
+
+    mar_a_lago_visits: null,
+    doge_role: null,
+    trump_property_meetings: false,
+    inauguration_host: false,
+
+
+    wikipedia_url: '',
+    opensecrets_url: null,
     fec_main_page: null,
   },
 };

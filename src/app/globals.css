@@ -2,21 +2,86 @@
 @import "tailwindcss";
 
 :root {
-  --bg-primary: #0b0f1a;
-  --bg-card: #111827;
-  --accent: #10b981;
-  --accent-warning: #f59e0b;
-  --accent-danger: #ef4444;
-  --border: #1f2937;
+  /* Brand - Slush Red */
+  --slush-red: #E63946;
+  --slush-red-dark: #c1303b;
+  --slush-red-light: #ff6b75;
+  
+  /* Neutrals */
+  --slate-950: #0a0a0f;
+  --slate-900: #111118;
+  --slate-800: #1a1a24;
+  --slate-700: #2a2a3a;
+  --slate-600: #3a3a4a;
+  --slate-500: #5a5a6a;
+  --slate-400: #8a8a9a;
+  --slate-300: #aaaabc;
+  --slate-200: #ccc;
+  --slate-100: #e8e8f0;
+  --slate-50: #f4f4f8;
+  
+  /* Accent */
+  --accent-green: #10b981;
+  --accent-blue: #3b82f6;
+  --accent-orange: #f97316;
+}
+
+/* Brand surfaces */
+.bg-slush-gradient {
+  background: linear-gradient(135deg, #1a1a24 0%, #111118 100%);
+}
+
+/* Subtle noise texture for premium feel */
+.texture-grain {
+  position: relative;
+}
+.texture-grain::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  border-radius: inherit;
 }
 
 * { box-sizing: border-box; }
 
 body {
   font-family: 'Inter', system-ui, sans-serif;
-  background: var(--bg-primary);
-  color: #e2e8f0;
+  background: var(--slate-950);
+  color: var(--slate-100);
 }
+
+/* Brand color utilities */
+.bg-slush-red { background-color: var(--slush-red); }
+.text-slush-red { color: var(--slush-red); }
+.border-slush-red { border-color: var(--slush-red); }
+
+/* Display headings */
+.display-heading {
+  font-family: 'Futura', 'Arial Black', 'Impact', sans-serif;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: -0.03em;
+}
+
+/* scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--slate-950); }
+::-webkit-scrollbar-thumb { background: var(--slate-700); border-radius: 3px; }
+
+/* Flag badges */
+.flag-no_bid { background: #7f1d1d; color: #fca5a5; border: 1px solid #b91c1c; }
+.flag-sole_source { background: #78350f; color: #fcd34d; border: 1px solid #d97706; }
+.flag-related_party { background: #4a1d96; color: #c4b5fd; border: 1px solid #7c3aed; }
+.flag-inflated { background: #9f1239; color: #fda4af; border: 1px solid #be123c; }
+.flag-emergency { background: #1e3a5f; color: #93c5fd; border: 1px solid #2563eb; }
+
+/* Glow effects */
+.glow-green { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+.glow-red { box-shadow: 0 0 20px rgba(230, 57, 70, 0.4); }
+.glow-amber { box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); }
 
 .font-mono { font-family: 'JetBrains Mono', monospace; }
 

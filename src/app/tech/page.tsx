@@ -1,8 +1,8 @@
 'use client';
+
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Search, Filter, Cpu, Cloud, Shield, AlertTriangle, Database, RefreshCw } from 'lucide-react';
-import Navbar from '@/components/Navbar';
 import { fmt, CONNECTION_LABELS } from '@/lib/utils';
 import type { Award, ConnectionType } from '@/lib/types';
 import { MOCK_AWARDS } from '@/lib/mock-data-new';
@@ -238,8 +238,6 @@ export default function TechPage() {
 
   return (
     <div className="min-h-screen bg-slate-950">
-      <Navbar />
-
       {/* Hero Header */}
       <div className="border-b border-slate-800 bg-slate-900/50">
         <div className="max-w-7xl mx-auto px-6 py-8">

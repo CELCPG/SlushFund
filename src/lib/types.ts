@@ -221,3 +221,58 @@ export interface ConnectionBreakdown {
   total: number;
   risk_score_avg: number;
 }
+
+// ─── Stock Holdings & Insider Trading ────────────────────────────────────────
+export interface StockHolding {
+  ticker: string;
+  company_name: string;
+  politician_name: string;
+  shares_owned: number | null;
+  estimated_value_low: number;
+  estimated_value_high: number;
+  filing_date: string;
+  filing_type: 'periodic' | 'initial' | 'annual' | 'amended';
+  source_url: string;
+  sector: string;
+  notes: string;
+}
+
+export interface InsiderTradingSignal {
+  id: string;
+  company_ticker: string;
+  company_name: string;
+  politician_name: string;
+  filing_date: string;
+  transaction_type: 'purchase' | 'sale' | 'exchange';
+  shares_estimate: number | null;
+  estimated_value: number;
+  related_contract?: {
+    contract_id: string;
+    dollar_amount: number;
+    awarding_agency: string;
+    description: string;
+    date: string;
+  };
+  sector: string;
+  confidence: 'high' | 'medium' | 'low';
+  analysis_notes: string;
+  source_url: string;
+}
+
+// ─── Cost Overrun / Project Inflation ────────────────────────────────────────
+export interface CostOverrun {
+  id: string;
+  project_name: string;
+  original_cost: number;
+  final_cost: number;
+  overrun_pct: number;
+  agency: string;
+  contractor: string;
+  state: string;
+  start_year: number;
+  end_year: number;
+  description: string;
+  flagged_reason: string;
+  source_url: string;
+  notes: string;
+}

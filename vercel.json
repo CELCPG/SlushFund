@@ -3,6 +3,18 @@
     {
       "path": "/api/sync?type=incremental",
       "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/sync/quiver",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/policy/bills",
+      "schedule": "0 6 * * 1"
+    },
+    {
+      "path": "/api/fec?committee_id=C00835959",
+      "schedule": "0 6 * * 1"
     }
   ]
 }

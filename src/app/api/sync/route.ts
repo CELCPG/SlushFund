@@ -29,6 +29,10 @@ export async function GET() {
     usage: 'POST /api/sync?type=full&start=2024-10-01&end=2025-05-17',
     last_sync: lastSync,
     note: 'This endpoint calls the USAspending.gov API and writes to Supabase. Use with caution — can trigger large syncs.',
+    live_endpoints: {
+      fec: 'GET /api/fec?committee_id=C00000000 — live FEC committee totals (read-through cache, no DB write). Weekly cron keeps the cache warm.',
+      policy: 'GET /api/policy/bills — curated bills + votes, enriched with live Congress.gov status. Weekly cron keeps the cache warm.',
+    },
   });
 }
 
