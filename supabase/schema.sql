@@ -100,6 +100,37 @@ create index if not exists awards_posted_idx on awards(posted_date);
 create index if not exists awards_risk_idx on awards(risk_score);
 create index if not exists awards_naics_idx on awards(naics_code);
 create index if not exists awards_flags_idx on awards using gin(flags);
+create index if not exists awards_fy_idx on awards(date_trunc('year', posted_date));
+create index if not exists awards_covid_idx on awards(covid_obligations) where covid_obligations > 0;
+
+-- ─── Era Snapshots (pre-computed for fast homepage stats) ──────────────────────
+create table if not exists era_snapshots (
+  era text primary key,
+  total_awards int,
+  total_dollars bigint,
+  connected_dollars bigint,
+  flagged_count int,
+  no_bid_count int,
+  no_bid_dollars bigint,
+  computed_at timestamptz default now()
+);
+
+-- ─── COVID Spending Summary (denormalized) ───────────────────────────────────
+create table if not exists covid_spending_summary (
+  id uuid primary key default gen_random_uuid(),
+  fiscal_year int,
+  quarter text,
+  agency text,
+  agency_code text,
+  total_covid_obligations bigint,
+  total_covid_outlays bigint,
+  covid_contract_count int,
+  covid_no_bid_count int,
+  covid_no_bid_dollars bigint,
+  top_vendor text,
+  top_vendor_dollars bigint,
+  updated_at timestamptz default now()
+);
 
 -- ─── Political Entities Table ─────────────────────────────────────────────────
 create table if not exists political_entities (
@@ -167,7 +198,7 @@ select
   sum(case when array_length(flags, 1) > 0 then dollar_amount else 0 end) as flagged_dollars,
   avg(risk_score) as avg_risk_score
 from awards
-where posted_date >= '2024-10-01'
+where posted_date is not null
 group by awarding_agency, awarding_agency_code, award_category;
 
 -- Connection group summary
@@ -193,7 +224,7 @@ select
   avg(risk_score) as avg_risk_score,
   sum(case when array_length(flags, 1) > 0 then 1 else 0 end) as flagged_awards
 from awards
-where posted_date >= '2024-10-01'
+where posted_date is not null
 group by recipient_name, recipient_uei, connection_type
 order by total_dollars desc
 limit 100;

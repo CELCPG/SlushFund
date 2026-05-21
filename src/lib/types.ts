@@ -16,7 +16,7 @@ export type PriceFlag = 'no_compete_high_value' | 'large_award' | 'inflated' | '
 // Connection flags
 export type ConnectionFlag = 'related_party' | 'donor' | 'lobbyist' | 'mar-a-lago';
 // Structural flags
-export type StructuralFlag = 'covid_related' | 'infrastructure' | 'emergency' | 'pass_through';
+export type StructuralFlag = 'covid_related' | 'infrastructure' | 'emergency' | 'pass_through' | 'pandemic_emergency' | 'covid_inflated' | 'ppp_related';
 
 export type ContractFlag = CompetitionFlag | PriceFlag | ConnectionFlag | StructuralFlag;
 
@@ -30,6 +30,25 @@ export type ConnectionType =
   | 'lobbyist'
   | 'none'
   | 'suspected';
+
+// ─── Eras (administrative periods) ─────────────────────────────────────────────
+export type Era = 'trump_1' | 'covid' | 'biden' | 'trump_2';
+
+export const ERA_LABELS: Record<Era, string> = {
+  trump_1: 'Trump 1.0',
+  covid: 'COVID Era',
+  biden: 'Biden',
+  trump_2: 'Trump 2.0 + DOGE',
+};
+
+export const ERA_FYS: Record<Era, number[]> = {
+  trump_1: [2019],
+  covid: [2020, 2021],
+  biden: [2022, 2023, 2024],
+  trump_2: [2025, 2026],
+};
+
+export const ALL_FYS = [2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026];
 
 // ─── Core Award Record (contracts, grants, loans, direct payments) ────────────
 export interface Award {
@@ -110,6 +129,9 @@ export interface Award {
   covid_outlays: number | null;
   infrastructure_obligations: number | null;
   infrastructure_outlays: number | null;
+
+  // Era
+  era: Era | null;
 
   // Links
   fpds_url: string | null;

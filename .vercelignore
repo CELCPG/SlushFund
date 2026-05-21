@@ -1,0 +1,6 @@
+# Keep credentials and dev scratch out of Vercel uploads.
+# scrape_quiver_trades.py contains a hardcoded API token — never ship it.
+src/scripts/scrape_quiver_trades.py
+.claude/
+MISSION_LOG.md
+supabase/.temp/

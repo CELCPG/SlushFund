@@ -9,7 +9,37 @@ import {
   type SpendingByAwardResponse,
 } from './usaspending';
 import { getConnectionInfo, connectionMultiplier, POLITICAL_ENTITIES } from './political-entities';
-import type { Award, AwardCategory, ContractFlag } from './types';
+import type { Award, AwardCategory, ContractFlag, Era } from './types';
+import { ERA_FYS } from './types';
+
+// ─── FY Date Ranges ──────────────────────────────────────────────────────────
+export const FY_DATE_RANGES: Record<number, { start: string; end: string }> = {
+  2019: { start: '2018-10-01', end: '2019-09-30' },
+  2020: { start: '2019-10-01', end: '2020-09-30' },
+  2021: { start: '2020-10-01', end: '2021-09-30' },
+  2022: { start: '2021-10-01', end: '2022-09-30' },
+  2023: { start: '2022-10-01', end: '2023-09-30' },
+  2024: { start: '2023-10-01', end: '2024-09-30' },
+  2025: { start: '2024-10-01', end: '2025-09-30' },
+  2026: { start: '2025-10-01', end: new Date().toISOString().split('T')[0] },
+};
+
+// ─── Era Detection ────────────────────────────────────────────────────────────
+export function detectEra(dateStr: string): Era | null {
+  if (!dateStr) return null;
+  const year = new Date(dateStr).getFullYear();
+  for (const [era, years] of Object.entries(ERA_FYS)) {
+    if (years.includes(year)) return era as Era;
+  }
+  return null;
+}
+
+// ─── PPP Detection ─────────────────────────────────────────────────────────────
+const PPP_CFDA_CODES = ['59.012', '59.013'];
+export function isPPPRelated(cfda: string | null): boolean {
+  if (!cfda) return false;
+  return PPP_CFDA_CODES.includes(cfda);
+}
 
 // ─── USAspending → Award Mapper ────────────────────────────────────────────────
 function mapToAward(raw: SpendingByAwardResponse): Award {
@@ -94,6 +124,7 @@ function mapToAward(raw: SpendingByAwardResponse): Award {
     covid_outlays: raw['COVID-19 Outlays'] ?? null,
     infrastructure_obligations: raw['Infrastructure Obligations'] ?? null,
     infrastructure_outlays: raw['Infrastructure Outlays'] ?? null,
+    era: detectEra(raw['Base Obligation Date']),
     fpds_url: buildFPDSUrl(raw),
     usaspending_url: buildUSASpendingUrl(raw),
     notes: null,
@@ -323,24 +354,22 @@ export async function syncAll(
   return { contracts, grants };
 }
 
-// Full backfill FY2024, FY2025, FY2026
-const FY2024_START = '2023-10-01';
-const FY2024_END   = '2024-09-30';
-const FY2025_START = '2024-10-01';
-const FY2025_END   = '2025-09-30';
-const FY2026_START = '2025-10-01';
+// Full backfill — accepts optional FY list (defaults to 2024-2026)
+export async function fullBackfill(fys: number[] = [2024, 2025, 2026]): Promise<{ contracts: SyncResult; grants: SyncResult }> {
+  const ranges = fys.map(fy => ({
+    fy,
+    start: FY_DATE_RANGES[fy]?.start ?? `${fy - 1}-10-01`,
+    end: fy === 2026 ? new Date().toISOString().split('T')[0] : (FY_DATE_RANGES[fy]?.end ?? `${fy}-09-30`),
+  }));
 
-export async function fullBackfill(): Promise<{ contracts: SyncResult; grants: SyncResult }> {
-  const now = new Date();
-  const fy26End = now.toISOString().split('T')[0];
-  console.log(`[sync] Full backfill: FY2024 (${FY2024_START}→${FY2024_END}), FY2025 (${FY2025_START}→${FY2025_END}), FY2026 (${FY2026_START}→${fy26End})`);
+  console.log(`[sync] Full backfill for FYs: ${ranges.map(r => `FY${r.fy}(${r.start}→${r.end})`).join(', ')}`);
+  const fyResults = await Promise.all(
+    ranges.map(({ start, end, fy }) =>
+      syncAll(start, end).then(result => ({ fy, result }))
+    )
+  );
 
-  // Run each FY sequentially to avoid overwhelming the API
-  const fy24 = await syncAll(FY2024_START, FY2024_END);
-  const fy25 = await syncAll(FY2025_START, FY2025_END);
-  const fy26 = await syncAll(FY2026_START, fy26End);
-
-  const combine = (label: string, parts: SyncResult[]) => ({
+  const combine = (parts: SyncResult[]) => ({
     synced: parts.reduce((s, p) => s + p.synced, 0),
     flagged: parts.reduce((s, p) => s + p.flagged, 0),
     errors: parts.flatMap(p => p.errors),
@@ -348,11 +377,14 @@ export async function fullBackfill(): Promise<{ contracts: SyncResult; grants: S
     page_count: parts.reduce((s, p) => s + p.page_count, 0),
   });
 
-  console.log(`[sync] Backfill complete. FY24: ${fy24.contracts.synced} contracts, ${fy24.grants.synced} grants | FY25: ${fy25.contracts.synced} contracts, ${fy25.grants.synced} grants | FY26: ${fy26.contracts.synced} contracts, ${fy26.grants.synced} grants`);
+  const contracts = fyResults.map(r => r.result.contracts);
+  const grants = fyResults.map(r => r.result.grants);
+  const labelStr = fyResults.map(r => `FY${r.fy}: ${r.result.contracts.synced} contracts, ${r.result.grants.synced} grants`).join(' | ');
+  console.log(`[sync] Backfill complete. ${labelStr}`);
 
   return {
-    contracts: { ...combine('contracts', [fy24.contracts, fy25.contracts, fy26.contracts]), label: 'contracts' } as any,
-    grants: { ...combine('grants', [fy24.grants, fy25.grants, fy26.grants]), label: 'grants' } as any,
+    contracts: { ...combine(contracts), label: 'contracts' } as any,
+    grants: { ...combine(grants), label: 'grants' } as any,
   };
 }
 

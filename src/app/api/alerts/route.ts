@@ -1,11 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { FY_DATE_RANGES } from '@/app/api/backfill/route';
+import { ERA_FYS, type Era } from '@/app/api/era-stats/route';
 
 // GET /api/alerts — aggregate stats for the dashboard
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const minRisk = searchParams.get('min_risk') ?? '50';
   const limit = Math.min(parseInt(searchParams.get('limit') ?? '10'), 50);
+  const era = searchParams.get('era') as Era | null;
+  const fyParam = searchParams.get('fy');
+
+  // Resolve date range from era/fy
+  let startDate: string | null = null;
+  let endDate: string | null = null;
+  if (fyParam) {
+    const fy = parseInt(fyParam);
+    if (FY_DATE_RANGES[fy]) {
+      startDate = FY_DATE_RANGES[fy].start;
+      endDate = FY_DATE_RANGES[fy].end;
+    }
+  } else if (era && ERA_FYS[era]) {
+    const fys = ERA_FYS[era];
+    const starts = fys.map(f => FY_DATE_RANGES[f]?.start).filter(Boolean);
+    const ends = fys.map(f => FY_DATE_RANGES[f]?.end).filter(Boolean);
+    if (starts.length && ends.length) {
+      startDate = starts[0];
+      endDate = ends[ends.length - 1];
+    }
+  }
 
   // Demo mode
   if (!supabase) {
@@ -15,10 +38,13 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Main stats
-  const { data: allAwards } = await supabase
+  // Main stats — apply date filter if set
+  let query = supabase
     .from('awards')
     .select('dollar_amount, connection_type, flags, risk_score, award_category, competition_status');
+  if (startDate) query = query.gte('posted_date', startDate);
+  if (endDate) query = query.lte('posted_date', endDate);
+  const { data: allAwards } = await query;
 
   if (!allAwards) {
     return NextResponse.json({ error: 'Database query failed' }, { status: 500 });
@@ -43,18 +69,24 @@ export async function GET(request: NextRequest) {
   }
 
   // Top high-risk awards
-  const { data: highRisk } = await supabase
+  let hrQuery = supabase
     .from('awards')
     .select('award_id, recipient_name, dollar_amount, connection_type, risk_score, flags, awarding_agency, competition_status')
     .gte('risk_score', parseInt(minRisk))
     .order('risk_score', { ascending: false })
     .limit(limit);
+  if (startDate) hrQuery = hrQuery.gte('posted_date', startDate);
+  if (endDate) hrQuery = hrQuery.lte('posted_date', endDate);
+  const { data: highRisk } = await hrQuery;
 
   // Agency breakdown
-  const { data: agencyData } = await supabase
+  let agQuery = supabase
     .from('awards')
     .select('awarding_agency, awarding_agency_code, award_category, dollar_amount, connection_type')
     .gte('risk_score', parseInt(minRisk));
+  if (startDate) agQuery = agQuery.gte('posted_date', startDate);
+  if (endDate) agQuery = agQuery.lte('posted_date', endDate);
+  const { data: agencyData } = await agQuery;
 
   const agencyMap: Record<string, { agency: string; code: string; total: number; connected: number; flagged: number }> = {};
   for (const row of agencyData ?? []) {

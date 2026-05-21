@@ -96,6 +96,56 @@ export const POLITICAL_ENTITIES: PoliticalEntity[] = [
     sources: ['https://en.wikipedia.org/wiki/Elon_Musk'],
   },
 
+  // ── COVID Medical Suppliers (GAO-flagged) ─────────────────────────────────────
+  {
+    name: 'McKesson',
+    entity_type: 'company',
+    connection_category: 'none',
+    aliases: ['McKesson Corp', 'McKesson Medical-Surgical', 'McKesson Government Solutions'],
+    description: 'Largest COVID-19 medical supply distributor in the US. Awarded $1.3B+ in COVID PPE/medical supply contracts by HHS/DOD. No competitive bidding on many awards. GAO flagged concentration risk in COVID supply chain.',
+    sources: ['https://www.gao.gov/products/GAO-21-93', 'https://www.opensecrets.org'],
+  },
+  {
+    name: 'Medline Industries',
+    entity_type: 'company',
+    connection_category: 'none',
+    aliases: ['Medline', 'Medline Industries Inc', 'Medline ReNewAir'],
+    description: 'GAO flagged Medline for $12M+ in inflated COVID respirator prices sold to federal government. Largest privately-held medical supply company. COVID PPE contracts with HHS, FEMA.',
+    sources: ['https://www.gao.gov/products/GAO-21-387', 'https://www.gao.gov/products/GAO-21-93'],
+  },
+  {
+    name: 'Puritan Products',
+    entity_type: 'company',
+    connection_category: 'none',
+    aliases: ['Puritan Products LLC', 'Puritan Medical Products', 'Puritan'],
+    description: 'GAO flagged Puritan for $28M in no-bid COVID mask contracts. Single-source awards with no competitive justification. GAO recommended DOD improve competition oversight.',
+    sources: ['https://www.gao.gov/products/GAO-21-387'],
+  },
+  {
+    name: 'Cardinal Health',
+    entity_type: 'company',
+    connection_category: 'none',
+    aliases: ['Cardinal Health Inc', 'Cardinal Health Systems'],
+    description: 'Major COVID-19 medical supply distributor. $500M+ in COVID PPE/medical supply contracts with FEMA, HHS. GAO noted limited competition in early COVID supply chain awards.',
+    sources: ['https://www.gao.gov/products/GAO-21-93', 'https://www.opensecrets.org'],
+  },
+  {
+    name: 'HCA Healthcare',
+    entity_type: 'company',
+    connection_category: 'gop_donor',
+    aliases: ['HCA', 'HCA Healthcare Inc', 'HCA Holdings'],
+    description: 'Largest hospital operator in the US. Received $1.4B+ in COVID Provider Relief Fund payments. Key GOP donor. Multiple senators had financial ties to HCA during COVID relief debates.',
+    sources: ['https://www.opensecrets.org', 'https://www.gao.gov/products/GAO-21-484'],
+  },
+  {
+    name: 'Change Healthcare',
+    entity_type: 'company',
+    connection_category: 'none',
+    aliases: ['Change Healthcare Inc', 'Change Healthcare Technologies'],
+    description: 'UnitedHealth subsidiary. Received $400M+ in COVID accelerated payments (later accused of not returning overpayments). Massive 2024 ransomware breach affecting 1/3 of Americans. No direct political connection but massive federal COVID dollars.',
+    sources: ['https://www.gao.gov/products/GAO-21-484'],
+  },
+
   // ── Trump Family ─────────────────────────────────────────────────────────────
   {
     name: 'Trump Organization',
@@ -150,16 +200,16 @@ export const POLITICAL_ENTITIES: PoliticalEntity[] = [
     entity_type: 'person',
     connection_category: 'trump_family',
     aliases: ['Jared Corey Kushner', 'J Kushner'],
-    description: 'Trump son-in-law. "Volunteer" Middle East envoy. Runs $6B Affinity Partners — 99% Saudi/UAE/Qatar capital. No official government role, exempt from financial disclosure.',
-    sources: ['https://en.wikipedia.org/wiki/Jared_Kushner'],
+    description: 'Trump son-in-law. "Volunteer" Middle East envoy while running Affinity Partners. Exempt from financial disclosure. Affinity Partners received $2B Saudi PIF seed while Kushner negotiated with Saudi Arabia as envoy. 99% of Affinity capital from foreign governments (Saudi, UAE, Qatar). FY2020-2021 active during Biden transition.',
+    sources: ['https://www.nytimes.com/2025/03/28/business/kushner-affinity-partners-saudi.html', 'https://www.opensecrets.org'],
   },
   {
     name: 'Affinity Partners',
     entity_type: 'company',
     connection_category: 'trump_family',
-    aliases: ['Affinity Partners LLC', 'A Fin Management LLC'],
-    description: 'Jared Kushner\'s investment firm. $2B seed from Saudi PIF. $6.1B AUM, 99% foreign investors. Deals in same countries where Kushner negotiates as envoy.',
-    sources: ['https://www.nytimes.com/2025/03/28/business/kushner-affinity-partners-saudi.html'],
+    aliases: ['Affinity Partners LLC', 'Affinity Emiral LLC', 'Affinity Partners Real Estate'],
+    description: 'Jared Kushner\'s investment firm. $2B seed investment from Saudi Arabia\'s Public Investment Fund (PIF). $6.1B AUM. 99% of capital from Saudi Arabia, UAE, Qatar. Kushner negotiated foreign policy as "volunteer" envoy while running the fund. Exempt from financial disclosure as a private citizen. Active during FY2020-2021 (Biden admin period).',
+    sources: ['https://www.nytimes.com/2025/03/28/business/kushner-affinity-partners-saudi.html', 'https://www.opensecrets.org'],
   },
   {
     name: 'Ivanka Trump',
@@ -216,6 +266,16 @@ export const POLITICAL_ENTITIES: PoliticalEntity[] = [
     aliases: ['RFK Jr', 'Kennedy Jr'],
     description: 'HHS Secretary (2025). Anti-vaxxer. Controls $1.7T in federal health spending. Dark money via Children\'s Health Defense.',
     sources: ['https://en.wikipedia.org/wiki/Robert_F._Kennedy_Jr.'],
+  },
+
+  // ── America First / Trump Org Litigation ──────────────────────────────────────
+  {
+    name: 'America First Legal',
+    entity_type: 'org',
+    connection_category: 'trump_ally',
+    aliases: ['AFL', 'America First Legal Foundation'],
+    description: 'Trump-aligned legal organization founded by former Trump officials. Filed dozens of lawsuits against Biden admin agencies. Funded by Trump donors. No direct federal contracts but significant federal spending influenced by litigation.',
+    sources: ['https://www.opensecrets.org', 'https://en.wikipedia.org/wiki/America_First_Legal'],
   },
   {
     name: 'Kash Patel',
@@ -390,6 +450,16 @@ export const POLITICAL_ENTITIES: PoliticalEntity[] = [
     aliases: ['Koch Industries Inc', 'Koch'],
     description: 'Conservative mega-donor network. Federal contracts.',
     sources: ['https://en.wikipedia.org/wiki/Koch_Industries'],
+  },
+
+  // ── PPP Era Lenders ────────────────────────────────────────────────────────────
+  {
+    name: 'Cross River Bank',
+    entity_type: 'company',
+    connection_category: 'none',
+    aliases: ['Cross River', 'Cross River Bank CRB'],
+    description: 'Small bank that became one of the largest SBA PPP lenders. Processed $3B+ in PPP loans during COVID. Fintech partnerships with Google, Uber, Shopify. No direct political connection but massive federal COVID financial backing.',
+    sources: ['https://www.sba.gov/sites/default/files/2021-04/PPP%20Lender%20List.pdf'],
   },
 ];
 
