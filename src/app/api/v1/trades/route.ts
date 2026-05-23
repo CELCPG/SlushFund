@@ -104,7 +104,8 @@ export async function GET(request: NextRequest) {
 
   // Filters
   const member = searchParams.get('member');
-  const ticker = searchParams.get('ticker');
+  const ticker = searchParams.getAll('ticker'); // supports ?ticker=A&ticker=B
+  const tickers = ticker.length > 0 ? ticker.map(t => t.toUpperCase()) : null;
   const chamber = searchParams.get('chamber');
   const party = searchParams.get('party');
   const txType = searchParams.get('type');
@@ -145,7 +146,8 @@ export async function GET(request: NextRequest) {
 
   // Filters
   if (member) query = query.ilike('member_name', `%${member}%`);
-  if (ticker) query = query.eq('ticker', ticker.toUpperCase());
+  if (tickers && tickers.length === 1) query = query.eq('ticker', tickers[0]);
+  if (tickers && tickers.length > 1) query = query.in('ticker', tickers);
   if (chamber && chamber !== 'all') query = query.eq('member_chamber', chamber);
   if (party && party !== 'all') query = query.eq('member_party', party);
   if (txType && txType !== 'all') query = query.eq('transaction_type', txType);

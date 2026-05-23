@@ -1,0 +1,59 @@
+{
+  "source": "https://www.opensecrets.org/federal-lobbying/ranked-sectors",
+  "slug": "ranked-sectors",
+  "count": 13,
+  "data": [
+    {
+      "Sector": "Health",
+      "Total": "$243,511,161"
+    },
+    {
+      "Sector": "Finance/Insur/RealEst",
+      "Total": "$196,420,866"
+    },
+    {
+      "Sector": "Communic/Electronics",
+      "Total": "$179,766,275"
+    },
+    {
+      "Sector": "Misc Business",
+      "Total": "$173,393,784"
+    },
+    {
+      "Sector": "Energy/Nat Resource",
+      "Total": "$126,883,453"
+    },
+    {
+      "Sector": "Transportation",
+      "Total": "$108,165,382"
+    },
+    {
+      "Sector": "Other",
+      "Total": "$90,532,973"
+    },
+    {
+      "Sector": "Agribusiness",
+      "Total": "$58,532,426"
+    },
+    {
+      "Sector": "Ideology/Single-Issue",
+      "Total": "$56,116,518"
+    },
+    {
+      "Sector": "Defense",
+      "Total": "$51,475,918"
+    },
+    {
+      "Sector": "Construction",
+      "Total": "$19,645,480"
+    },
+    {
+      "Sector": "Labor",
+      "Total": "$14,236,077"
+    },
+    {
+      "Sector": "Lawyers & Lobbyists",
+      "Total": "$6,153,798"
+    }
+  ]
+}

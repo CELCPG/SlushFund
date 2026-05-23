@@ -14,7 +14,7 @@ export const FY_DATE_RANGES: Record<number, { start: string; end: string }> = {
 };
 
 export const runtime = 'nodejs';
-export const maxDuration = 3600; // 1 hour max
+export const maxDuration = 800; // Vercel Pro max
 
 export async function POST(request: NextRequest) {
   try {

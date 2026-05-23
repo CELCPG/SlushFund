@@ -1,0 +1,132 @@
+{
+  "source": "https://www.opensecrets.org/federal-lobbying/top-recipients",
+  "slug": "top-recipients",
+  "count": 25,
+  "data": [
+    {
+      "Recipient": "Maria Cantwell (D-Wash)",
+      "From Lobbyists": "$706,120",
+      "From Lobbyists + Family": "$749,966"
+    },
+    {
+      "Recipient": "Bob Casey (D-Pa)",
+      "From Lobbyists": "$658,663",
+      "From Lobbyists + Family": "$690,673"
+    },
+    {
+      "Recipient": "Jon Tester (D-Mont)",
+      "From Lobbyists": "$637,153",
+      "From Lobbyists + Family": "$656,923"
+    },
+    {
+      "Recipient": "Angela Alsobrooks (D-Md)",
+      "From Lobbyists": "$614,708",
+      "From Lobbyists + Family": "$644,890"
+    },
+    {
+      "Recipient": "Kamala Harris (D)",
+      "From Lobbyists": "$595,035",
+      "From Lobbyists + Family": "$756,412"
+    },
+    {
+      "Recipient": "Sherrod Brown (D-Ohio)",
+      "From Lobbyists": "$564,014",
+      "From Lobbyists + Family": "$575,475"
+    },
+    {
+      "Recipient": "Martin Heinrich (D-NM)",
+      "From Lobbyists": "$508,058",
+      "From Lobbyists + Family": "$514,438"
+    },
+    {
+      "Recipient": "Tim Kaine (D-Va)",
+      "From Lobbyists": "$481,736",
+      "From Lobbyists + Family": "$523,032"
+    },
+    {
+      "Recipient": "Ken Calvert (R-Calif)",
+      "From Lobbyists": "$450,159",
+      "From Lobbyists + Family": "$465,637"
+    },
+    {
+      "Recipient": "Jacky Rosen (D-Nev)",
+      "From Lobbyists": "$447,205",
+      "From Lobbyists + Family": "$467,848"
+    },
+    {
+      "Recipient": "Steve Scalise (R-La)",
+      "From Lobbyists": "$446,323",
+      "From Lobbyists + Family": "$440,523"
+    },
+    {
+      "Recipient": "Mike Johnson (R-La)",
+      "From Lobbyists": "$425,974",
+      "From Lobbyists + Family": "$433,474"
+    },
+    {
+      "Recipient": "Tom Emmer (R-Minn)",
+      "From Lobbyists": "$414,197",
+      "From Lobbyists + Family": "$420,802"
+    },
+    {
+      "Recipient": "Lisa Blunt Rochester (D-Del)",
+      "From Lobbyists": "$408,779",
+      "From Lobbyists + Family": "$419,699"
+    },
+    {
+      "Recipient": "Ruben Gallego (D-Ariz)",
+      "From Lobbyists": "$394,205",
+      "From Lobbyists + Family": "$407,431"
+    },
+    {
+      "Recipient": "Tim Sheehy (R-Mont)",
+      "From Lobbyists": "$372,802",
+      "From Lobbyists + Family": "$378,103"
+    },
+    {
+      "Recipient": "Donald Trump (R)",
+      "From Lobbyists": "$368,518",
+      "From Lobbyists + Family": "$395,979"
+    },
+    {
+      "Recipient": "Larry Hogan (R-Md)",
+      "From Lobbyists": "$353,774",
+      "From Lobbyists + Family": "$369,724"
+    },
+    {
+      "Recipient": "Marsha Blackburn (R-Tenn)",
+      "From Lobbyists": "$349,284",
+      "From Lobbyists + Family": "$351,284"
+    },
+    {
+      "Recipient": "Hakeem Jeffries (D-NY)",
+      "From Lobbyists": "$347,276",
+      "From Lobbyists + Family": "$355,915"
+    },
+    {
+      "Recipient": "Ted Cruz (R-Texas)",
+      "From Lobbyists": "$346,648",
+      "From Lobbyists + Family": "$355,975"
+    },
+    {
+      "Recipient": "Roger Wicker (R-Miss)",
+      "From Lobbyists": "$345,915",
+      "From Lobbyists + Family": "$360,065"
+    },
+    {
+      "Recipient": "Tammy Baldwin (D-Wis)",
+      "From Lobbyists": "$342,486",
+      "From Lobbyists + Family": "$357,348"
+    },
+    {
+      "Recipient": "John Barrasso (R-Wyo)",
+      "From Lobbyists": "$336,046",
+      "From Lobbyists + Family": "$344,946"
+    },
+    {
+      "Recipient": "Kevin McCarthy (R)",
+      "From Lobbyists": "$326,356",
+      "From Lobbyists + Family": "$327,856"
+    }
+  ]
+}
