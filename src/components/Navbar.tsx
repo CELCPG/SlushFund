@@ -31,8 +31,21 @@ const NAV_SECTIONS = [
       { href: '/congress/trades?chamber=house', label: 'House', icon: null },
       { href: '/congress/trades/trump', label: 'Trump OGE 278-T', icon: <FileText size={12} /> },
       { href: '/congress/trades?has_contract=true', label: 'Contractor Overlap', icon: <AlertTriangle size={12} /> },
+      { href: '/analysis/history', label: '10-Year History', icon: <BarChart3 size={12} /> },
+      { href: '/analysis/conflicts', label: 'Conflict Engine', icon: <AlertTriangle size={12} /> },
       { href: '/analysis/companies', label: 'Company Deep Dives', icon: <Shield size={12} /> },
       { href: '/blog', label: 'Blog & Investigations', icon: <FileText size={12} /> },
+    ],
+  },
+  {
+    label: 'Healthcare',
+    icon: <Activity size={14} />,
+    color: 'text-rose-400',
+    links: [
+      { href: '/healthcare', label: 'Pharma Lobbying', icon: <Activity size={12} /> },
+      { href: '/healthcare?tab=lobbying', label: 'Lobbying', icon: null },
+      { href: '/healthcare?tab=stocks', label: 'Pharma Stocks', icon: null },
+      { href: '/healthcare?tab=correlation', label: 'The Connection', icon: null },
     ],
   },
   {

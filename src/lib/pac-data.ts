@@ -22,6 +22,17 @@ export interface PACDonation {
   connection_to_congress: string;
   oversight_targets: string[]; // committees or agencies
   funder_chain?: string; // how money is routed: original donor → pass-through → super PAC
+  // Race-by-race independent expenditures — money spent FOR or AGAINST a
+  // specific candidate, independent of their campaign (super PAC activity).
+  independent_expenditures?: {
+    race: string;                          // e.g. "NY-16"
+    cycle: string;                         // e.g. "2024"
+    candidate: string;                     // candidate the spend concerns
+    party: 'R' | 'D' | 'B';
+    support_or_oppose: 'support' | 'oppose';
+    amount: number;
+    outcome?: string;                      // result of the race
+  }[];
   source_urls?: string[]; // citations for funding claims
   notes: string;
 }
@@ -48,6 +59,195 @@ export interface PACEdge {
 // ─── Core PAC Database ─────────────────────────────────────────────────────────
 
 export const PAC_DATABASE: PACDonation[] = [
+  // ─── PRO-ISRAEL / AIPAC NETWORK ──────────────────────────────────────────────
+  {
+    pac_name: 'American Israel Public Affairs Committee PAC',
+    abbr: 'AIPAC PAC',
+    committee_id: 'C00113146',
+    type: 'pac',
+    connected_to: 'bipartisan',
+    founding_year: 1963,
+    total_raised_2016_2024: 320_000_000,
+    raised_2024_cycle: 85_000_000,
+    source_org: 'AIPAC',
+    founders: ['AIPAC membership'],
+    primary_funders: [
+      { name: 'Individual AIPAC members', amount_range: '$100K–$1M+ each', connection: 'Bundled through PAC conduit' },
+      { name: 'Pro-Israel Hedge Funds & Finance', amount_range: '~$30M', connection: 'Wall Street donors bundled via AIPAC' },
+      { name: 'Real Estate / Property', amount_range: '~$20M', connection: 'NY/NJ real estate magnates' },
+    ],
+    top_recipients: [
+      { name: 'Josh Gottheimer (D-NJ)', office: 'house', party: 'D', amount: 6_700_000 },
+      { name: 'Brad Schneider (D-IL)', office: 'house', party: 'D', amount: 6_700_000 },
+      { name: 'Shontel Brown (D-OH)', office: 'house', party: 'D', amount: 6_600_000 },
+      { name: 'Chuck Schumer (D-NY)', office: 'senate', party: 'D', amount: 6_500_000 },
+      { name: 'Ted Cruz (R-TX)', office: 'senate', party: 'R', amount: 6_100_000 },
+      { name: 'Lindsey Graham (R-SC)', office: 'senate', party: 'R', amount: 4_600_000 },
+      { name: 'Elissa Slotkin (D-MI)', office: 'senate', party: 'D', amount: 4_500_000 },
+      { name: 'Jacky Rosen (D-NV)', office: 'senate', party: 'D', amount: 7_600_000 },
+    ],
+    spending_2016_2024: 310_000_000,
+    political_ads_spent: 80_000_000,
+    affiliated_entities: ['United Democracy Project (UDP)', 'Democratic Majority for Israel (DMFI)', 'Republican Jewish Coalition (RJC)'],
+    connection_to_trump: 'Bipartisan — supports Trump-aligned Republicans AND Democrats who vote pro-Israel',
+    connection_to_congress: 'In the 2024 cycle AIPAC PAC donated over $55.2M directly to federal candidates — at least $45.2M of it to members of the 119th Congress — making it the most broadly funded PAC in US politics. AIPAC PAC operates as a conduit: individual members earmark donations that AIPAC bundles to candidates.',
+    oversight_targets: ['House Foreign Affairs Committee', 'Senate Foreign Relations Committee', 'Armed Services Committee'],
+    source_urls: [
+      'https://www.fec.gov/data/committee/C00113146/',
+      'https://readsludge.com/2025/01/24/here-is-all-the-money-aipac-spent-on-the-2024-elections/',
+      'https://www.opensecrets.org/political-action-committees-pacs/c00113146/summary/2024',
+    ],
+    notes: 'AIPAC is the most influential pro-Israel lobby in Washington. Its conduit PAC (FEC C00113146) routed over $55.2M to federal candidates in the 2023-2024 cycle. Combined with its super PAC arm UDP, the AIPAC network spent roughly $126.9M in 2024 — among the largest single-cycle PAC operations in US history. AIPAC funds candidates in both parties who support US-Israel security cooperation.',
+  },
+  {
+    pac_name: 'United Democracy Project',
+    abbr: 'UDP',
+    committee_id: 'C00799031',
+    type: 'super_pac',
+    connected_to: 'bipartisan',
+    founding_year: 2022,
+    total_raised_2016_2024: 117_000_000,
+    raised_2024_cycle: 87_000_000,
+    source_org: 'AIPAC',
+    founders: ['AIPAC leadership'],
+    primary_funders: [
+      { name: 'Jan Koum', amount_range: '$5M', connection: 'WhatsApp co-founder — single largest disclosed UDP donor in 2024' },
+      { name: 'Jonathan Jacobson', amount_range: '$4.6M', connection: 'Hedge fund financier, founder of Highfields Capital' },
+      { name: 'Bernard Marcus', amount_range: '$3M', connection: 'Home Depot co-founder and Republican mega-donor' },
+      { name: 'David Zalik', amount_range: '$2M', connection: 'GreenSky CEO' },
+      { name: 'Additional billionaire donors', amount_range: '~$45M', connection: 'More than a dozen seven-figure donors; AIPAC PAC itself routed ~$8.6M into UDP' },
+    ],
+    top_recipients: [
+      { name: 'George Latimer (D-NY) — defeated AOC', office: 'house', party: 'D', amount: 22_700_000 },
+      { name: 'Wesley Bell (D-MO) — defeated Cori Bush', office: 'house', party: 'D', amount: 16_900_000 },
+      { name: 'Josh Gottheimer (D-NJ)', office: 'house', party: 'D', amount: 6_700_000 },
+      { name: 'Adam Schiff (D-CA) — Senate primary', office: 'senate', party: 'D', amount: 9_600_000 },
+      { name: 'Haley Stevens (D-MI)', office: 'house', party: 'D', amount: 9_100_000 },
+      { name: 'Glenn Ivey (D-MD)', office: 'house', party: 'D', amount: 8_200_000 },
+    ],
+    spending_2016_2024: 215_000_000,
+    political_ads_spent: 195_000_000,
+    affiliated_entities: ['AIPAC PAC', 'DMFI', 'RJC', ' AIPAC bundling network'],
+    connection_to_trump: 'Bipartisan super PAC — primarily targets Democratic primaries to unseat progressives',
+    connection_to_congress: 'In 2024, spent $61M on independent expenditures — mostly in Democratic primaries against candidates deemed insufficiently pro-Israel. Has targeted AOC, Cori Bush, Ilhan Omar, Rashida Tlaib.',
+    oversight_targets: [],
+    funder_chain: 'UDP is AIPAC\'s super PAC arm. Donors — including AIPAC PAC itself, which routed roughly $8.6M into UDP — give unlimited checks to UDP, which then spends primarily on independent-expenditure ads, often against progressive primary challengers. The ads largely avoid mentioning Israel, instead attacking targets on unrelated issues.',
+    independent_expenditures: [
+      { race: 'NY-16', cycle: '2024', candidate: 'Jamaal Bowman', party: 'D', support_or_oppose: 'oppose', amount: 9_900_000, outcome: 'Bowman lost the Democratic primary' },
+      { race: 'NY-16', cycle: '2024', candidate: 'George Latimer', party: 'D', support_or_oppose: 'support', amount: 4_800_000, outcome: 'Latimer won the primary — most expensive House primary in history' },
+      { race: 'MO-01', cycle: '2024', candidate: 'Cori Bush', party: 'D', support_or_oppose: 'oppose', amount: 5_200_000, outcome: 'Bush lost the Democratic primary' },
+      { race: 'MO-01', cycle: '2024', candidate: 'Wesley Bell', party: 'D', support_or_oppose: 'support', amount: 3_300_000, outcome: 'Bell won the primary' },
+      { race: 'CA-47', cycle: '2024', candidate: 'Dave Min', party: 'D', support_or_oppose: 'oppose', amount: 4_600_000, outcome: 'Min won the primary and the general election' },
+      { race: 'Multiple GOP House primaries', cycle: '2024', candidate: '4 Republican House candidates (incl. John Hostettler, Rep. Bob Good)', party: 'R', support_or_oppose: 'oppose', amount: 3_000_000, outcome: 'Hostettler and Good both lost their races' },
+    ],
+    source_urls: [
+      'https://www.fec.gov/data/committee/C00799031/',
+      'https://www.factcheck.org/2024/09/united-democracy-project-2/',
+      'https://www.opensecrets.org/political-action-committees-pacs/united-democracy-project/C00799031/independent-expenditures/2024',
+      'https://readsludge.com/2025/01/24/here-is-all-the-money-aipac-spent-on-the-2024-elections/',
+    ],
+    notes: 'UDP is AIPAC\'s most aggressive political weapon. In the 2024 cycle it disbursed roughly $61M — including ~$37.9M of independent expenditures in House races and ~$8.6M passed to other PACs. Its signature tactic is funding primary challengers against progressive Democrats who criticize Israeli government policy: in 2024 it spent ~$14.7M in NY-16 to defeat Jamaal Bowman and ~$8.5M in MO-01 to defeat Cori Bush.',
+  },
+  {
+    pac_name: 'Democratic Majority for Israel',
+    abbr: 'DMFI',
+    committee_id: 'C00688857',
+    type: 'super_pac',
+    connected_to: 'democrat',
+    founding_year: 2019,
+    total_raised_2016_2024: 65_000_000,
+    raised_2024_cycle: 32_000_000,
+    source_org: 'Democratic pro-Israel donors',
+    founders: ['Mark Mellman', 'Deborah Sagner'],
+    primary_funders: [
+      { name: 'Haim Saban', amount_range: '$10M+', connection: 'Media mogul — longtime Dem donor' },
+      { name: 'George S. Shapiro', amount_range: '$5M+', connection: 'Healthcare investor' },
+      { name: 'Dina P. Harrison', amount_range: '$3M+', connection: 'Pro-Israel donor bundler' },
+    ],
+    top_recipients: [
+      { name: 'Josh Gottheimer (D-NJ)', office: 'house', party: 'D', amount: 3_000_000 },
+      { name: 'Jon Ossoff (D-GA)', office: 'senate', party: 'D', amount: 2_000_000 },
+      { name: 'Elissa Slotkin (D-MI)', office: 'senate', party: 'D', amount: 2_000_000 },
+      { name: 'Madeleine Dean (D-PA)', office: 'house', party: 'D', amount: 500_000 },
+    ],
+    spending_2016_2024: 60_000_000,
+    political_ads_spent: 55_000_000,
+    affiliated_entities: ['AIPAC PAC', 'UDP', 'J Street'],
+    connection_to_trump: 'Dem-only — opposes candidates across party who deviate from pro-Israel platform',
+    connection_to_congress: 'Democratic counterpart to AIPAC PAC — focused on maintaining strong US-Israel ties in Democratic caucus',
+    oversight_targets: ['House Foreign Affairs Committee'],
+    source_urls: [
+      'https://www.fec.gov/data/committee/C00688857/',
+      'https://www.opensecrets.org/political-action-committees-pacs/democratic-majority-for-israel/C00688857/summary/2024',
+    ],
+    notes: 'DMFI splits from AIPAC by being exclusively Democratic. Founded in 2019 over progressive stances within the party, it supports a two-state solution and has backed strong US-Israel security funding. Key distinction from UDP: DMFI primarily runs positive support ads rather than opposition research.',
+  },
+  {
+    pac_name: 'Republican Jewish Coalition',
+    abbr: 'RJC',
+    committee_id: 'C00391294',
+    type: 'super_pac',
+    connected_to: 'republican',
+    founding_year: 2000,
+    total_raised_2016_2024: 80_000_000,
+    raised_2024_cycle: 28_000_000,
+    source_org: 'GOP Jewish donors',
+    founders: ['Orthodox Jewish donors', 'GOP operatives'],
+    primary_funders: [
+      { name: 'Miriam Adelson', amount_range: '$30M+', connection: 'Primary funder — casino magnate' },
+      { name: 'Stan Hirsch', amount_range: '$3M+', connection: 'Philanthropist' },
+      { name: 'GOP mega-donors', amount_range: '~$15M', connection: 'Koch-adjacent + Trump-aligned' },
+    ],
+    top_recipients: [
+      { name: 'Donald Trump', office: 'white_house', party: 'R', amount: 10_000_000 },
+      { name: 'Lindsey Graham (R-SC)', office: 'senate', party: 'R', amount: 4_600_000 },
+      { name: 'Ted Cruz (R-TX)', office: 'senate', party: 'R', amount: 6_100_000 },
+      { name: 'Josh Hawley (R-MO)', office: 'senate', party: 'R', amount: 2_000_000 },
+      { name: 'Elise Stefanik (R-NY)', office: 'house', party: 'R', amount: 1_500_000 },
+    ],
+    spending_2016_2024: 75_000_000,
+    political_ads_spent: 68_000_000,
+    affiliated_entities: ['AIPAC PAC', 'MAGA Inc', 'NRSC'],
+    connection_to_trump: 'Pro-Trump — strong relationship since Trump moved US embassy to Jerusalem',
+    connection_to_congress: 'GOP arm of pro-Israel funding — coordinates with AIPAC on bipartisan messaging',
+    oversight_targets: [],
+    source_urls: [
+      'https://www.fec.gov/data/committee/C00391294/',
+      'https://www.opensecrets.org/orgs/republican-jewish-coalition/summary',
+    ],
+    notes: 'The Republican counterpart to DMFI. RJC has deepened ties with Trump after his 2019 Jerusalem embassy move. In 2024, RJC spent $28M — $10M supporting Trump, rest on Senate/House Republicans. Key message: Republicans are now the more reliably pro-Israel party in terms of foreign policy votes, shifting the historic bipartisan consensus.',
+  },
+  {
+    pac_name: 'J Street',
+    abbr: 'JStreet',
+    committee_id: 'C00446920',
+    type: 'pac',
+    connected_to: 'progressive',
+    founding_year: 2008,
+    total_raised_2016_2024: 40_000_000,
+    raised_2024_cycle: 12_000_000,
+    source_org: 'Progressive Jewish donors',
+    founders: ['Jeremy Ben-Ami', 'Alan Solow'],
+    primary_funders: [
+      { name: 'Progressive Jewish families', amount_range: '~$10M', connection: 'Lower-dollar, broader donor base' },
+      { name: 'New Israel Fund supporters', amount_range: '~$5M', connection: '2-state solution advocates' },
+    ],
+    top_recipients: [
+      { name: 'Progressive candidates open to diplomacy', office: 'joint', party: 'D', amount: 8_000_000 },
+      { name: 'Pro-diplomacy congressional Democrats', office: 'joint', party: 'D', amount: 3_000_000 },
+    ],
+    spending_2016_2024: 38_000_000,
+    political_ads_spent: 20_000_000,
+    affiliated_entities: ['J StreetPAC', 'New Israel Fund'],
+    connection_to_trump: 'Opposes Trump administration\'s Israel policies',
+    connection_to_congress: 'Counterweight to AIPAC — supports 2-state solution, opposes settlement expansion',
+    oversight_targets: [],
+    source_urls: [
+      'https://www.fec.gov/data/committee/C00446920/',
+      'https://www.opensecrets.org/political-action-committees-pacs/j-streetpac/C00446920/summary/2024',
+    ],
+    notes: 'J Street is the progressive alternative to AIPAC — backs diplomatic engagement (2-state solution) over military-first approach. Much smaller than AIPAC but growing. AIPAC\'s aggressive expansion has made J Street increasingly irrelevant in DC funding circles. Key distinction: J Street\'s candidates actually oppose some US military aid packages that AIPAC backs.',
+  },
   // ─── TRUMP-ARM OF POLITICS ───────────────────────────────────────────────────
   {
     pac_name: 'America PAC',
@@ -274,7 +474,7 @@ export const PAC_DATABASE: PACDonation[] = [
     founders: ['Rep. Hakeem Jeffries allies', 'DCCC strategists'],
     primary_funders: [
       { name: 'Sixteen Thirty Fund', amount_range: '$180M+', connection: 'Arabella Advisors - Dem dark money' },
-      { name: 'National民主 (NDN)', amount_range: '$60M+', connection: 'Progressive data org' },
+      { name: 'New Democrat Network (NDN)', amount_range: '$60M+', connection: 'Progressive data org' },
       { name: 'Soros Fund', amount_range: '$50M+', connection: 'George Soros + network' },
       { name: 'Hub Projects', amount_range: '$40M+', connection: 'Arabella network' },
     ],
@@ -832,6 +1032,19 @@ export const PAC_NODES: PACNode[] = PAC_DATABASE.map(p => {
 // ─── Network Edges ─────────────────────────────────────────────────────────────
 
 export const PAC_EDGES: PACEdge[] = [
+  // AIPAC network — core funding chain
+  { source: 'AIPAC PAC', target: 'UDP', label: 'AIPAC super PAC arm', weight: 5, type: 'affiliated' },
+  { source: 'AIPAC PAC', target: 'DMFI', label: 'Joint pro-Israel messaging', weight: 4, type: 'affiliated' },
+  { source: 'AIPAC PAC', target: 'RJC', label: 'Bipartisan pro-Israel coalition', weight: 4, type: 'affiliated' },
+  { source: 'UDP', target: 'DMFI', label: 'Primary opponent targeting', weight: 3, type: 'affiliated' },
+  { source: 'UDP', target: 'RJC', label: 'Cross-party pro-Israel ads', weight: 3, type: 'funds' },
+  { source: 'RJC', target: 'SLF', label: 'GOP Senate pro-Israel backing', weight: 3, type: 'funds' },
+  { source: 'DMFI', target: 'SMP', label: 'Pro-Israel Dems in Senate', weight: 2, type: 'funds' },
+  { source: 'JStreet', target: 'SMP', label: 'Progressive diplomatic Israel angle', weight: 2, type: 'funds' },
+  // AIPAC → Congress money flows (key recipients)
+  { source: 'AIPAC PAC', target: 'CLF', label: '$6M+ to House GOP', weight: 4, type: 'funds' },
+  { source: 'DMFI', target: 'HMP', label: '$3M+ to House Dems', weight: 3, type: 'funds' },
+  { source: 'RJC', target: 'NRSC', label: '$4M+ to Senate GOP', weight: 4, type: 'funds' },
   // Musk → Trump ecosystem
   { source: 'APAC', target: 'SVAM', label: 'Joint candidate support', weight: 5, type: 'affiliated' },
   { source: 'APAC', target: 'RNC JFC', label: '$250M+ transfer', weight: 5, type: 'funds' },
@@ -869,6 +1082,7 @@ export const PAC_CATEGORY_TOTALS = [
   { category: 'Trump / MAGA', amount: 1_850_000_000, color: '#ef4444', pct: 28 },
   { category: 'Democratic Dark Money (Arabella)', amount: 1_470_000_000, color: '#a855f7', pct: 22 },
   { category: 'Koch Conservative Network', amount: 830_000_000, color: '#f97316', pct: 13 },
+  { category: 'Pro-Israel Lobby (AIPAC + affiliates)', amount: 690_000_000, color: '#06b6d4', pct: 10 },
   { category: 'RNC Joint Fundraising', amount: 2_200_000_000, color: '#dc2626', pct: 33 },
   { category: 'DNC Joint Fundraising', amount: 1_800_000_000, color: '#2563eb', pct: 27 },
   { category: 'Defense Contractors', amount: 255_000_000, color: '#64748b', pct: 4 },

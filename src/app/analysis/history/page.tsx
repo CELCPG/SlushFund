@@ -150,10 +150,22 @@ export default function HistoryPage() {
   const fetchTrades = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/congress/trades?limit=1000');
-      const json = await res.json();
-      setTrades(json.trades ?? []);
-      const dateHeader = res.headers.get('date');
+      // The API caps each request at 1000 rows — page through all of them so
+      // the 10-year dashboard sees every year, not just the most recent.
+      const first = await fetch('/api/congress/trades?limit=1000&page=1');
+      const firstJson = await first.json();
+      let all: CongressTrade[] = firstJson.trades ?? [];
+      const pages: number = firstJson.pages ?? 1;
+      if (pages > 1) {
+        const rest = await Promise.all(
+          Array.from({ length: pages - 1 }, (_, i) =>
+            fetch(`/api/congress/trades?limit=1000&page=${i + 2}`).then(r => r.json())
+          )
+        );
+        all = all.concat(...rest.map(j => j.trades ?? []));
+      }
+      setTrades(all);
+      const dateHeader = first.headers.get('date');
       setLastUpdated(dateHeader ? new Date(dateHeader).toLocaleString() : new Date().toLocaleString());
     } catch (err) {
       console.error('Failed to fetch trades:', err);
