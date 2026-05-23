@@ -40,3 +40,15 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env*.local
+
+# python
+__pycache__/
+*.pyc
+.venv/
+
+# supabase cli cache
+supabase/.temp/
+
+# claude code dev tooling
+.claude/worktrees/
+.claude/launch.json
