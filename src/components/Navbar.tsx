@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   BarChart3, Landmark, DollarSign, PieChart, Bitcoin,
   ChevronDown, Shield, TrendingUp, Database,
-  Activity, AlertTriangle, FileText, ArrowRight, Scale, Network, Menu, X, ShoppingBag, MessageCircle, Heart
+  Activity, AlertTriangle, FileText, ArrowRight, Scale, Network, Menu, X, ShoppingBag, MessageCircle, Heart, Building2
 } from 'lucide-react';
 
 const NAV_SECTIONS = [
@@ -15,6 +15,7 @@ const NAV_SECTIONS = [
     color: 'text-emerald-400',
     links: [
       { href: '/dashboard', label: 'Dashboard', icon: <Database size={12} /> },
+      { href: '/vendors', label: 'Vendor Directory', icon: <Building2 size={12} /> },
       { href: '/defense', label: 'Defense Contracts', icon: <Shield size={12} /> },
       { href: '/covid', label: 'COVID Spending', icon: <AlertTriangle size={12} /> },
       { href: '/tech', label: 'Tech & AI', icon: <Activity size={12} /> },
