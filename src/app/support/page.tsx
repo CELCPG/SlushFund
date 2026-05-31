@@ -7,10 +7,26 @@ import { buttonClasses } from '@/components/ui/Button';
 import NewsletterSignup from '@/components/NewsletterSignup';
 import { ONE_TIME_TIERS, MONTHLY_TIERS, tierHref, type DonationTier } from '@/lib/support';
 
+const SUPPORT_OG = `/api/og?title=${encodeURIComponent('Keep the money trackable.')}&eyebrow=${encodeURIComponent('Reader-funded accountability')}`;
+
 export const metadata: Metadata = {
   title: 'Support',
   description:
     'SlushFund is free and reader-funded. Chip in once or become a monthly member to keep federal spending, congressional trades, and PAC money searchable and accountable.',
+  alternates: { canonical: '/support' },
+  openGraph: {
+    type: 'website',
+    url: 'https://slushfund.net/support',
+    title: 'Support SlushFund',
+    description: 'Free and reader-funded. Help keep federal spending and congressional trades accountable.',
+    images: [{ url: SUPPORT_OG, width: 1200, height: 630, alt: 'Support SlushFund' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Support SlushFund',
+    description: 'Free and reader-funded. Help keep federal spending and congressional trades accountable.',
+    images: [SUPPORT_OG],
+  },
 };
 
 const WHAT_YOUR_MONEY_DOES = [

@@ -16,6 +16,9 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://slushfund.net'),
   alternates: {
     canonical: '/',
+    types: {
+      'application/rss+xml': [{ url: '/feed.xml', title: 'SlushFund — Investigations' }],
+    },
   },
   openGraph: {
     type: 'website',
