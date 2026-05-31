@@ -109,6 +109,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly',
       priority: 0.8,
     },
+    {
+      url: `${base}/latest`,
+      lastModified: now,
+      changeFrequency: 'hourly',
+      priority: 0.9,
+    },
   ];
 
   // Blog posts — generated from the shared source of truth (only real slugs).

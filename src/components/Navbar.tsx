@@ -191,6 +191,12 @@ export default function Navbar() {
           {/* Right side */}
           <div className="ml-auto flex items-center gap-2">
             <Link
+              href="/latest"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold text-emerald-400 hover:text-emerald-300 hover:bg-slate-800/60 transition-colors"
+            >
+              <Activity size={13} /> Latest
+            </Link>
+            <Link
               href="/store"
               className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
             >
