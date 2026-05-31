@@ -11,10 +11,10 @@ import {
 import { getHomeStats, formatCompactUSD } from '@/lib/home-stats';
 import Hero from '@/components/home/Hero';
 import WhatIsSlushFund from '@/components/home/WhatIsSlushFund';
-import LiveStatsBand from '@/components/home/LiveStatsBand';
+
 import LoopDiagram from '@/components/home/LoopDiagram';
 import TrackCard from '@/components/home/TrackCard';
-import DogeCompareChart from '@/components/home/DogeCompareChart';
+
 
 export const revalidate = 3600;
 
@@ -42,15 +42,13 @@ export default async function Home() {
 
       <WhatIsSlushFund />
 
-      <LiveStatsBand stats={stats} />
-
       <LoopDiagram />
 
       {/* ─── THREE TRACKS ─── */}
       <section className="border-b border-slate-800 bg-slate-950">
         <div className="max-w-7xl mx-auto px-6 py-16">
           <div className="max-w-2xl mb-8">
-            <span className="text-xs font-mono uppercase tracking-widest text-[var(--slush-red)]">
+            <span className="text-xs font-mono uppercase tracking-widest text-slush-red">
               Three databases
             </span>
             <h2 className="text-white font-black text-3xl md:text-4xl mt-3 mb-3">
@@ -89,7 +87,7 @@ export default async function Home() {
             <TrackCard
               accent="blue"
               icon={<Landmark size={19} />}
-              title="Congress Trading"
+              title="Political Trading"
               subtitle="House · Senate · Presidential"
               href="/congress/trades"
               ctaLabel="View all trades"
@@ -136,7 +134,7 @@ export default async function Home() {
       <section className="border-b border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950">
         <div className="max-w-7xl mx-auto px-6 py-16">
           <div className="max-w-2xl mb-8">
-            <span className="text-xs font-mono uppercase tracking-widest text-[var(--slush-red)]">
+            <span className="text-xs font-mono uppercase tracking-widest text-slush-red">
               Featured investigations
             </span>
             <h2 className="text-white font-black text-3xl md:text-4xl mt-3">
@@ -211,12 +209,26 @@ export default async function Home() {
               <h3 className="text-white font-black text-xl mb-2">DOGE: The Real Score</h3>
               <p className="text-slate-400 text-sm leading-relaxed mb-4">
                 DOGE claims $130B in savings. Independent auditors verified $28B. The $102B gap is
-                projected future savings counted as fact.
+                projected future savings counted as fact. We track who&apos;s winning the contracts.
               </p>
 
-              <DogeCompareChart />
+              <div className="grid grid-cols-3 gap-2 mb-5">
+                {[
+                  { label: 'DOGE claim', value: '$130B' },
+                  { label: 'Verified savings', value: '$28B' },
+                  { label: 'Gap', value: '$102B' },
+                ].map((s) => (
+                  <div
+                    key={s.label}
+                    className="bg-slate-800/70 border border-slate-700 rounded-lg px-3 py-2 text-center"
+                  >
+                    <div className="text-lg font-black font-mono text-red-400">{s.value}</div>
+                    <div className="text-slate-500 text-xs">{s.label}</div>
+                  </div>
+                ))}
+              </div>
 
-              <div className="mt-5 flex flex-wrap gap-3">
+              <div className="mt-auto flex flex-wrap gap-3">
                 <Link
                   href="/doge"
                   className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white font-bold px-5 py-2.5 rounded-lg text-sm transition-colors"
@@ -280,7 +292,7 @@ export default async function Home() {
           <div className="flex flex-wrap justify-center gap-3">
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-2 bg-[var(--slush-red)] hover:bg-[var(--slush-red-dark)] text-white font-bold px-6 py-3 rounded-lg text-sm transition-colors"
+              className="inline-flex items-center gap-2 bg-slush-red hover:bg-slush-red-dark text-white font-bold px-6 py-3 rounded-lg text-sm transition-colors"
             >
               <BarChart3 size={16} /> Federal Spending
             </Link>
@@ -288,7 +300,7 @@ export default async function Home() {
               href="/congress/trades"
               className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold px-6 py-3 rounded-lg text-sm transition-colors border border-slate-700"
             >
-              <Landmark size={16} /> Congress Trading
+              <Landmark size={16} /> Political Trading
             </Link>
             <Link
               href="/influence"

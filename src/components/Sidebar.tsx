@@ -21,7 +21,7 @@ const SECTIONS = [
     ],
   },
   {
-    label: 'Congress Trading',
+    label: 'Political Trading',
     icon: <Landmark size={15} className="text-blue-400" />,
     href: '/congress/trades',
     color: 'blue',
@@ -66,7 +66,7 @@ export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     'Federal Spending': true,
-    'Congress Trading': true,
+    'Political Trading': true,
     'Influence': true,
     'Analytics': true,
   });

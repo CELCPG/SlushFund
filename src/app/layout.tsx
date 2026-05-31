@@ -53,13 +53,22 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: '/favicon.png',
+    icon: '/favicon.ico',
+    shortcut: '/favicon.png',
   },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const snipcartKey = process.env.NEXT_PUBLIC_SNIPCART_API_KEY;
   return (
     <html lang="en" className={`dark ${inter.variable}`}>
+      <head>
+        {snipcartKey && (
+          <link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.7.1/default/snipcart.css" />
+        )}
+        <link rel="icon" type="image/png" href="/favicon.png" sizes="any" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+      </head>
       <body className="bg-slate-950 text-slate-100 antialiased font-sans">
         <Navbar />
         <main className="min-h-[calc(100vh-3.5rem)]">
@@ -77,6 +86,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           gtag('config', '${process.env.NEXT_PUBLIC_GA4_ID}');
           `}
         </Script>
+        {snipcartKey && (
+          <>
+            <Script
+              id="snipcart-settings"
+              strategy="afterInteractive"
+            >{`window.SnipcartSettings = { publicApiKey: "${snipcartKey}", loadStrategy: "on-user-interaction" };`}</Script>
+            <Script src="https://cdn.snipcart.com/themes/v3.7.1/default/snipcart.js" strategy="afterInteractive" />
+            <div id="snipcart" data-api-key={snipcartKey} hidden />
+          </>
+        )}
       </body>
     </html>
   );

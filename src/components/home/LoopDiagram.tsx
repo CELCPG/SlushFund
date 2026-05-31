@@ -161,7 +161,7 @@ export default function LoopDiagram() {
                 key={s.n}
                 className="flex gap-4 bg-slate-900 border border-slate-800 rounded-xl p-4"
               >
-                <span className="shrink-0 w-8 h-8 rounded-full bg-[var(--slush-red)]/15 border border-[var(--slush-red)]/50 text-[var(--slush-red)] font-black flex items-center justify-center text-sm">
+                <span className="shrink-0 w-8 h-8 rounded-full bg-slush-red/15 border border-slush-red/50 text-slush-red font-black flex items-center justify-center text-sm">
                   {s.n}
                 </span>
                 <div>
@@ -174,7 +174,7 @@ export default function LoopDiagram() {
         </div>
 
         {/* Caption */}
-        <div className="mt-10 max-w-3xl border-l-2 border-[var(--slush-red)] pl-5">
+        <div className="mt-10 max-w-3xl border-l-2 border-slush-red pl-5">
           <p className="text-white font-semibold text-lg leading-relaxed">
             Your taxes fund the contract. Your 401k funds their exit. Your retirement holds the
             bag.

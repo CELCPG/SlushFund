@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Clock, TrendingUp, AlertTriangle, FileText } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Clock, TrendingUp, AlertTriangle, FileText } from 'lucide-react';
 
 interface Post {
   slug: string;
@@ -219,12 +219,19 @@ const POSTS: Post[] = [
 
 const CATEGORIES = ['All', 'Investigation', 'Dark Money', 'Insider Trading', 'Trump Trades'];
 
+// ─── Featured post (first / most recent investigation) ───────────────────────
+const FEATURED = POSTS[0];
+const REST = POSTS.slice(1);
+
 export default function BlogPage() {
   const [activeCategory, setActiveCategory] = useState('All');
 
   const filtered = activeCategory === 'All'
     ? POSTS
     : POSTS.filter(p => p.category === activeCategory);
+
+  const featured = activeCategory === 'All' ? FEATURED : filtered[0];
+  const gridPosts = activeCategory === 'All' ? REST : filtered.slice(1);
 
   return (
     <div className="min-h-screen bg-slate-950">
@@ -237,12 +244,81 @@ export default function BlogPage() {
               Back to Tracker
             </Link>
           </div>
-          <h1 className="text-4xl font-black text-white mb-3">Blog & Investigations</h1>
+          <h1 className="text-4xl font-black text-white mb-3">Investigations</h1>
           <p className="text-slate-400 text-lg max-w-2xl">
             Original reporting and data analysis on federal spending, congressional stock trading, and political money flows. No paywall. No agenda except the truth.
           </p>
         </div>
       </div>
+
+      {/* Featured Investigation */}
+      {featured && (
+        <div className="border-b border-slate-800 bg-slate-900/40 group">
+          <div className="max-w-5xl mx-auto px-6 py-10">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs font-mono uppercase tracking-widest text-slush-red">
+                Featured Investigation
+              </span>
+            </div>
+            <div className="flex flex-col lg:flex-row gap-8 items-start">
+
+              {/* Clickable card body */}
+              <Link
+                href={`/blog/${featured.slug}`}
+                className="flex-1 min-w-0 cursor-pointer"
+              >
+                <div className="flex items-center gap-2 mb-3 flex-wrap">
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
+                    featured.category === 'Investigation' ? 'bg-emerald-900/60 text-emerald-400' :
+                    featured.category === 'Dark Money' ? 'bg-purple-900/60 text-purple-400' :
+                    featured.category === 'Insider Trading' ? 'bg-red-900/60 text-red-400' :
+                    'bg-blue-900/60 text-blue-400'
+                  }`}>
+                    {featured.category}
+                  </span>
+                  <span className="text-slate-600 text-xs">{featured.date}</span>
+                  <span className="text-slate-600 text-xs flex items-center gap-1">
+                    <Clock size={11} /> {featured.readTime}
+                  </span>
+                </div>
+                <h2 className="text-2xl md:text-3xl font-black text-white leading-tight mb-3 group-hover:text-slush-red transition-colors">
+                  {featured.title}
+                </h2>
+                <p className="text-slate-400 text-base leading-relaxed mb-5 max-w-2xl">
+                  {featured.excerpt}
+                </p>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="inline-flex items-center gap-2 bg-slush-red hover:bg-slush-red-dark text-white font-bold px-5 py-2.5 rounded-lg text-sm transition-colors">
+                    Read Investigation <ArrowRight size={15} />
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {featured.tags.slice(0, 4).map(tag => (
+                      <span key={tag} className="px-2 py-0.5 bg-slate-800 text-slate-500 text-xs rounded">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </Link>
+
+              {/* Stats sidebar */}
+              <div className="shrink-0 w-full lg:w-56 grid grid-cols-2 lg:grid-cols-1 gap-3">
+                {[
+                  { label: 'Published', value: featured.date },
+                  { label: 'Read time', value: featured.readTime },
+                  { label: 'Category', value: featured.category },
+                  { label: 'Author', value: featured.author },
+                ].map(stat => (
+                  <div key={stat.label} className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-3">
+                    <div className="text-slate-500 text-xs mb-0.5">{stat.label}</div>
+                    <div className="text-white font-bold text-sm">{stat.value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Category filter */}
       <div className="border-b border-slate-800 bg-slate-900/50">
@@ -268,7 +344,7 @@ export default function BlogPage() {
       {/* Posts grid */}
       <div className="max-w-5xl mx-auto px-6 py-12">
         <div className="grid gap-6 md:grid-cols-2">
-          {filtered.map(post => (
+          {gridPosts.map(post => (
             <article
               key={post.slug}
               className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden hover:border-emerald-600/40 transition-all group"
@@ -345,7 +421,7 @@ export default function BlogPage() {
               View API Docs
             </a>
             <a
-              href="/contact"
+              href="/connect"
               className="px-5 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors"
             >
               Submit a Tip

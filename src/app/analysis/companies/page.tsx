@@ -79,48 +79,94 @@ function isPublicTicker(ticker: string): boolean {
   return publicTickers.has(ticker.toUpperCase());
 }
 
+// ─── Data panel for private companies ──────────────────────────────────────────
+function PrivateDataPanel({ company }: { company: Company }) {
+  const hasContracts = company.related_contracts.length > 0;
+
+  if (hasContracts) {
+    return (
+      <div className="bg-slate-800/60 rounded-lg p-3 min-h-[130px] flex flex-col justify-between">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Building2 size={11} className="text-emerald-400" />
+            <span className="text-emerald-400 text-xs font-bold uppercase tracking-widest">Federal Contract Data</span>
+          </div>
+          <div className="space-y-1.5">
+            {company.related_contracts.slice(0, 2).map(rc => (
+              <div key={rc.recipient_name} className="flex items-center justify-between">
+                <span className="text-slate-300 text-xs">{rc.recipient_name}</span>
+                <span className="text-amber-400 font-mono font-bold text-xs">{formatMoney(rc.total)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="text-slate-500 text-xs mt-2">{company.related_contracts[0].agencies}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-slate-800/30 rounded-lg p-3 min-h-[130px] flex items-center justify-center">
+      <div className="text-center">
+        <div className="text-slate-600 text-2xl mb-1">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-slate-600">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <div className="text-slate-500 text-xs font-semibold">No Public Market Data</div>
+        <div className="text-slate-600 text-xs mt-0.5">Private company — not publicly traded</div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Company Card ──────────────────────────────────────────────────────────────
 function CompanyCard({ company, onSelect }: { company: Company; onSelect: () => void }) {
   const partyColors: Record<string, string> = { Republican: 'text-red-400', Democrat: 'text-blue-400', Independent: 'text-purple-400' };
   const partyBg: Record<string, string> = { Republican: 'bg-red-900/30', Democrat: 'bg-blue-900/30', Independent: 'bg-purple-900/30' };
+  const isPublic = isPublicTicker(company.ticker);
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-blue-600/50 transition-all">
+    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-blue-600/50 transition-all flex flex-col">
+      {/* Header */}
       <div className="flex items-start justify-between mb-3">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="text-white font-black text-lg">{company.ticker}</span>
-            <span className="text-slate-400 text-sm">{company.company_name}</span>
+            <span className="text-slate-400 text-sm truncate">{company.company_name}</span>
             {company.has_contract && (
-              <span className="inline-flex items-center gap-1 bg-emerald-900/40 border border-emerald-700 text-emerald-400 text-xs px-2 py-0.5 rounded-full">
+              <span className="inline-flex items-center gap-1 bg-emerald-900/40 border border-emerald-700 text-emerald-400 text-xs px-2 py-0.5 rounded-full shrink-0">
                 <Building2 size={10} /> Federal Contract
               </span>
             )}
           </div>
-          <div className="flex items-center gap-3 text-xs text-slate-400 mb-2">
+          <div className="flex items-center gap-3 text-xs text-slate-400">
             <span className="font-mono">{company.trade_count} trades</span>
             <span>·</span>
             <span className="font-mono">{company.purchases} buys / {company.sales} sells</span>
           </div>
-          {isPublicTicker(company.ticker) ? (
-            <div className="mb-3">
-              <StockChart ticker={company.ticker} />
-            </div>
-          ) : (
-            <div className="text-xs text-slate-600 mb-2 italic">Private company — no public stock data</div>
-          )}
         </div>
-        <div className="text-right">
+        <div className="text-right shrink-0 ml-3">
           <div className="text-white font-black font-mono text-lg">{formatMoney(company.total_volume)}</div>
           <div className="text-slate-500 text-xs">total volume</div>
         </div>
       </div>
 
-      {/* Top traders */}
+      {/* Chart / Data panel — uniform height for all cards */}
+      <div className="mb-3">
+        {isPublic ? (
+          <StockChart ticker={company.ticker} />
+        ) : (
+          <PrivateDataPanel company={company} />
+        )}
+      </div>
+
+      {/* Top trader */}
       {company.top_members.length > 0 && (
         <div className="mb-3">
           <div className="text-slate-500 text-xs uppercase tracking-widest mb-2">Top Trader</div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-white text-sm font-semibold">{company.top_members[0].name}</span>
             <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${partyColors[company.top_members[0].party] ?? 'text-slate-400'} ${partyBg[company.top_members[0].party] ?? 'bg-slate-800'}`}>
               {company.top_members[0].party} · {company.top_members[0].chamber}
@@ -130,7 +176,7 @@ function CompanyCard({ company, onSelect }: { company: Company; onSelect: () => 
         </div>
       )}
 
-      {/* Parties */}
+      {/* Parties & chambers */}
       <div className="flex items-center gap-2 flex-wrap mb-3">
         {company.parties.map(p => (
           <span key={p} className={`text-xs font-bold px-2 py-0.5 rounded ${partyColors[p] ?? 'text-slate-400'} ${partyBg[p] ?? 'bg-slate-800'}`}>{p}</span>
@@ -140,8 +186,8 @@ function CompanyCard({ company, onSelect }: { company: Company; onSelect: () => 
         ))}
       </div>
 
-      {/* Related contract highlight */}
-      {company.related_contracts.length > 0 && (
+      {/* Related contracts strip — only show if not already in PrivateDataPanel */}
+      {company.related_contracts.length > 0 && isPublic && (
         <div className="bg-slate-800/60 rounded-lg px-3 py-2 mb-3">
           <div className="text-slate-500 text-xs mb-1">Related federal contracts</div>
           {company.related_contracts.slice(0, 2).map(rc => (
@@ -153,8 +199,9 @@ function CompanyCard({ company, onSelect }: { company: Company; onSelect: () => 
         </div>
       )}
 
+      {/* CTA */}
       <button onClick={onSelect}
-        className="w-full mt-2 py-2 rounded-lg bg-blue-900/30 border border-blue-700 text-blue-400 text-sm font-bold hover:bg-blue-900/50 hover:text-blue-300 transition-all flex items-center justify-center gap-2">
+        className="w-full mt-auto pt-2 py-2 rounded-lg bg-blue-900/30 border border-blue-700 text-blue-400 text-sm font-bold hover:bg-blue-900/50 hover:text-blue-300 transition-all flex items-center justify-center gap-2">
         <TrendingUp size={14} /> Deep Dive Analysis
       </button>
     </div>

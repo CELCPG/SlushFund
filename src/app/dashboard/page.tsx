@@ -15,6 +15,7 @@ import { fmt, CONNECTION_LABELS } from '@/lib/utils';
 import type { Award, ConnectionType, Era } from '@/lib/types';
 import { MOCK_AWARDS } from '@/lib/mock-data-new';
 import EraToggle from '@/components/home/EraToggle';
+import { KpiCard, ConnectionBadge } from '@/components/ui';
 
 const CONNECTION_COLORS: Record<string, string> = {
   elon_musk: '#a855f7',
@@ -35,66 +36,6 @@ function formatLargeNum(n: number): string {
   if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
   if (n >= 1e3) return `$${(n / 1e3).toFixed(0)}K`;
   return `$${n}`;
-}
-
-// ─── KPI Card ────────────────────────────────────────────────────────────────
-function KpiCard({ label, value, sub, icon: Icon, color, highlight }: {
-  label: string; value: string; sub?: string;
-  icon: React.ElementType; color: string; highlight?: boolean;
-}) {
-  return (
-    <div className={`rounded-xl px-5 py-4 border ${highlight ? 'border-red-700/60 bg-red-950/30' : 'border-slate-800 bg-slate-900'}`}>
-      <div className="flex items-center gap-2 mb-2">
-        <Icon size={13} className={color} />
-        <span className="text-slate-400 text-xs uppercase tracking-widest font-medium">{label}</span>
-      </div>
-      <div className={`text-3xl font-black font-mono ${color}`}>{value}</div>
-      {sub && <div className="text-slate-500 text-xs mt-1.5">{sub}</div>}
-    </div>
-  );
-}
-
-// ─── Connection Badge ─────────────────────────────────────────────────────────
-function ConnectionBadge({ type }: { type: string | null }) {
-  if (!type || type === 'none') return <span className="text-slate-600 text-xs">—</span>;
-  const styles: Record<string, string> = {
-    elon_musk: 'bg-purple-900 text-purple-200 border-purple-700',
-    trump_family: 'bg-red-900 text-red-200 border-red-700',
-    trump_ally: 'bg-blue-900 text-blue-200 border-blue-700',
-    suspected: 'bg-amber-900 text-amber-200 border-amber-700',
-    none: 'bg-slate-800 text-slate-400 border-slate-700',
-  };
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${styles[type] ?? styles.none}`}>
-      {CONNECTION_LABELS[type as ConnectionType] ?? type}
-    </span>
-  );
-}
-
-function FlagBadge({ flag }: { flag: string }) {
-  const styles: Record<string, string> = {
-    no_bid: 'bg-rose-900 text-rose-300 border-rose-700',
-    sole_source: 'bg-orange-900 text-orange-300 border-orange-700',
-    related_party: 'bg-violet-900 text-violet-300 border-violet-700',
-    inflated: 'bg-pink-900 text-pink-300 border-pink-700',
-    no_compete_high_value: 'bg-red-900 text-red-300 border-red-700',
-    large_award: 'bg-amber-900 text-amber-300 border-amber-700',
-    limited_competition: 'bg-yellow-900 text-yellow-300 border-yellow-700',
-  };
-  return (
-    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-mono border ${styles[flag] ?? 'bg-slate-800 text-slate-400 border-slate-700'}`}>
-      {flag.replace(/_/g, ' ')}
-    </span>
-  );
-}
-
-function MiniBar({ value, max, color }: { value: number; max: number; color: string }) {
-  const pct = Math.max(0, Math.min(100, (value / max) * 100));
-  return (
-    <div className="w-full bg-slate-800 rounded-full h-2">
-      <div className="h-2 rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
-    </div>
-  );
 }
 
 // ─── The Bottom Line — Deep Insights ───────────────────────────────────────────
@@ -476,6 +417,7 @@ export default function DashboardPage() {
   const [eraFilter, setEraFilter] = useState<Era | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [flagFilter, setFlagFilter] = useState('all');
+  const [topicFilter, setTopicFilter] = useState<'all' | 'defense' | 'tech' | 'covid'>('all');
   const [sortKey, setSortKey] = useState('dollar_amount');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
@@ -524,6 +466,9 @@ export default function DashboardPage() {
       setUsingMock(true);
       const filtered = MOCK_AWARDS
         .filter((a) => {
+          if (topicFilter === 'defense' && !a.awarding_agency.includes('Defense') && !a.awarding_agency.includes('DOD') && !a.awarding_sub_agency?.includes('Force')) return false;
+          if (topicFilter === 'tech' && !/xai|openai|palantir|anduril|crowd\s*strike|palo\s*alto|oracle|aws|google\s*cloud|microsoft|cloudflare|nvidia/i.test(a.recipient_name)) return false;
+          if (topicFilter === 'covid' && !a.covid_obligations) return false;
           if (connectionFilter !== 'all' && a.connection_type !== connectionFilter) return false;
           if (categoryFilter !== 'all' && a.award_category !== categoryFilter) return false;
           if (flagFilter !== 'all' && !a.flags?.includes(flagFilter as any)) return false;
@@ -540,7 +485,7 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, connectionFilter, eraFilter, categoryFilter, flagFilter, search, sortKey, sortDir]);
+  }, [currentPage, connectionFilter, eraFilter, categoryFilter, flagFilter, topicFilter, search, sortKey, sortDir]);
 
   useEffect(() => {
     loadStats();
@@ -579,6 +524,9 @@ export default function DashboardPage() {
             </button>
             <Link href="/analysis" className="px-3 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
               Analysis
+            </Link>
+            <Link href="/compare" className="px-3 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+              Era Comparison
             </Link>
             <Link href="/about" className="px-3 py-1.5 rounded-md text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
               About
@@ -623,8 +571,32 @@ export default function DashboardPage() {
 
         {/* ── Full Awards Table ──────────────────────────────────────── */}
         <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between gap-4">
-            <h3 className="text-white font-bold text-sm uppercase tracking-widest">All Awards</h3>
+          {/* Topic tab row */}
+          <div className="px-5 pt-4 pb-0 flex items-center gap-1 border-b border-slate-800">
+            {([
+              { key: 'all', label: 'All' },
+              { key: 'defense', label: 'Defense' },
+              { key: 'tech', label: 'Tech & AI' },
+              { key: 'covid', label: 'COVID' },
+            ] as const).map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => { setTopicFilter(tab.key); setCurrentPage(1); }}
+                className={`px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${
+                  topicFilter === tab.key
+                    ? 'border-slush-red text-white bg-slate-800/60'
+                    : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800/30'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+            <div className="ml-auto text-xs text-slate-500 font-mono">
+              {awards.length.toLocaleString()} awards
+            </div>
+          </div>
+          <div className="px-5 py-3 border-b border-slate-800 flex items-center justify-between gap-4">
+            <h3 className="text-white font-bold text-sm uppercase tracking-widest">Awards</h3>
             <div className="flex items-center gap-3">
               <div className="relative">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />

@@ -46,7 +46,8 @@ export default function CorrelationView() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/v1/trades?limit=500')
+    const tickerParams = [...PHARMA_TICKERS].map((t) => `ticker=${t}`).join('&');
+    fetch(`/api/v1/trades?limit=1000&${tickerParams}`)
       .then((r) => r.json())
       .then((d) => {
         const all: Trade[] = d.trades ?? d.data ?? [];
@@ -100,8 +101,6 @@ export default function CorrelationView() {
   }
 
   const matched: MatchedMember[] = recipients.map((r) => {
-    const rWords = getNameWords(r.Recipient);
-
     const memberTrades = pharmaTrades.filter((t) =>
       nameMatches(r.Recipient, t.member_name)
     );
@@ -120,7 +119,40 @@ export default function CorrelationView() {
     };
   });
 
-  const connected = matched.filter((m) => m.pharmaTrades > 0 || m.lobbyCash > 100000);
+  // Top pharma traders who aren't already matched to an OpenSecrets recipient —
+  // surface the actual heavy pharma traders so the chart shows real activity even
+  // when lobby-cash leaders don't trade.
+  const matchedTradeNames = new Set<string>();
+  recipients.forEach((r) => {
+    pharmaTrades.forEach((t) => {
+      if (nameMatches(r.Recipient, t.member_name)) matchedTradeNames.add(t.member_name);
+    });
+  });
+
+  const traderCounts: Record<string, { count: number; tickers: Set<string>; chamber: string }> = {};
+  pharmaTrades.forEach((t) => {
+    if (matchedTradeNames.has(t.member_name)) return;
+    const k = t.member_name;
+    if (!traderCounts[k]) traderCounts[k] = { count: 0, tickers: new Set(), chamber: t.member_chamber };
+    traderCounts[k].count += 1;
+    if (t.ticker) traderCounts[k].tickers.add(t.ticker);
+  });
+
+  const topTraders: MatchedMember[] = Object.entries(traderCounts)
+    .map(([name, v]) => ({
+      name,
+      lobbyCash: 0,
+      pharmaTrades: v.count,
+      tickers: [...v.tickers],
+      chamber: v.chamber,
+    }))
+    .sort((a, b) => b.pharmaTrades - a.pharmaTrades)
+    .slice(0, 25);
+
+  const connected = [
+    ...matched.filter((m) => m.pharmaTrades > 0 || m.lobbyCash > 100000),
+    ...topTraders,
+  ];
   const topConnected = [...connected].sort((a, b) => b.pharmaTrades - a.pharmaTrades);
 
   const tooltipStyle = {

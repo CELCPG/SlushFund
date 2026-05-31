@@ -1,10 +1,19 @@
 'use client';
 import Link from 'next/link';
+import NewsletterSignup from './NewsletterSignup';
 
 export default function Footer() {
   return (
     <footer className="border-t border-slate-800 bg-slate-950">
       <div className="max-w-7xl mx-auto px-6 py-10">
+        <div className="mb-8 p-5 rounded-xl bg-slate-900/60 border border-slate-800">
+          <NewsletterSignup
+            source="footer"
+            variant="stacked"
+            heading="The Slush Report"
+            blurb="New flagged contracts, congressional trades, and investigations — straight to your inbox. No spam."
+          />
+        </div>
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           {/* Left: Logo + tagline */}
           <div className="flex items-center gap-3">
@@ -16,10 +25,12 @@ export default function Footer() {
           <div className="flex flex-wrap gap-6 text-sm text-slate-500">
             <Link href="/explain" className="hover:text-white transition-colors">How It Works</Link>
             <Link href="/dashboard" className="hover:text-white transition-colors">Spending</Link>
-            <Link href="/congress/trades" className="hover:text-white transition-colors">Congress Trades</Link>
+            <Link href="/congress/trades" className="hover:text-white transition-colors">Political Trades</Link>
             <Link href="/pacs" className="hover:text-white transition-colors">PAC Money</Link>
             <Link href="/blog" className="hover:text-white transition-colors">Investigations</Link>
-            <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
+            <Link href="/support" className="text-slush-red hover:text-slush-red-light transition-colors">Support Us</Link>
+            <Link href="/store" className="hover:text-white transition-colors">Store</Link>
+            <Link href="/connect" className="hover:text-white transition-colors">Connect</Link>
           </div>
 
           {/* Right: Social */}

@@ -13,7 +13,7 @@ const PILLARS = [
   {
     icon: Landmark,
     accent: 'blue',
-    title: 'Congress Trading',
+    title: 'Political Trading',
     desc: 'House, Senate, and presidential stock trades from official OGE disclosures, matched against the companies those same officials regulate and fund.',
     href: '/congress/trades',
     cta: 'View congressional trades',
@@ -64,7 +64,7 @@ export default function WhatIsSlushFund() {
     >
       <div className="max-w-7xl mx-auto px-6 py-16">
         <div className="max-w-3xl">
-          <span className="text-xs font-mono uppercase tracking-widest text-[var(--slush-red)]">
+          <span className="text-xs font-mono uppercase tracking-widest text-slush-red">
             What is SlushFund?
           </span>
           <h2 className="text-white font-black text-3xl md:text-4xl mt-3 mb-4">

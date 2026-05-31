@@ -67,9 +67,13 @@ export async function GET(request: NextRequest): Promise<NextResponse<TradesResp
   const sortDir = searchParams.get('dir') ?? 'desc';
   const sortCol = sortKey === 'amount' || sortKey === 'volume' ? 'amount_max' : sortKey;
 
+  // Guard: never return future-dated trades — credibility fix
+  const today = new Date().toISOString().split('T')[0];
+
   let query = supabaseAdmin
     .from('congress_trades')
     .select('*', { count: 'exact' })
+    .lte('transaction_date', today)
     .range(offset, offset + limit - 1);
 
   // Apply ordering explicitly so it doesn't get lost in chained filters

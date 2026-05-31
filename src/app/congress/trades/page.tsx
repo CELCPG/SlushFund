@@ -11,6 +11,7 @@ import {
   ChevronUp, Shield, Target, ArrowRight, ArrowUpRight, ArrowDownRight,
   Building2, Scale, Zap, ArrowUp, ArrowDown, Clock
 } from 'lucide-react';
+import { KpiCard } from '@/components/ui';
 
 const CHART_COLORS = {
   Democrat: '#3b82f6',
@@ -616,23 +617,6 @@ function OverlapMap({ trades }: { trades: Trade[] }) {
   );
 }
 
-// ─── KPI Cards ─────────────────────────────────────────────────────────────────
-
-function KpiCard({ label, value, sub, icon: Icon, color }: {
-  label: string; value: string; sub?: string; icon: React.ElementType; color: string;
-}) {
-  return (
-    <div className="bg-slate-900 rounded-xl border border-slate-800 px-5 py-4">
-      <div className="flex items-center gap-2 mb-2">
-        <Icon size={13} className={color} />
-        <span className="text-slate-400 text-xs uppercase tracking-widest font-medium">{label}</span>
-      </div>
-      <div className={`text-3xl font-black font-mono ${color}`}>{value}</div>
-      {sub && <div className="text-slate-500 text-xs mt-1">{sub}</div>}
-    </div>
-  );
-}
-
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 export default function CongressTradesPage() {
@@ -647,7 +631,15 @@ export default function CongressTradesPage() {
     try {
       const res = await fetch('/api/congress/trades?limit=1000');
       const json = await res.json();
-      const liveTrades: Trade[] = json.trades ?? [];
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const liveTrades: Trade[] = (json.trades ?? []).filter((t: Trade) => {
+        if (!t.transaction_date) return false;
+        const tradeDate = new Date(t.transaction_date);
+        if (isNaN(tradeDate.getTime())) return false;
+        return tradeDate <= today;
+      });
 
       // Capture last updated from response header or now
       const dateHeader = res.headers.get('date');

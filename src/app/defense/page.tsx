@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { Search, Filter, Building2, Shield, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
-import { fmt, CONNECTION_LABELS } from '@/lib/utils';
-import type { Award, ConnectionType } from '@/lib/types';
+import { fmt } from '@/lib/utils';
+import type { Award } from '@/lib/types';
 import { MOCK_AWARDS } from '@/lib/mock-data-new';
+import { ConnectionBadge, FlagBadge } from '@/components/ui';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 interface DefenseStats {
@@ -102,22 +103,6 @@ function computeStats(dodAwards: Award[]): DefenseStats {
 }
 
 // ─── Badges ──────────────────────────────────────────────────────────────────
-function ConnectionBadge({ type }: { type: string | null }) {
-  if (!type || type === 'none') return <span className="text-slate-600 text-xs">—</span>;
-  const styles: Record<string, string> = {
-    elon_musk: 'bg-purple-900 text-purple-200 border-purple-700',
-    trump_family: 'bg-red-900 text-red-200 border-red-700',
-    trump_ally: 'bg-blue-900 text-blue-200 border-blue-700',
-    suspected: 'bg-amber-900 text-amber-200 border-amber-700',
-    none: 'bg-slate-800 text-slate-400 border-slate-700',
-  };
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${styles[type] ?? styles.none}`}>
-      {CONNECTION_LABELS[type as ConnectionType] ?? type}
-    </span>
-  );
-}
-
 function CompetitionBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     no_bid: 'bg-rose-900 text-rose-300 border-rose-700',
@@ -129,25 +114,6 @@ function CompetitionBadge({ status }: { status: string }) {
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${styles[status] ?? styles.unknown}`}>
       {status.replace(/_/g, ' ')}
-    </span>
-  );
-}
-
-function FlagBadge({ flag }: { flag: string }) {
-  const styles: Record<string, string> = {
-    no_bid: 'bg-rose-900 text-rose-300 border-rose-700',
-    sole_source: 'bg-orange-900 text-orange-300 border-orange-700',
-    limited_competition: 'bg-yellow-900 text-yellow-300 border-yellow-700',
-    non_competitive: 'bg-red-900 text-red-300 border-red-700',
-    no_compete_high_value: 'bg-red-900 text-red-300 border-red-700',
-    large_award: 'bg-amber-900 text-amber-300 border-amber-700',
-    inflated: 'bg-pink-900 text-pink-300 border-pink-700',
-    related_party: 'bg-violet-900 text-violet-300 border-violet-700',
-    cost_plus: 'bg-slate-700 text-slate-300 border-slate-600',
-  };
-  return (
-    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-mono border ${styles[flag] ?? 'bg-slate-800 text-slate-400 border-slate-700'}`}>
-      {flag.replace(/_/g, ' ')}
     </span>
   );
 }
