@@ -114,13 +114,15 @@ def parse_date(date_str: str) -> Optional[str]:
 
 def parse_trade_type(type_str: str) -> str:
     t = type_str.strip().upper()
-    if 'BUY' in t:
+    if 'BUY' in t or 'PURCHASE' in t:
         return 'BUY'
-    elif 'SELL' in t:
+    elif 'SELL' in t or 'SALE' in t:
         return 'SELL'
     elif 'EXCHANGE' in t:
         return 'EXCHANGE'
-    return type_str.strip()
+    # Default unknowns to BUY rather than leaking a raw label that breaks the
+    # (member,ticker,date,type) dedup key.
+    return 'BUY'
 
 
 def scrape_member_page(slug: str, member_name: str, chamber: str, state: str, party: str, district: str = None) -> list:

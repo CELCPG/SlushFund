@@ -50,6 +50,19 @@ REPRESENTATIVES = [
 ]
 
 
+def normalize_tx_type(raw: str) -> str:
+    """Canonicalize to BUY/SELL/EXCHANGE for the (member,ticker,date,type)
+    dedup key — keeps 'Purchase'/'Sale (Full)' from creating duplicate rows."""
+    t = (raw or '').strip().upper()
+    if 'BUY' in t or 'PURCHASE' in t:
+        return 'BUY'
+    if 'SELL' in t or 'SALE' in t:
+        return 'SELL'
+    if 'EXCHANGE' in t:
+        return 'EXCHANGE'
+    return 'BUY'
+
+
 def parse_amount_from_text(text: str) -> tuple:
     """Parse '$100,001 - $250,000' or '$1M - $5M' into (min, max).
 
@@ -292,7 +305,7 @@ def scrape_senate_member(scraper, first: str, last: str, state: str, year: str) 
                         'member_state': state,
                         'ticker': ticker,
                         'company_name': asset_name,
-                        'transaction_type': tx.get('type', 'BUY').upper(),
+                        'transaction_type': normalize_tx_type(tx.get('type', 'BUY')),
                         'asset_type': 'Stock',
                         'amount_min': amt_min,
                         'amount_max': amt_max,
@@ -341,7 +354,7 @@ def write_trades_to_supabase(trades: List[Dict]) -> int:
                 'district': t.get('district'),
                 'ticker': t['ticker'],
                 'company_name': t.get('company_name', ''),
-                'transaction_type': t.get('transaction_type', 'BUY').upper(),
+                'transaction_type': normalize_tx_type(t.get('transaction_type', 'BUY')),
                 'asset_type': t.get('asset_type', 'Stock'),
                 'amount_min': t.get('amount_min'),
                 'amount_max': t.get('amount_max'),

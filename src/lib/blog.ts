@@ -197,3 +197,40 @@ export const POSTS: Post[] = [
 
 /** Posts sorted newest-first. */
 export const POSTS_BY_DATE = [...POSTS].sort((a, b) => b.date.localeCompare(a.date));
+
+export function getPost(slug: string): Post | undefined {
+  return POSTS.find((p) => p.slug === slug);
+}
+
+/**
+ * Per-post Next.js Metadata (title, description, canonical, OG + Twitter card
+ * with a dynamic share image). Used by each blog post's layout.tsx so the
+ * client-component post pages still get unique, share-optimized metadata.
+ */
+export function blogPostMetadata(slug: string) {
+  const post = getPost(slug);
+  if (!post) return { title: 'Investigation' };
+  const url = `https://slushfund.net/blog/${post.slug}`;
+  const og = `/api/og?title=${encodeURIComponent(post.title)}&eyebrow=${encodeURIComponent(post.category)}`;
+  return {
+    title: post.title,
+    description: post.excerpt,
+    alternates: { canonical: `/blog/${post.slug}` },
+    openGraph: {
+      type: 'article' as const,
+      url,
+      title: post.title,
+      description: post.excerpt,
+      publishedTime: post.date,
+      authors: [post.author],
+      tags: post.tags,
+      images: [{ url: og, width: 1200, height: 630, alt: post.title }],
+    },
+    twitter: {
+      card: 'summary_large_image' as const,
+      title: post.title,
+      description: post.excerpt,
+      images: [og],
+    },
+  };
+}
