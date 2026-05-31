@@ -45,6 +45,7 @@ const NAV_SECTIONS = [
       { href: '/influence', label: 'Influence Overview', icon: <PieChart size={12} /> },
       { href: '/influence?tab=crypto', label: 'Crypto & Government', icon: <Bitcoin size={12} /> },
       { href: '/influence?tab=pacs', label: 'Super PACs & Dark Money', icon: <DollarSign size={12} /> },
+      { href: '/lobbying', label: 'Federal Lobbying (LDA)', icon: <Building2 size={12} /> },
       { href: '/influence?tab=policy', label: 'Policy & Bills', icon: <Scale size={12} /> },
       { href: '/influence?tab=network', label: 'Influence Network', icon: <Network size={12} /> },
     ],

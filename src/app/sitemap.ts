@@ -115,6 +115,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'hourly',
       priority: 0.9,
     },
+    {
+      url: `${base}/lobbying`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
   ];
 
   // Blog posts — generated from the shared source of truth (only real slugs).
