@@ -36,7 +36,7 @@ export async function getLatest(limit = 40): Promise<LatestItem[]> {
   const contractsP = client
     .from('awards')
     .select('id, recipient_name, description, dollar_amount, awarding_agency, connection_type, flags, risk_score, posted_date')
-    .gte('risk_score', 60)
+    .or(`risk_score.gte.55,connection_type.neq.none`)
     .lte('posted_date', today)
     .order('posted_date', { ascending: false })
     .limit(limit);
@@ -87,16 +87,23 @@ export async function getLatest(limit = 40): Promise<LatestItem[]> {
     };
   });
 
-  const clean = (arr: LatestItem[]) =>
-    arr.filter((i) => i.date && i.date !== 'null').sort((a, b) => b.date.localeCompare(a.date));
+  // Sort all items together — newest first — then interleave by category
+  // to ensure the feed always leads with the most recent items while
+  // keeping both trades and contracts visible.
+  const all = [...contractItems, ...tradeItems]
+    .filter((i) => i.date && i.date !== 'null')
+    .sort((a, b) => b.date.localeCompare(a.date));
 
-  const contracts = clean(contractItems);
-  const trades = clean(tradeItems);
-
-  // Interleave so both categories are represented even when one source is much
-  // fresher than the other (trades update continuously; contract sync lags).
-  // Roughly half the feed from each, drawn newest-first within each kind.
-  const half = Math.ceil(limit / 2);
-  const merged = [...trades.slice(0, half), ...contracts.slice(0, limit - Math.min(half, trades.length))];
-  return merged.sort((a, b) => b.date.localeCompare(a.date)).slice(0, limit);
+  const merged: LatestItem[] = [];
+  const seen = new Set<string>();
+  for (const item of all) {
+    // Avoid near-duplicate entries on the same day for the same recipient
+       const key = `${item.date}-${item.kind}-${item.title.slice(0, 20)}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      merged.push(item);
+    }
+    if (merged.length >= limit) break;
+  }
+  return merged;
 }

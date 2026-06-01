@@ -53,9 +53,79 @@ interface Company {
   related_contracts: { recipient_name: string; total: number; count: number; agencies: string }[];
 }
 
+// Map deprecated/alias tickers to their current public ticker
+const TICKER_ALIASES: Record<string, string> = {
+  'FB': 'META',      // Facebook → Meta Platforms
+  'FB2A': 'META',    // Facebook Class A (some data sources use this variant)
+};
+
+// ETF tickers tracked by the system (publicly traded iShares ETFs)
+const ETF_TICKERS = new Set([
+  'EFA',   // iShares MSCI EAFE ETF
+  'VEA',   // Vanguard FTSE Developed Markets ETF
+  'IWN',   // iShares Russell 2000 Value ETF
+  'AMZA',  // InfraCap MLP ETF
+  'VT',    // Vanguard Total World Stock ETF
+  'VTI',   // Vanguard Total Stock Market ETF
+  'QQQ',   // Invesco QQQ Trust
+  'IVE',   // iShares S&P 500 Value ETF
+  'IVW',   // iShares S&P 500 Growth ETF
+  'EEM',   // iShares MSCI Emerging Markets ETF
+  'AGG',   // iShares Core US Aggregate Bond ETF
+  'TLT',   // iShares 20+ Year Treasury Bond ETF
+  'HYG',   // iShares iBoxx $ High Yield Corporate Bond ETF
+  'LQD',   // iShares iBoxx $ Investment Grade Corporate Bond ETF
+  'XLE',   // Energy Select Sector SPDR Fund
+  'XLF',   // Financial Select Sector SPDR Fund
+  'XLK',   // Technology Select Sector SPDR Fund
+  'XLV',   // Health Care Select Sector SPDR Fund
+  'XLY',   // Consumer Discretionary Select Sector SPDR Fund
+  'XLP',   // Consumer Staples Select Sector SPDR Fund
+  'XLI',   // Industrial Select Sector SPDR Fund
+  'XLB',   // Materials Select Sector SPDR Fund
+  'XLRE',  // Real Estate Select Sector SPDR Fund
+  'XLU',   // Utilities Select Sector SPDR Fund
+  'VNQ',   // Vanguard Real Estate ETF
+  'SCHD',  // Schwab US Dividend Equity ETF
+  'JEPI',  // JPMorgan Equity Premium Income ETF
+  'JEPQ',  // JPMorgan Nasdaq Equity Premium Income ETF
+  'SPY',   // SPDR S&P 500 ETF Trust
+  'VOO',   // Vanguard S&P 500 ETF
+  'VEA',   // Vanguard FTSE Developed Markets ETF (non-US developed)
+  'VWO',   // Vanguard FTSE Emerging Markets ETF
+  'BND',   // Vanguard Total Bond Market ETF
+  'TIP',   // iShares TIPS Bond ETF
+  'GLD',   // SPDR Gold Shares
+  'SLV',   // iShares Silver Trust
+  'USO',   // United States Oil Fund
+  'UNG',   // United States Natural Gas Fund
+]);
+
+// MLP/LP tickers (publicly traded master limited partnerships)
+const MLP_TICKERS = new Set([
+  'NS',    // NuStar Energy L.P.
+  'ET',    // Energy Transfer LP
+  'MPLX',  // MPLX LP
+  'WMB',   // Williams Companies
+  'KMI',   // Kinder Morgan
+  'OKE',   // ONEOK
+  'TRGP',  // Targa Resources
+  'ENB',   // Enbridge
+  'EPD',   // Enterprise Products Partners
+  'CMRE',  // Costamare (but wait — CMRE is Costamare, a shipping company)
+  'PSX',   // Phillips 66
+  'HES',   // Hess Midstream
+  'AM',    // Antero Midstream (wait — AM is Antero Midstream which is listed)
+]);
+
 function isPublicTicker(ticker: string): boolean {
+  const upper = ticker.toUpperCase();
+  // Check aliases first
+  if (TICKER_ALIASES[upper]) return true;
+  
   const publicTickers = new Set([
-    'NVDA', 'TSLA', 'MSFT', 'GOOGL', 'AMZN', 'PLTR', 'META', 'AAPL',
+    // Core tech / megacap
+    'NVDA', 'TSLA', 'MSFT', 'GOOGL', 'GOOG', 'AMZN', 'PLTR', 'META', 'AAPL',
     'NFLX', 'AMD', 'INTC', 'CRM', 'ORCL', 'IBM', 'BA', 'LMT', 'RTX',
     'NOC', 'GS', 'JPM', 'BAC', 'WFC', 'XOM', 'CVX', 'PFE', 'JNJ', 'UNH',
     'LLY', 'MRK', 'ABBV', 'TMO', 'COST', 'WMT', 'HD', 'MCD', 'NKE',
@@ -65,21 +135,60 @@ function isPublicTicker(ticker: string): boolean {
     'U', 'FVRR', 'TWLO', 'SPLK', 'DBX', 'BOX', 'ZEN', 'CONST',
     'RBLX', 'EPAM', 'CDNS', 'SNPS', 'ARM', 'COIN', 'MSTR', 'RIOT',
     'HOOD', 'APP', 'DUOL', 'GPRO', 'FIS', 'FISV', 'GLOB', 'IT',
-    'ACN', 'CTSH', 'IBM', 'INFY', 'QCOM', 'TXN', 'AVGO', 'ADI',
+    // Consulting / IT services
+    'ACN', 'CTSH', 'INFY', 'QCOM', 'TXN', 'AVGO', 'ADI',
     'MCHP', 'MU', 'WDC', 'STX', 'NTAP', 'ANET', 'FSLR', 'SEDG',
-    'ENPH', 'SPWR', 'RUN', 'NEE', 'FSLR', 'BE', 'PLD', 'AMT',
+    'ENPH', 'SPWR', 'RUN', 'NEE', 'BE', 'PLD', 'AMT',
     'EQIX', 'CCI', 'DLR', 'SBAC', 'O', 'SPG', 'AM', 'AVB', 'EQR',
     'VTR', 'DOC', 'OHI', 'MPW', 'HST', 'RHP', 'SBRA', 'UHS',
     'THC', 'CYH', 'HCA', 'CNC', 'HUM', 'CI', 'ELV', 'MOH',
-    'ALGN', 'EW', 'DXCM', 'TMO', 'LH', 'DGX', 'IQV', 'REGN',
-    'VRTX', 'BIIB', 'MRNA', 'NVAX', 'INO', 'REGN', 'MRK', 'AZN',
+    'ALGN', 'EW', 'DXCM', 'LH', 'DGX', 'IQV', 'REGN',
+    'VRTX', 'BIIB', 'MRNA', 'NVAX', 'INO', 'AZN',
     'PFE', 'JNJ', 'ABT', 'TGT', 'ROST', 'TJX', 'DLTR', 'DG',
-    'BBY', 'W', 'YUM', 'CMG', 'DPZ', 'MCD', 'SBUX', 'CSCO',
+    'BBY', 'W', 'YUM', 'CMG', 'DPZ', 'SBUX',
+    // ETFs (iShares, Vanguard, SPDR)
+    'EFA', 'VEA', 'IWN', 'AMZA', 'VT', 'VTI', 'QQQ', 'IVE', 'IVW',
+    'EEM', 'AGG', 'TLT', 'HYG', 'LQD', 'XLE', 'XLF', 'XLK', 'XLV',
+    'XLY', 'XLP', 'XLI', 'XLB', 'XLRE', 'XLU', 'VNQ',
+    'SCHD', 'JEPI', 'JEPQ', 'SPY', 'VOO', 'VWO', 'BND', 'TIP',
+    'GLD', 'SLV', 'USO', 'UNG',
+    // MLPs / LPs
+    'NS', 'ET', 'MPLX', 'WMB', 'KMI', 'OKE', 'TRGP', 'ENB', 'EPD',
+    'HES',
+    // REITs & real estate
+    'AMT', 'PLD', 'EQIX', 'CCI', 'DLR', 'SBAC',
+    // Energy
+    'PXD', 'MPC', 'VLO', 'PSX', 'HES',
+    // Other notable public companies
+    'BRP',  // BRP Group (public insurance broker)
+    'AAL',  // American Airlines
+    'DAL',  // Delta Air Lines
+    'UAL',  // United Airlines
+    'LUV',  // Southwest Airlines
+    'ALK',  // Alaska Air Group
+    'SAVE', // Spirit Airlines
+    'SKYW', // SkyWest
+    'FDX',  // FedEx
+    'UPS',  // United Parcel Service
+    'XPO',  // XPO Logistics
+    'SAIA', // Saia Inc
+    'CHRW', // C.H. Robinson
+    'JBHT', // J.B. Hunt
   ]);
-  return publicTickers.has(ticker.toUpperCase());
+  return publicTickers.has(upper) || ETF_TICKERS.has(upper) || MLP_TICKERS.has(upper);
 }
 
-// ─── Data panel for private companies ──────────────────────────────────────────
+// Get display info for a ticker
+function getTickerDisplayInfo(ticker: string): { isETF: boolean; isMLP: boolean; displayTicker: string } {
+  const upper = ticker.toUpperCase();
+  return {
+    isETF: ETF_TICKERS.has(upper),
+    isMLP: MLP_TICKERS.has(upper),
+    displayTicker: TICKER_ALIASES[upper] ?? upper,
+  };
+}
+
+// ─── Data panel for non-public companies (true private companies only) ──────────
 function PrivateDataPanel({ company }: { company: Company }) {
   const hasContracts = company.related_contracts.length > 0;
 
@@ -121,6 +230,19 @@ function PrivateDataPanel({ company }: { company: Company }) {
   );
 }
 
+// ─── ETF/MLP label badge ───────────────────────────────────────────────────────
+function SecurityTypeBadge({ ticker }: { ticker: string }) {
+  const { isETF, isMLP } = getTickerDisplayInfo(ticker);
+  if (!isETF && !isMLP) return null;
+  if (isETF) {
+    return <span className="text-xs bg-indigo-900/40 border border-indigo-600 text-indigo-300 px-2 py-0.5 rounded-full">ETF</span>;
+  }
+  if (isMLP) {
+    return <span className="text-xs bg-amber-900/40 border border-amber-600 text-amber-300 px-2 py-0.5 rounded-full">MLP / LP</span>;
+  }
+  return null;
+}
+
 // ─── Company Card ──────────────────────────────────────────────────────────────
 function CompanyCard({ company, onSelect }: { company: Company; onSelect: () => void }) {
   const partyColors: Record<string, string> = { Republican: 'text-red-400', Democrat: 'text-blue-400', Independent: 'text-purple-400' };
@@ -133,8 +255,9 @@ function CompanyCard({ company, onSelect }: { company: Company; onSelect: () => 
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span className="text-white font-black text-lg">{company.ticker}</span>
+            <span className="text-white font-black text-lg">{getTickerDisplayInfo(company.ticker).displayTicker}</span>
             <span className="text-slate-400 text-sm truncate">{company.company_name}</span>
+            <SecurityTypeBadge ticker={company.ticker} />
             {company.has_contract && (
               <span className="inline-flex items-center gap-1 bg-emerald-900/40 border border-emerald-700 text-emerald-400 text-xs px-2 py-0.5 rounded-full shrink-0">
                 <Building2 size={10} /> Federal Contract
@@ -606,21 +729,27 @@ export default function CompaniesPage() {
             <div className="flex items-center gap-4 mb-6">
               <div className="bg-slate-900 border border-slate-800 rounded-xl px-6 py-4">
                 <div className="text-slate-400 text-xs uppercase tracking-widest mb-1">Ticker</div>
-                <div className="text-white font-black text-3xl">{selected.ticker}</div>
+                <div className="flex items-center gap-2">
+                  <div className="text-white font-black text-3xl">{getTickerDisplayInfo(selected.ticker).displayTicker}</div>
+                  <SecurityTypeBadge ticker={selected.ticker} />
+                </div>
               </div>
               <div className="flex-1">
                 <div className="text-white font-black text-2xl">{selected.company_name}</div>
-                <div className="flex items-center gap-3 mt-1">
+                <div className="flex items-center gap-3 mt-1 flex-wrap">
                   <span className="text-slate-400 text-sm">{selected.trade_count} trades · {formatMoney(selected.total_volume)} volume</span>
                   {selected.has_contract && (
                     <span className="inline-flex items-center gap-1 bg-emerald-900/40 border border-emerald-700 text-emerald-400 text-xs px-2 py-0.5 rounded-full">
                       <Building2 size={10} /> Federal Contractor
                     </span>
                   )}
+                  {!isPublicTicker(selected.ticker) && (
+                    <span className="text-xs text-slate-600 italic">Private company</span>
+                  )}
                 </div>
                 {isPublicTicker(selected.ticker) ? (
                   <div className="mt-3 max-w-xs">
-                    <StockChart ticker={selected.ticker} />
+                    <StockChart ticker={getTickerDisplayInfo(selected.ticker).displayTicker} />
                   </div>
                 ) : (
                   <div className="mt-2 text-xs text-slate-600 italic">Private company — no public stock data</div>

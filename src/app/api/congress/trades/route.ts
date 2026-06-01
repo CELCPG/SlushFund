@@ -48,7 +48,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<TradesResp
 
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get('page') ?? '1');
-  const limit = Math.min(parseInt(searchParams.get('limit') ?? '50'), 1000);
+  const limit = Math.min(parseInt(searchParams.get('limit') ?? '50'), 50000);
   const offset = (page - 1) * limit;
 
   const chamber = searchParams.get('chamber');

@@ -285,16 +285,90 @@ export interface InsiderTradingSignal {
 export interface CostOverrun {
   id: string;
   project_name: string;
-  original_cost: number;
-  final_cost: number;
-  overrun_pct: number;
   agency: string;
-  contractor: string;
-  state: string;
+  awarding_subagency?: string;   // e.g. 'Air Force', 'NAVSEA', 'CBP'
+  contractor: string;            // prime contractor(s)
+  subcontractors?: string[];     // known sub-contractors
+  state: string;                // primary place of performance state
   start_year: number;
-  end_year: number;
+  end_year: number | null;      // null = ongoing
+
+  // Cost data
+  original_cost: number;
+  current_cost?: number;         // latest approved baseline (if revised)
+  final_cost: number;           // actual or projected final cost
+  overrun_pct: number;          // (final - original) / original * 100
+  overrun_dollars: number;      // final_cost - original_cost
+
+  // Project details
   description: string;
+  program_description?: string; // larger program context (e.g. F-35 is part of $1.7T program)
+  category: OverrunCategory;
+
+  // Why flagged
   flagged_reason: string;
+  flags: OverrunFlag[];
+
+  // Competition / contracting
+  competition_status: CompetitionStatus;
+  contract_type: ContractType2; // cost_plus | firm_fixed | time_and_materials | idiq | unknown
+  bundling?: boolean;           // were smaller contracts bundled to avoid competition?
+
+  // Oversight
+  gao_high_risk: boolean;
+  oig_investigation?: boolean;
+  oig_report_urls?: string[];
+  congressional_hearing?: string; // e.g. 'House Armed Services Committee 2024-03-15'
+  oversight_committee?: string;   // e.g. 'House Appropriations Committee'
+
+  // Contractor financials
+  contractor_total_federal_contracts?: number; // what we know about their total federal $ from our DB
+
+  // Political connection
+  political_connection?: string;
+  trump_donor?: boolean;
+  mar_a_lago_visitor?: boolean;
+
+  // Timeline
+  delay_years?: number;
+  baseline_revisions?: number;    // how many times the estimate was revised upward
+
+  // Sources
   source_url: string;
+  additional_sources?: string[];
   notes: string;
 }
+
+export type OverrunCategory =
+  | 'defense_weapons'
+  | 'defense_ships'
+  | 'defense_aircraft'
+  | 'defense_it'
+  | 'border_security'
+  | 'construction'
+  | 'it_modernization'
+  | 'nuclear'
+  | 'healthcare'
+  | 'space'
+  | 'postal'
+  | 'civilian_it'
+  | 'infrastructure';
+
+export type OverrunFlag =
+  | 'sole_source'
+  | 'no_bid'
+  | 'limited_competition'
+  | 'cost_plus'
+  | 'non_competitive'
+  | 'gao_high_risk'
+  | 'oig_investigation'
+  | 'congressional_override'
+  | 'political_connection'
+  | 'mid_project_contractor_change'
+  | 'emergency_waiver'
+  | 'single_bid'
+  | 'delayed'
+  | 'scope_creep'
+  | 'bundling';
+
+export type ContractType2 = 'cost_plus' | 'firm_fixed' | 'time_and_materials' | 'idiq' | 'hybrid' | 'unknown' | 'sole_source';
