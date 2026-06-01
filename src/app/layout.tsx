@@ -56,8 +56,11 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon.png',
+    icon: [
+      { url: '/favicon-256.png', sizes: '256x256', type: 'image/png' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    apple: '/favicon-256.png',
   },
 };
 
@@ -69,8 +72,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {snipcartKey && (
           <link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.7.1/default/snipcart.css" />
         )}
-        <link rel="icon" type="image/png" href="/favicon.png" sizes="any" />
-        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
       </head>
       <body className="bg-slate-950 text-slate-100 antialiased font-sans">
         <Navbar />

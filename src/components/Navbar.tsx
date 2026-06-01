@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   BarChart3, Landmark, DollarSign, PieChart, Bitcoin,
   ChevronDown, Shield, TrendingUp, Database,
-  Activity, AlertTriangle, FileText, ArrowRight, Scale, Network, Menu, X, ShoppingBag, MessageCircle, Heart, Building2, ExternalLink
+  Activity, AlertTriangle, FileText, ArrowRight, Scale, Network, Menu, X, MessageCircle, Building2, ExternalLink
 } from 'lucide-react';
 
 const NAV_SECTIONS = [
@@ -215,22 +215,10 @@ export default function Navbar() {
               <Activity size={13} /> Latest
             </Link>
             <Link
-              href="/store"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
-            >
-              <ShoppingBag size={13} /> Store
-            </Link>
-            <Link
               href="/connect"
               className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
             >
               <MessageCircle size={13} /> Connect
-            </Link>
-            <Link
-              href="/support"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold text-white bg-slush-red hover:bg-slush-red-dark transition-colors"
-            >
-              <Heart size={13} /> Donate
             </Link>
 
             {/* Mobile menu button */}
@@ -297,13 +285,7 @@ export default function Navbar() {
               );
             })}
 
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <Link
-                href="/store"
-                className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-md text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-white transition-colors"
-              >
-                <ShoppingBag size={14} /> Store
-              </Link>
+            <div className="mt-2">
               <Link
                 href="/connect"
                 className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-md text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-white transition-colors"

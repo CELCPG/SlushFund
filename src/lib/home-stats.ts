@@ -65,16 +65,42 @@ export async function getHomeStats(era: Era | 'all' = 'all'): Promise<HomeStats>
   if (!supabase) return { ...CURATED_STATS, era };
 
   try {
-    let query = supabase
-      .from('awards')
-      .select('dollar_amount, connection_type, flags, competition_status, posted_date');
-
+    // Fast path: try era_snapshots (precomputed aggregates) for the requested era.
+    // Falls through to on-the-fly aggregation only if snapshots are missing/empty.
     if (era && era !== 'all') {
-      const { start, end } = eraDateRange(era);
-      query = query.gte('posted_date', start).lte('posted_date', end);
+      const { data: snap } = await supabase
+        .from('era_snapshots')
+        .select('total_awards, total_dollars, connected_dollars, flagged_count, no_bid_dollars')
+        .eq('era', era)
+        .maybeSingle();
+
+      if (snap) {
+        return {
+          ...CURATED_STATS,
+          live: true,
+          totalDollars: Number(snap.total_dollars) || 0,
+          connectedDollars: Number(snap.connected_dollars) || 0,
+          noBidDollars: Number(snap.no_bid_dollars) || 0,
+          flaggedCount: Number(snap.flagged_count) || 0,
+          era,
+        };
+      }
     }
 
-    const { data, error } = await query;
+    // Fallback: aggregate from awards. Cap at 50k rows to keep SSR fast even
+    // when era_snapshots hasn't been populated. Use a wide open range for 'all'.
+    const today = new Date().toISOString().split('T')[0];
+    const { start, end } =
+      era && era !== 'all'
+        ? eraDateRange(era)
+        : { start: '2018-10-01', end: today };
+
+    const { data, error } = await supabase
+      .from('awards')
+      .select('dollar_amount, connection_type, flags, competition_status, posted_date')
+      .gte('posted_date', start)
+      .lte('posted_date', end)
+      .limit(50000);
 
     if (error || !data || data.length === 0) return { ...CURATED_STATS, era };
 

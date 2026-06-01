@@ -1,4 +1,3 @@
-'use client';
 import Link from 'next/link';
 import NewsletterSignup from './NewsletterSignup';
 
@@ -28,8 +27,6 @@ export default function Footer() {
             <Link href="/congress/trades" className="hover:text-white transition-colors">Political Trades</Link>
             <Link href="/pacs" className="hover:text-white transition-colors">PAC Money</Link>
             <Link href="/blog" className="hover:text-white transition-colors">Investigations</Link>
-            <Link href="/support" className="text-slush-red hover:text-slush-red-light transition-colors">Support Us</Link>
-            <Link href="/store" className="hover:text-white transition-colors">Store</Link>
             <Link href="/connect" className="hover:text-white transition-colors">Connect</Link>
           </div>
 
