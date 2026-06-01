@@ -16,7 +16,7 @@ const SECTIONS = [
     color: 'emerald',
     links: [
       { href: '/dashboard', label: 'All Spending', icon: <Database size={13} /> },
-      { href: '/defense', label: 'Defense Contracts', icon: <Shield size={13} /> },
+      { href: 'https://corporatewarlords.com', label: 'Corporate Warlords ↗', icon: <ExternalLink size={13} />, external: true },
       { href: '/tech', label: 'Tech & AI', icon: <Activity size={13} /> },
     ],
   },
@@ -162,17 +162,26 @@ export default function Sidebar() {
                 {!collapsed && open && (
                   <div className={`ml-5 border-l ${borderColor} pl-2 space-y-0.5`}>
                     {section.links.map((link) => {
-                      const isActive = pathname === link.href;
-                      return (
-                        <Link
+                      const isExternal = (link as any).external === true;
+                      const isActive = !isExternal && pathname === link.href;
+                      const cls = `flex items-center gap-2 px-3 py-1.5 rounded text-xs transition-colors ${
+                        isActive
+                          ? 'text-white bg-slate-800 font-medium'
+                          : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800/40'
+                      }`;
+                      return isExternal ? (
+                        <a
                           key={link.href}
                           href={link.href}
-                          className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs transition-colors ${
-                            isActive
-                              ? 'text-white bg-slate-800 font-medium'
-                              : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800/40'
-                          }`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={cls}
                         >
+                          {link.icon && <span className="text-slate-400">{link.icon}</span>}
+                          <span className="truncate">{link.label}</span>
+                        </a>
+                      ) : (
+                        <Link key={link.href} href={link.href} className={cls}>
                           {link.icon && <span className="text-slate-400">{link.icon}</span>}
                           <span className="truncate">{link.label}</span>
                         </Link>
@@ -219,16 +228,30 @@ export default function Sidebar() {
                   </Link>
                   {open && (
                     <div className="ml-7 space-y-1">
-                      {section.links.map((link) => (
-                        <Link
-                          key={link.href}
-                          href={link.href}
-                          onClick={() => setCollapsed(true)}
-                          className="block text-xs text-slate-400 hover:text-white py-1"
-                        >
-                          {link.label}
-                        </Link>
-                      ))}
+                      {section.links.map((link) => {
+                        const isExternal = (link as any).external === true;
+                        return isExternal ? (
+                          <a
+                            key={link.href}
+                            href={link.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => setCollapsed(true)}
+                            className="block text-xs text-slate-400 hover:text-white py-1"
+                          >
+                            {link.label}
+                          </a>
+                        ) : (
+                          <Link
+                            key={link.href}
+                            href={link.href}
+                            onClick={() => setCollapsed(true)}
+                            className="block text-xs text-slate-400 hover:text-white py-1"
+                          >
+                            {link.label}
+                          </Link>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

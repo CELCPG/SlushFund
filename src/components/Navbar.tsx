@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   BarChart3, Landmark, DollarSign, PieChart, Bitcoin,
   ChevronDown, Shield, TrendingUp, Database,
-  Activity, AlertTriangle, FileText, ArrowRight, Scale, Network, Menu, X, ShoppingBag, MessageCircle, Heart, Building2
+  Activity, AlertTriangle, FileText, ArrowRight, Scale, Network, Menu, X, ShoppingBag, MessageCircle, Heart, Building2, ExternalLink
 } from 'lucide-react';
 
 const NAV_SECTIONS = [
@@ -16,7 +16,7 @@ const NAV_SECTIONS = [
     links: [
       { href: '/dashboard', label: 'Dashboard', icon: <Database size={12} /> },
       { href: '/vendors', label: 'Vendor Directory', icon: <Building2 size={12} /> },
-      { href: '/defense', label: 'Defense Contracts', icon: <Shield size={12} /> },
+      { href: 'https://corporatewarlords.com', label: 'Corporate Warlords', icon: <ExternalLink size={12} />, external: true },
       { href: '/covid', label: 'COVID Spending', icon: <AlertTriangle size={12} /> },
       { href: '/tech', label: 'Tech & AI', icon: <Activity size={12} /> },
     ],
@@ -163,23 +163,40 @@ export default function Navbar() {
                           <span className={`text-xs font-bold uppercase tracking-widest ${section.color}`}>{section.label}</span>
                         </div>
                         <div className="py-1">
-                          {section.links.map((link) => (
-                            <Link
-                              key={link.href}
-                              href={link.href}
-                              className={`flex items-center gap-2.5 px-3 py-2 text-sm transition-colors ${
-                                isActive(link.href)
-                                  ? 'text-white bg-slate-800'
-                                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                              }`}
-                            >
-                              {link.icon && <span className="text-slate-500">{link.icon}</span>}
-                              <span>{link.label}</span>
-                              {isActive(link.href) && (
-                                <ArrowRight size={11} className="ml-auto text-slate-500" />
-                              )}
-                            </Link>
-                          ))}
+                          {section.links.map((link) => {
+                            const isExternal = (link as any).external === true;
+                            const linkClass = `flex items-center gap-2.5 px-3 py-2 text-sm transition-colors ${
+                              !isExternal && isActive(link.href)
+                                ? 'text-white bg-slate-800'
+                                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                            }`;
+                            const inner = (
+                              <>
+                                {link.icon && <span className="text-slate-500">{link.icon}</span>}
+                                <span>{link.label}</span>
+                                {isExternal ? (
+                                  <ExternalLink size={11} className="ml-auto text-slate-500" />
+                                ) : isActive(link.href) ? (
+                                  <ArrowRight size={11} className="ml-auto text-slate-500" />
+                                ) : null}
+                              </>
+                            );
+                            return isExternal ? (
+                              <a
+                                key={link.href}
+                                href={link.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={linkClass}
+                              >
+                                {inner}
+                              </a>
+                            ) : (
+                              <Link key={link.href} href={link.href} className={linkClass}>
+                                {inner}
+                              </Link>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
@@ -250,18 +267,30 @@ export default function Navbar() {
                   </button>
                   {expanded && (
                     <div className="py-1 bg-slate-900/60">
-                      {section.links.map((link) => (
-                        <Link
-                          key={link.href}
-                          href={link.href}
-                          className={`flex items-center gap-2 pl-9 pr-3 py-2 text-sm rounded-md ${
-                            isActive(link.href) ? 'text-white bg-slate-800' : 'text-slate-400 hover:text-white'
-                          }`}
-                        >
-                          {link.icon && <span className="text-slate-500">{link.icon}</span>}
-                          {link.label}
-                        </Link>
-                      ))}
+                      {section.links.map((link) => {
+                        const isExternal = (link as any).external === true;
+                        const cls = `flex items-center gap-2 pl-9 pr-3 py-2 text-sm rounded-md ${
+                          !isExternal && isActive(link.href) ? 'text-white bg-slate-800' : 'text-slate-400 hover:text-white'
+                        }`;
+                        return isExternal ? (
+                          <a
+                            key={link.href}
+                            href={link.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cls}
+                          >
+                            {link.icon && <span className="text-slate-500">{link.icon}</span>}
+                            {link.label}
+                            <ExternalLink size={11} className="ml-auto text-slate-500" />
+                          </a>
+                        ) : (
+                          <Link key={link.href} href={link.href} className={cls}>
+                            {link.icon && <span className="text-slate-500">{link.icon}</span>}
+                            {link.label}
+                          </Link>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

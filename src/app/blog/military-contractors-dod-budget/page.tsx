@@ -169,7 +169,7 @@ export default function MilitaryContractorsDodBudgetPage() {
             </p>
             <div className="flex gap-3 flex-wrap">
               <Link
-                href="/defense"
+                href="https://corporatewarlords.com" target="_blank" rel="noopener noreferrer"
                 className="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors inline-flex items-center gap-2"
               >
                 <Shield size={14} />

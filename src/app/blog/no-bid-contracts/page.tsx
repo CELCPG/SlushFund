@@ -167,7 +167,7 @@ export default function NoBidContractsPage() {
                 View DOGE Contracts
               </Link>
               <Link
-                href="/defense"
+                href="https://corporatewarlords.com" target="_blank" rel="noopener noreferrer"
                 className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-colors inline-flex items-center gap-2"
               >
                 <DollarSign size={14} />

@@ -62,12 +62,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
-      url: `${base}/defense`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.75,
-    },
-    {
       url: `${base}/tech`,
       lastModified: now,
       changeFrequency: 'weekly',
