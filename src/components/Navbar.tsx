@@ -1,5 +1,6 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -123,9 +124,12 @@ export default function Navbar() {
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 mr-4 shrink-0">
-            <img
+            <Image
               src="/slushfund-logo.png"
               alt="SlushFund"
+              width={180}
+              height={36}
+              priority
               className="h-9 w-auto object-contain"
               style={{ imageRendering: 'crisp-edges' }}
             />

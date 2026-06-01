@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import NewsletterSignup from './NewsletterSignup';
 
@@ -16,7 +17,7 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           {/* Left: Logo + tagline */}
           <div className="flex items-center gap-3">
-            <img src="/slushfund-logo.png" alt="SlushFund" className="h-7 w-auto object-contain opacity-70" />
+            <Image src="/slushfund-logo.png" alt="SlushFund" width={140} height={28} className="h-7 w-auto object-contain opacity-70" />
             <span className="text-slate-500 text-sm">Tracking the money.</span>
           </div>
 

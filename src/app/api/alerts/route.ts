@@ -38,10 +38,17 @@ export async function GET(request: NextRequest) {
     });
   }
 
+  // Cap the unbounded aggregation queries so a future data backfill can't
+  // tip the route into OOM territory. The era_snapshots table (in schema.sql)
+  // is the proper long-term fix — this limit is a safety net until the
+  // /api/era-stats snapshot backfill covers all eras.
+  const ROW_CAP = 50_000;
+
   // Main stats — apply date filter if set
   let query = supabase
     .from('awards')
-    .select('dollar_amount, connection_type, flags, risk_score, award_category, competition_status');
+    .select('dollar_amount, connection_type, flags, risk_score, award_category, competition_status')
+    .limit(ROW_CAP);
   if (startDate) query = query.gte('posted_date', startDate);
   if (endDate) query = query.lte('posted_date', endDate);
   const { data: allAwards } = await query;
@@ -79,11 +86,13 @@ export async function GET(request: NextRequest) {
   if (endDate) hrQuery = hrQuery.lte('posted_date', endDate);
   const { data: highRisk } = await hrQuery;
 
-  // Agency breakdown
+  // Agency breakdown — only pull the slice we need to build the top-10.
+  // We filter by min_risk server-side, then group + sort in JS.
   let agQuery = supabase
     .from('awards')
-    .select('awarding_agency, awarding_agency_code, award_category, dollar_amount, connection_type')
-    .gte('risk_score', parseInt(minRisk));
+    .select('awarding_agency, awarding_agency_code, dollar_amount, connection_type')
+    .gte('risk_score', parseInt(minRisk))
+    .limit(ROW_CAP);
   if (startDate) agQuery = agQuery.gte('posted_date', startDate);
   if (endDate) agQuery = agQuery.lte('posted_date', endDate);
   const { data: agencyData } = await agQuery;

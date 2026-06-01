@@ -58,7 +58,8 @@ export async function GET(request: NextRequest) {
       .from('awards')
       .select('dollar_amount, connection_type, flags, competition_status, award_category, posted_date')
       .gte('posted_date', startDate)
-      .lte('posted_date', endDate);
+      .lte('posted_date', endDate)
+      .limit(50_000);
 
     if (error) throw error;
     if (!data) return NextResponse.json({ total_awards: 0, total_dollars: 0 });
