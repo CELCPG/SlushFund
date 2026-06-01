@@ -12,6 +12,7 @@ import {
   Building2, Scale, Zap, ArrowUp, ArrowDown, Clock
 } from 'lucide-react';
 import { KpiCard } from '@/components/ui';
+import { SECTOR_COLORS as SHARED_SECTOR_COLORS, getSector as sharedGetSector } from '@/lib/sector-map';
 
 const CHART_COLORS = {
   Democrat: '#3b82f6',
@@ -26,116 +27,13 @@ const TX_COLORS: Record<string, string> = {
   EXERCISE: '#eab308',
 };
 
-const SECTOR_COLORS: Record<string, string> = {
-  'AI / Tech': '#8b5cf6',
-  'AI / Chips': '#06b6d4',
-  Defense: '#ef4444',
-  Aerospace: '#f97316',
-  'Oil & Gas': '#fbbf24',
-  'Renewable Energy': '#22c55e',
-  Finance: '#10b981',
-  'Hedge Funds': '#14b8a6',
-  Biotech: '#ec4899',
-  Pharma: '#f43f5e',
-  Media: '#a855f7',
-  Telecom: '#3b82f6',
-  'Real Estate': '#f59e0b',
-  Consumer: '#84cc16',
-  Automotive: '#eab308',
-  Industrials: '#64748b',
-  Crypto: '#f97316',
-  ETFs: '#475569',
-  Other: '#334155',
-};
+const SECTOR_COLORS = SHARED_SECTOR_COLORS;;
 
-const TICKER_SECTORS: Record<string, string> = {
-  // AI / Tech
-  MSFT: 'AI / Tech', GOOGL: 'AI / Tech', GOOG: 'AI / Tech', META: 'AI / Tech',
-  AMZN: 'AI / Tech', AAPL: 'AI / Tech', CRM: 'AI / Tech',
-  ORCL: 'AI / Tech', IBM: 'AI / Tech', ADBE: 'AI / Tech', SNOW: 'AI / Tech',
-  UBER: 'AI / Tech', SHOP: 'AI / Tech', SQ: 'AI / Tech', SPOT: 'AI / Tech',
-  SNAP: 'AI / Tech', PIN: 'AI / Tech', MTCH: 'AI / Tech',
-  NOW: 'AI / Tech', WDAY: 'AI / Tech', APP: 'AI / Tech', DDOG: 'AI / Tech',
-  HOOD: 'AI / Tech', EPAM: 'AI / Tech', CTSH: 'AI / Tech', ACN: 'AI / Tech',
-  FIS: 'AI / Tech', GPN: 'AI / Tech', GEN: 'AI / Tech',
-  CSGP: 'AI / Tech', INTU: 'AI / Tech', ADP: 'AI / Tech',
-  PAYX: 'AI / Tech', PAYC: 'AI / Tech', TRMB: 'AI / Tech',
-  FICO: 'AI / Tech', JKHY: 'AI / Tech', GDDY: 'AI / Tech',
-  // AI / Chips
-  NVDA: 'AI / Chips', AMD: 'AI / Chips', INTC: 'AI / Chips', QCOM: 'AI / Chips',
-  AMAT: 'AI / Chips', LRCX: 'AI / Chips', KLAC: 'AI / Chips', ASML: 'AI / Chips',
-  MU: 'AI / Chips', WDC: 'AI / Chips', STX: 'AI / Chips', NXPI: 'AI / Chips',
-  TSM: 'AI / Chips', AVGO: 'AI / Chips',
-  // Defense
-  PLTR: 'Defense', BA: 'Defense', RTX: 'Defense', LMT: 'Defense',
-  NOC: 'Defense', GD: 'Defense', LHX: 'Defense', TDY: 'Defense',
-  HII: 'Defense', LDOS: 'Defense', SAIC: 'Defense', CACI: 'Defense',
-  // Aerospace
-  ULCC: 'Aerospace', DAL: 'Aerospace', LUV: 'Aerospace', AAL: 'Aerospace',
-  UAL: 'Aerospace', ALK: 'Aerospace', SKYW: 'Aerospace', MESA: 'Aerospace',
-  TDG: 'Aerospace',
-  // Oil & Gas
-  XOM: 'Oil & Gas', CVX: 'Oil & Gas', COP: 'Oil & Gas', EOG: 'Oil & Gas',
-  SLB: 'Oil & Gas', HAL: 'Oil & Gas', DVN: 'Oil & Gas', OXY: 'Oil & Gas',
-  PXD: 'Oil & Gas', MRO: 'Oil & Gas', FANG: 'Oil & Gas', CTRA: 'Oil & Gas',
-  ET: 'Oil & Gas', ENB: 'Oil & Gas',
-  // Renewable Energy
-  ENPH: 'Renewable Energy', RUN: 'Renewable Energy', SOLV: 'Renewable Energy',
-  NEE: 'Renewable Energy', ED: 'Renewable Energy', AEP: 'Renewable Energy',
-  // Finance
-  GS: 'Finance', MS: 'Finance', JPM: 'Finance', BAC: 'Finance',
-  WFC: 'Finance', C: 'Finance', USB: 'Finance', PNC: 'Finance',
-  TFC: 'Finance', COF: 'Finance', AXP: 'Finance', DFH: 'Finance',
-  FULT: 'Finance', SYF: 'Finance', ALLY: 'Finance', FSV: 'Finance',
-  SCHW: 'Finance', TROW: 'Finance', IVZ: 'Finance',
-  APO: 'Finance', CG: 'Finance', BLK: 'Finance',
-  VOYG: 'Finance', NDAQ: 'Finance',
-  // Biotech / Pharma
-  MRNA: 'Biotech', BIIB: 'Biotech', REGN: 'Biotech', VRTX: 'Biotech',
-  GILD: 'Biotech', BMRN: 'Biotech', CRSP: 'Biotech', INT: 'Biotech',
-  PFE: 'Pharma', JNJ: 'Pharma', LLY: 'Pharma', ABBV: 'Pharma',
-  MRK: 'Pharma', BMY: 'Pharma', AMGN: 'Pharma',
-  TMO: 'Biotech', PKG: 'Biotech', STE: 'Biotech', BBIO: 'Biotech',
-  // Medical Devices
-  PODD: 'Medical Devices', DXCM: 'Medical Devices',
-  // Healthcare
-  UNH: 'Healthcare', HUM: 'Healthcare', CI: 'Healthcare',
-  MCK: 'Healthcare', ABC: 'Healthcare',
-  // Media
-  DIS: 'Media', WBD: 'Media', PARA: 'Media',
-  CMCSA: 'Media', CHTR: 'Media',
-  // Telecom
-  VZ: 'Telecom', T: 'Telecom', CCI: 'Telecom', EQIX: 'Telecom',
-  TMUS: 'Telecom', LITE: 'Telecom',
-  // Real Estate
-  PLD: 'Real Estate', SPG: 'Real Estate', O: 'Real Estate',
-  WELL: 'Real Estate', ARE: 'Real Estate',
-  // Consumer
-  WMT: 'Consumer', TGT: 'Consumer', COST: 'Consumer', HD: 'Consumer',
-  LOW: 'Consumer', KO: 'Consumer', PEP: 'Consumer', PG: 'Consumer',
-  MDLZ: 'Consumer', KMB: 'Consumer', GIS: 'Consumer', K: 'Consumer',
-  KHC: 'Consumer', DG: 'Consumer', DLTR: 'Consumer', OMC: 'Consumer',
-  NKE: 'Consumer', TSCO: 'Consumer', PFGC: 'Consumer', DRI: 'Consumer',
-  SHW: 'Consumer',
-  // Automotive
-  TSLA: 'Automotive', RIVN: 'Automotive', F: 'Automotive', GM: 'Automotive',
-  // Industrials
-  CAT: 'Industrials', DE: 'Industrials', HON: 'Industrials',
-  GE: 'Industrials', UPS: 'Industrials', FDX: 'Industrials', ETN: 'Industrials',
-  CARR: 'Industrials', PH: 'Industrials', AME: 'Industrials',
-  PWR: 'Industrials', EFX: 'Industrials', FISV: 'Industrials',
-  // Cybersecurity
-  PANW: 'Cybersecurity', FTNT: 'Cybersecurity', CRWD: 'Cybersecurity',
-  // Crypto
-  COIN: 'Crypto', MSTR: 'Crypto', GBTC: 'Crypto', ETHE: 'Crypto',
-  // ETFs / Index
-  SPY: 'ETFs', QQQ: 'ETFs', VTI: 'ETFs', IWM: 'ETFs',
-  VOO: 'ETFs', VEA: 'ETFs', VWO: 'ETFs', EFA: 'ETFs',
-  AGG: 'ETFs', TLT: 'ETFs', GLD: 'ETFs', SLV: 'ETFs',
-  // Specialty
-  DASH: 'Specialty', MLM: 'Specialty', VRSK: 'Specialty',
-  BR: 'Specialty', PGR: 'Specialty',
-};
+// Ticker → sector mapping is in @/lib/sector-map (shared with the API)
+const TICKER_SECTORS: Record<string, string> = {};
+const getSector = sharedGetSector;
+;
+
 
 function formatDollars(n: number | null | undefined): string {
   if (!n) return '—';
@@ -151,9 +49,6 @@ function formatDate(d: string | null): string {
   catch { return d; }
 }
 
-function getSector(ticker: string): string {
-  return TICKER_SECTORS[ticker] ?? 'Other';
-}
 
 function getPartyColor(party: string): string {
   return (CHART_COLORS as Record<string, string>)[party] ?? '#64748b';
@@ -302,7 +197,7 @@ function TradesTable({ trades, onSearch }: { trades: Trade[]; onSearch: (q: stri
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <span className="font-mono font-bold text-white text-sm">{t.ticker}</span>
-                    <span className="text-slate-500 text-xs">{getSector(t.ticker) !== 'Other' && <span className="text-slate-600">{getSector(t.ticker)}</span>}</span>
+                    <span className="text-slate-500 text-xs">{getSector(t.ticker, t.company_name) !== 'Catch-All / Misc' && <span className="text-slate-600">{getSector(t.ticker, t.company_name)}</span>}</span>
                   </div>
                 </td>
                 <td className="px-4 py-3">
@@ -402,58 +297,116 @@ function Leaderboard({ members }: { members: TopMember[] }) {
 
 // ─── Stock Heatmap ────────────────────────────────────────────────────────────
 
-function StockHeatmap({ stocks }: { stocks: StockAgg[] }) {
-  const [selectedSector, setSelectedSector] = useState<string | null>(null);
+function StockHeatmap({
+  stocks,
+  sectorData,
+  tradeCount,
+}: {
+  stocks: StockAgg[];
+  sectorData: { sector: string; vol: number; buys: number; sells: number; count: number; tickers: string[] }[];
+  tradeCount: number;
+}) {
+  const [hoveredSector, setHoveredSector] = useState<string | null>(null);
+  const [expandedOther, setExpandedOther] = useState(false);
 
-  const sectorData = Object.entries(
-    stocks.reduce<Record<string, { vol: number; buys: number; sells: number; count: number }>>((acc, s) => {
-      const sec = getSector(s.ticker);
-      if (!acc[sec]) acc[sec] = { vol: 0, buys: 0, sells: 0, count: 0 };
-      acc[sec].vol += s.estimated_volume;
-      acc[sec].buys += s.buys;
-      acc[sec].sells += s.sells;
-      acc[sec].count += s.total_trades;
-      return acc;
-    }, {})
-  ).sort((a, b) => b[1].vol - a[1].vol);
+  // Use server-aggregated sector data (computed across all trades in DB)
+  const allSectorData: [string, { vol: number; buys: number; sells: number; count: number; tickers: string[] }][] =
+    sectorData.map(s => [s.sector, { vol: s.vol, buys: s.buys, sells: s.sells, count: s.count, tickers: s.tickers }]);
+
+  // For the Catch-All expansion we approximate the per-ticker breakdown from the
+  // most-recent in-memory trades (the server doesn't return per-misc-ticker vol).
+  // The count + sector total are accurate from the server.
+  const miscData = allSectorData.find(([s]) => s === 'Catch-All / Misc');
+  const miscTickers: Record<string, { count: number; vol: number; name: string }> = {};
+  const miscSorted: [string, { count: number; vol: number; name: string }][] = [];
 
   return (
     <div className="space-y-4">
-      {/* Sector bars — expanded */}
+      {/* Sector bars — computed from ALL trades */}
       <div className="bg-slate-900 rounded-xl border border-slate-800 p-5">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-1">
           <h3 className="text-white font-semibold text-sm uppercase tracking-wider flex items-center gap-2">
             <Activity size={14} className="text-purple-400" />
             Sector Volume — Congressional Trading (180d)
           </h3>
-          <span className="text-slate-500 text-xs">{sectorData.length} sectors</span>
+          <span className="text-slate-500 text-xs">{allSectorData.length} sectors</span>
         </div>
-        <div className="space-y-2">
-          {sectorData.map(([sector, data]) => {
-            const maxVol = Math.max(...sectorData.map(([, d]) => d.vol), 1);
+        <p className="text-slate-600 text-xs mb-4">Based on all {tradeCount.toLocaleString()} trades · hover a sector to see constituent tickers</p>
+
+        {/* Catch-All expanded breakdown */}
+        {expandedOther && miscSorted.length > 0 && (
+          <div className="mb-3 p-3 bg-slate-800/60 border border-slate-700 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-amber-400 text-xs font-bold uppercase tracking-wider">
+                Catch-All / Misc — {miscSorted.length} tickers ({miscData?.[1].count ?? 0} trades)
+              </span>
+              <button onClick={() => setExpandedOther(false)} className="text-slate-500 hover:text-white text-xs">✕ close</button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
+              {miscSorted.slice(0, 30).map(([ticker, info]) => (
+                <div key={ticker} className="flex items-center justify-between px-2 py-1 bg-slate-900 rounded text-xs">
+                  <span className="font-mono font-bold text-white">{ticker}</span>
+                  <span className="text-slate-500">{info.count}t</span>
+                </div>
+              ))}
+              {miscSorted.length > 30 && (
+                <div className="flex items-center justify-center px-2 py-1 text-slate-600 text-xs">
+                  +{miscSorted.length - 30} more tickers
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-1.5">
+          {allSectorData.map(([sector, data]) => {
+            const maxVol = Math.max(...allSectorData.map(([, d]) => d.vol), 1);
             const pct = (data.vol / maxVol) * 100;
+            const isHovered = hoveredSector === sector;
+            const isOther = sector === 'Catch-All / Misc';
             return (
-              <div key={sector} className="group">
-                <div className="flex items-center gap-3 mb-1">
-                  <div className="w-24 text-xs text-slate-300 font-medium flex items-center gap-1.5">
+              <div
+                key={sector}
+                className={`group relative rounded-lg transition-all ${isOther && !expandedOther ? 'cursor-pointer hover:bg-slate-800/50' : ''}`}
+                onMouseEnter={() => setHoveredSector(sector)}
+                onMouseLeave={() => setHoveredSector(null)}
+                onClick={() => isOther && !expandedOther && setExpandedOther(true)}
+              >
+                <div className="flex items-center gap-3 py-1">
+                  <div className="w-36 text-xs text-slate-300 font-medium flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: SECTOR_COLORS[sector] ?? '#475569' }} />
-                    <span className="truncate">{sector}</span>
+                    <span className="truncate">{sector}{isOther && !expandedOther ? ' ›' : ''}</span>
                   </div>
-                  <div className="flex-1 bg-slate-800 rounded-full h-6 overflow-hidden">
+                  <div className="flex-1 bg-slate-800 rounded-full h-7 overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all relative"
                       style={{ width: `${pct}%`, backgroundColor: SECTOR_COLORS[sector] ?? '#475569' }}
                     />
                   </div>
-                  <div className="w-28 text-right">
+                  <div className="w-32 text-right">
                     <span className="text-white font-mono font-bold text-sm">{formatDollars(data.vol)}</span>
                   </div>
-                  <div className="w-24 text-right flex items-center justify-end gap-2">
+                  <div className="w-20 text-right flex items-center justify-end gap-2">
                     <span className="text-emerald-400 text-xs font-mono">{data.buys}↑</span>
                     <span className="text-red-400 text-xs font-mono">{data.sells}↓</span>
                   </div>
-                  <div className="w-12 text-right text-slate-500 text-xs font-mono">{data.count}t</div>
+                  <div className="w-10 text-right text-slate-500 text-xs font-mono">{data.count}t</div>
                 </div>
+
+                {/* Hover tooltip: show top tickers in this sector */}
+                {isHovered && data.tickers.length > 0 && (
+                  <div className="absolute left-0 top-full z-20 mt-1 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl p-3 min-w-[240px]">
+                    <div className="text-white text-xs font-bold mb-2">{sector} — {data.tickers.length} tickers</div>
+                    <div className="flex flex-wrap gap-1">
+                      {data.tickers.slice(0, 20).map(t => (
+                        <span key={t} className="px-1.5 py-0.5 bg-slate-700 rounded text-white text-xs font-mono">{t}</span>
+                      ))}
+                      {data.tickers.length > 20 && (
+                        <span className="px-1.5 py-0.5 text-slate-500 text-xs">+{data.tickers.length - 20} more</span>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -619,77 +572,60 @@ function OverlapMap({ trades }: { trades: Trade[] }) {
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
+// Server-aggregated summary from /api/congress/trades/summary
+interface TradeSummary {
+  totalTrades: number;
+  totalVolume: number;
+  buyCount: number;
+  sellCount: number;
+  flaggedCount: number;
+  tradeCount: number;
+  dateRange: { earliest: string | null; latest: string | null };
+  partyBreakdown: { party: string; buys: number; sells: number; volume: number; count: number }[];
+  topMembers: TopMember[];
+  topStocks: StockAgg[];
+  sectorData: { sector: string; vol: number; buys: number; sells: number; count: number; tickers: string[] }[];
+  windowDays: number;
+  windowedCount: number;
+}
+
 export default function CongressTradesPage() {
   const [trades, setTrades] = useState<Trade[]>([]);
-  const [topMembers, setTopMembers] = useState<TopMember[]>([]);
-  const [stocks, setStocks] = useState<StockAgg[]>([]);
+  const [summary, setSummary] = useState<TradeSummary | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
   const fetchTrades = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/congress/trades?limit=1000');
-      const json = await res.json();
+      // Server-aggregated summary: total counts, sector breakdown, leaderboard, top stocks
+      // (computed from ALL trades in DB via paginated server queries)
+      const summaryRes = await fetch('/api/congress/trades/summary?days=180');
+      const summaryJson: TradeSummary = await summaryRes.json();
+      setSummary(summaryJson);
+      setLastUpdated(new Date().toLocaleString());
+
+      // Paginated fetch of recent trades for the table (limit 1000, ordered by date desc)
+      // PostgREST caps each request at 1000 rows so we paginate to get the most recent N
+      const PAGE_SIZE = 1000;
+      const MAX_PAGES = 3; // up to 3000 most-recent trades for the table
+      const allRecent: Trade[] = [];
+      for (let page = 1; page <= MAX_PAGES; page++) {
+        const res = await fetch(`/api/congress/trades?limit=${PAGE_SIZE}&page=${page}&sort=transaction_date&dir=desc`);
+        const json = await res.json();
+        const rows: Trade[] = json.trades ?? [];
+        if (rows.length === 0) break;
+        allRecent.push(...rows);
+        if (rows.length < PAGE_SIZE) break;
+      }
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-
-      const liveTrades: Trade[] = (json.trades ?? []).filter((t: Trade) => {
+      const liveTrades = allRecent.filter(t => {
         if (!t.transaction_date) return false;
-        const tradeDate = new Date(t.transaction_date);
-        if (isNaN(tradeDate.getTime())) return false;
-        return tradeDate <= today;
+        const d = new Date(t.transaction_date);
+        return !isNaN(d.getTime()) && d <= today;
       });
-
-      // Capture last updated from response header or now
-      const dateHeader = res.headers.get('date');
-      setLastUpdated(dateHeader ? new Date(dateHeader).toLocaleString() : new Date().toLocaleString());
-
       setTrades(liveTrades);
-
-      // Aggregate top members by volume
-      const memberMap = liveTrades.reduce<Record<string, {
-        member_name: string; member_party: string; member_chamber: string; member_state: string;
-        total_trades: number; estimated_volume: number; buys: number; sells: number; tickers: Set<string>;
-      }>>((acc, t) => {
-        const key = t.member_name;
-        if (!acc[key]) {
-          acc[key] = { member_name: t.member_name, member_party: t.member_party, member_chamber: t.member_chamber, member_state: t.member_state, total_trades: 0, estimated_volume: 0, buys: 0, sells: 0, tickers: new Set() };
-        }
-        acc[key].total_trades++;
-        acc[key].estimated_volume += (t.amount_max ?? 0);
-        acc[key].tickers.add(t.ticker);
-        if (t.transaction_type === 'BUY' || t.transaction_type.includes('PURCHASE')) acc[key].buys++;
-        else if (t.transaction_type === 'SELL' || t.transaction_type.includes('SALE')) acc[key].sells++;
-        return acc;
-      }, {});
-
-      const aggregatedMembers: TopMember[] = Object.values(memberMap)
-        .map(m => ({ ...m, unique_tickers: m.tickers.size }))
-        .sort((a, b) => b.estimated_volume - a.estimated_volume)
-        .slice(0, 10);
-
-      setTopMembers(aggregatedMembers);
-
-      // Aggregate stocks by ticker
-      const stockMap = liveTrades.reduce<Record<string, { ticker: string; company_name: string; total_trades: number; buys: number; sells: number; estimated_volume: number; _members: Set<string> }>>((acc, t) => {
-        if (!acc[t.ticker]) {
-          acc[t.ticker] = { ticker: t.ticker, company_name: t.company_name, total_trades: 0, buys: 0, sells: 0, estimated_volume: 0, _members: new Set() };
-        }
-        acc[t.ticker].total_trades++;
-        acc[t.ticker].estimated_volume += (t.amount_max ?? 0);
-        acc[t.ticker]._members.add(t.member_name);
-        if (t.transaction_type === 'BUY' || t.transaction_type.includes('PURCHASE')) acc[t.ticker].buys++;
-        else if (t.transaction_type === 'SELL' || t.transaction_type.includes('SALE')) acc[t.ticker].sells++;
-        return acc;
-      }, {});
-
-      const aggregatedStocks: StockAgg[] = Object.values(stockMap)
-        .map(s => ({ ticker: s.ticker, company_name: s.company_name, total_trades: s.total_trades, buys: s.buys, sells: s.sells, estimated_volume: s.estimated_volume, num_members: s._members.size }))
-        .sort((a, b) => b.estimated_volume - a.estimated_volume)
-        .slice(0, 20);
-
-      setStocks(aggregatedStocks);
     } catch (err) {
       console.error('Failed to fetch trades:', err);
     } finally {
@@ -701,10 +637,12 @@ export default function CongressTradesPage() {
     fetchTrades();
   }, [fetchTrades]);
 
-  const totalVolume = trades.reduce((s, t) => s + (t.amount_max ?? 0), 0);
-  const buyCount = trades.filter(t => t.transaction_type === 'BUY' || t.transaction_type.includes('PURCHASE')).length;
-  const sellCount = trades.filter(t => t.transaction_type === 'SELL' || t.transaction_type.includes('SALE')).length;
-  const flaggedCount = trades.filter(t => t.flags.includes('federal_contractor_overlap') || t.flags.includes('large_trade')).length;
+  // KPIs come from server-aggregated summary (true totals across all 25K+ trades)
+  const totalVolume = summary?.totalVolume ?? 0;
+  const buyCount = summary?.buyCount ?? 0;
+  const sellCount = summary?.sellCount ?? 0;
+  const flaggedCount = summary?.flaggedCount ?? 0;
+  const trackedTradesCount = summary?.totalTrades ?? 0;
 
   return (
     <div className="min-h-screen bg-slate-950">
@@ -788,7 +726,7 @@ export default function CongressTradesPage() {
 
         {/* KPI Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <KpiCard label="Tracked Trades" value={String(trades.length)} sub={`${lastUpdated ? 'Live data' : '—'}`} icon={Activity} color="text-blue-400" />
+          <KpiCard label="Tracked Trades" value={trackedTradesCount.toLocaleString()} sub={`${lastUpdated ? 'Live data' : '—'}`} icon={Activity} color="text-blue-400" />
           <KpiCard label="Est. Volume" value={formatDollars(totalVolume)} sub="Last 90 days" icon={DollarSign} color="text-emerald-400" />
           <KpiCard label="Buy/Sell" value={`${buyCount}/${sellCount}`} sub="Demn/Rep split" icon={TrendingUp} color="text-purple-400" />
           <KpiCard label="Flagged" value={String(flaggedCount)} sub="Fed contractor overlap" icon={AlertTriangle} color="text-amber-400" />
@@ -798,7 +736,7 @@ export default function CongressTradesPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left — Leaderboard + Party chart */}
           <div className="space-y-6">
-            <Leaderboard members={topMembers} />
+            <Leaderboard members={summary?.topMembers ?? []} />
             <PartyChart trades={trades} />
           </div>
 
@@ -809,7 +747,7 @@ export default function CongressTradesPage() {
         </div>
 
         {/* Stock Heatmap */}
-        <StockHeatmap stocks={stocks} />
+        <StockHeatmap stocks={summary?.topStocks ?? []} sectorData={summary?.sectorData ?? []} tradeCount={summary?.tradeCount ?? 0} />
 
         {/* Federal Contractor Overlap Map */}
         <OverlapMap trades={trades} />
