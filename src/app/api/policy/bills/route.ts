@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { BILLS, ROLL_CALL_VOTES, REGULATORY_ACTIONS } from '@/lib/policy-data';
 import { getLiveBillStatus, congressGovConfigured } from '@/lib/congress-gov';
 
+// Edge runtime: static policy data + optional congress.gov fetch. No Node deps.
+export const runtime = 'edge';
+
 // GET /api/policy/bills            → all curated bills + votes + regulatory actions
 // GET /api/policy/bills?id=HR-4763-118  → one bill, with live Congress.gov status merged in
 //

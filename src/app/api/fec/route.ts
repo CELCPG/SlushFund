@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCommittee, getCommitteeTotals, getTopDonors, fecConfigured } from '@/lib/fec';
 
+// Edge runtime: FEC API fetch. No Node deps.
+export const runtime = 'edge';
+
 // GET /api/fec?committee_id=C00835959&cycle=2024
 // Returns live FEC committee identity + financial totals.
 // Degrades gracefully: if FEC_API_KEY is unset or FEC errors, returns
