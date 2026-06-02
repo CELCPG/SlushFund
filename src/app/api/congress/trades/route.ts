@@ -124,19 +124,24 @@ export async function GET(request: NextRequest): Promise<NextResponse<TradesResp
  * Batch version of the per-trade enrichment.
  *
  * For each trade with has_federal_contract=true AND transaction_type='BUY',
- * we want to find any awards >$10M with recipient_name matching the
- * company OR ticker, where date_signed is within 30 days before / 60 days
- * after the trade.
+ * we want to find any awards >$10M with recipient_name or recipient_parent_name
+ * matching the trade's company, where posted_date is within 30 days before /
+ * 60 days after the trade's transaction_date.
  *
  * Strategy:
- *   1. Build the union of all (ticker, start_date, end_date) windows for
- *      the candidate trades.
- *   2. Fire ONE Supabase OR query covering all of them.
- *   3. Group the awards by ticker, then assign matching awards back to
- *      their originating trade.
+ *   1. Build the union of all (company_name, start_date, end_date) windows
+ *      for the candidate trades.
+ *   2. Fire ONE Supabase query covering the full date range, with an OR
+ *      filter on recipient_name/recipient_parent_name containing the
+ *      company_name.
+ *   3. Group the awards in JS, filter per-trade against the actual date
+ *      window.
  *
  * This replaces up to 1,222 sequential round-trips (worst case) with a
  * single round-trip. 5-50x faster on cold pages.
+ *
+ * NOTE: The awards table doesn't have a ticker column or a date_signed
+ * column. We use posted_date as the contract-award date proxy.
  */
 async function enrichTradesBatched(trades: CongressTrade[]): Promise<CongressTrade[]> {
   if (!supabaseAdmin) {
@@ -153,29 +158,28 @@ async function enrichTradesBatched(trades: CongressTrade[]): Promise<CongressTra
     return trades.map(computeSignalType);
   }
 
-  // Build an OR filter for all candidates. The PostgREST syntax is:
-  //   or=(ticker1.eq.T,date_signed.gte.X,date_signed.lte.Y,ticker2.eq.T,...)
-  // We collect unique tickers + the global date range that covers all windows.
-  const tickers = Array.from(new Set(candidates.map((c) => c.trade.ticker.toUpperCase()).filter(Boolean)));
-  const allWindows = candidates
-    .map((c) => c.trade.transaction_date as string)
-    .sort();
-  const minDate = addDays(allWindows[0], -30);
-  const maxDate = addDays(allWindows[allWindows.length - 1], 60);
+  // Build the global date range covering all candidates' windows.
+  const allDates = candidates.map((c) => c.trade.transaction_date as string).sort();
+  const minDate = addDays(allDates[0], -30);
+  const maxDate = addDays(allDates[allDates.length - 1], 60);
 
-  // Build a single OR filter: ticker IN (ticker1, ticker2, ...)
-  // AND date_signed in the global window
-  const tickerFilter = tickers.map((tk) => `recipient_name.ilike.%${tk}%`).join(',');
-  const tickerIn = `(${tickerFilter})`;
+  // OR filter: each candidate contributes two predicates (recipient_name
+  // contains company_name, recipient_parent_name contains company_name).
+  // Dedupe by company_name so popular tickers don't blow up the filter.
+  const companies = Array.from(new Set(candidates.map((c) => c.trade.company_name).filter(Boolean)));
+  const nameFilters = companies
+    .map((c) => `recipient_name.ilike.%${c}%,recipient_parent_name.ilike.%${c}%`)
+    .join(',');
+  const orFilter = `(${nameFilters})`;
 
   const { data: awards, error } = await supabaseAdmin
     .from('awards')
-    .select('recipient_name, total_cost, date_signed, awarding_agency_name, awarding_office, description')
-    .or(tickerIn)
-    .gte('total_cost', 10_000_000)
-    .gte('date_signed', minDate)
-    .lte('date_signed', maxDate)
-    .limit(Math.min(candidates.length * 5, 200));
+    .select('recipient_name, recipient_parent_name, dollar_amount, posted_date, awarding_agency, description')
+    .or(orFilter)
+    .gte('dollar_amount', 10_000_000)
+    .gte('posted_date', minDate)
+    .lte('posted_date', maxDate)
+    .limit(Math.min(candidates.length * 10, 200));
 
   if (error || !awards) {
     // Fail soft: don't 500 the whole page if the enrichment query errors.
@@ -184,34 +188,33 @@ async function enrichTradesBatched(trades: CongressTrade[]): Promise<CongressTra
     return trades.map(computeSignalType);
   }
 
-  // Group awards by recipient_name (proxy for ticker).
-  // For each candidate trade, filter awards whose recipient_name matches
-  // the trade's ticker OR company_name, and whose date_signed is within
-  // the trade's window. Cap at 3 per trade.
+  // For each candidate trade, filter awards whose recipient matches
+  // the trade's company_name (case-insensitive), and whose posted_date
+  // is within the trade's window. Cap at 3 per trade.
   const tradesWithContracts: CongressTrade[] = trades.map((t) => ({ ...t, related_contracts: [] }));
   for (const c of candidates) {
     const t = c.trade;
     const txStart = addDays(t.transaction_date as string, -30);
     const txEnd = addDays(t.transaction_date as string, 60);
     const companyLower = t.company_name.toLowerCase();
-    const tickerLower = t.ticker.toLowerCase();
 
     const matches: RelatedContract[] = (awards as any[])
       .filter((a) => {
-        if (!a.date_signed) return false;
-        const ds = String(a.date_signed).slice(0, 10);
-        return ds >= txStart && ds <= txEnd;
+        if (!a.posted_date) return false;
+        const pd = String(a.posted_date).slice(0, 10);
+        return pd >= txStart && pd <= txEnd;
       })
       .filter((a) => {
         const rn = String(a.recipient_name ?? '').toLowerCase();
-        return rn.includes(companyLower) || rn.includes(tickerLower);
+        const pn = String(a.recipient_parent_name ?? '').toLowerCase();
+        return rn.includes(companyLower) || pn.includes(companyLower);
       })
       .slice(0, 3)
       .map((a) => ({
         recipient_name: a.recipient_name,
-        total: a.total_cost,
-        date_signed: a.date_signed,
-        agency: a.awarding_agency_name || a.awarding_office || 'Unknown',
+        total: a.dollar_amount,
+        date_signed: a.posted_date,
+        agency: a.awarding_agency || 'Unknown',
         description: a.description ?? null,
       }));
 
