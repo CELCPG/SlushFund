@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+// Edge runtime: single RPC call, no Node deps.
+export const runtime = 'edge';
+
 // GET /api/covid-stats
 //
 // Returns COVID-19 spending aggregates for the dashboard.

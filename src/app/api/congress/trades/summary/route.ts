@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getSector } from '@/lib/sector-map';
 
+// Edge runtime: this route is pure RPC + sector-mapping JS, no Node deps.
+// Edge gives sub-50ms cold starts and proper CDN caching.
+export const runtime = 'edge';
+
 interface TradeRow {
   ticker: string;
   company_name: string;
