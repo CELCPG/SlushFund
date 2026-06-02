@@ -3,6 +3,11 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { FY_DATE_RANGES } from '@/app/api/backfill/route';
 import { ERA_FYS, type Era } from '@/lib/types';
 
+// Edge runtime: this route reads from a 4-row snapshot table and
+// calls one SQL RPC. Pure fetch — no Node deps. Edge gives us
+// sub-50ms cold starts and proper CDN caching.
+export const runtime = 'edge';
+
 // Cache headers: snapshot data is refreshed once daily by the Vercel cron at
 // 04:30 UTC. The CDNs can cache for 24h, browsers for 1h, and we allow
 // stale-while-revalidate for 12h to mask cron timing jitter.
