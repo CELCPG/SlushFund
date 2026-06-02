@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 
+// Edge runtime: static OGE 278-T data, no Node deps.
+export const runtime = 'edge';
+
 interface TrumpTrade {
   ticker: string;
   company_name: string;
