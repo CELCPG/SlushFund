@@ -65,24 +65,43 @@ export async function getHomeStats(era: Era | 'all' = 'all'): Promise<HomeStats>
   if (!supabase) return { ...CURATED_STATS, era };
 
   try {
-    // Fast path: try era_snapshots (precomputed aggregates) for the requested era.
-    // Falls through to on-the-fly aggregation only if snapshots are missing/empty.
-    if (era && era !== 'all') {
-      const { data: snap } = await supabase
-        .from('era_snapshots')
-        .select('total_awards, total_dollars, connected_dollars, flagged_count, no_bid_dollars')
-        .eq('era', era)
-        .maybeSingle();
+    // Fast path: era_snapshots (4 rows total, populated by the 04:30 UTC
+    // cron at /api/snapshots/backfill). For 'all', sum the snapshots.
+    // This avoids a 50k-row scan on every SSR render of the home page.
+    const { data: snapshots } = await supabase
+      .from('era_snapshots')
+      .select('era, total_awards, total_dollars, connected_dollars, flagged_count, no_bid_dollars');
 
-      if (snap) {
+    if (snapshots && snapshots.length > 0) {
+      if (era && era !== 'all') {
+        const snap = snapshots.find((s) => s.era === era);
+        if (snap) {
+          return {
+            ...CURATED_STATS,
+            live: true,
+            totalDollars: Number(snap.total_dollars) || 0,
+            connectedDollars: Number(snap.connected_dollars) || 0,
+            noBidDollars: Number(snap.no_bid_dollars) || 0,
+            flaggedCount: Number(snap.flagged_count) || 0,
+            era,
+          };
+        }
+      } else {
+        // Sum across all 4 eras for 'all'
+        const total = snapshots.reduce(
+          (acc, s) => ({
+            totalDollars: acc.totalDollars + (Number(s.total_dollars) || 0),
+            connectedDollars: acc.connectedDollars + (Number(s.connected_dollars) || 0),
+            noBidDollars: acc.noBidDollars + (Number(s.no_bid_dollars) || 0),
+            flaggedCount: acc.flaggedCount + (Number(s.flagged_count) || 0),
+          }),
+          { totalDollars: 0, connectedDollars: 0, noBidDollars: 0, flaggedCount: 0 }
+        );
         return {
           ...CURATED_STATS,
           live: true,
-          totalDollars: Number(snap.total_dollars) || 0,
-          connectedDollars: Number(snap.connected_dollars) || 0,
-          noBidDollars: Number(snap.no_bid_dollars) || 0,
-          flaggedCount: Number(snap.flagged_count) || 0,
-          era,
+          ...total,
+          era: 'all',
         };
       }
     }
