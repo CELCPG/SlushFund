@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { supabase, supabaseAdmin, isSupabaseConfigured } from '@/lib/supabase';
 import { subscribeToButtondown } from '@/lib/buttondown';
 
+// Edge runtime: PostgREST + Buttondown fetch. No Node deps.
+export const runtime = 'edge';
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: Request) {
