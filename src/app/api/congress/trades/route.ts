@@ -70,9 +70,13 @@ export async function GET(request: NextRequest): Promise<NextResponse<TradesResp
   // Guard: never return future-dated trades — credibility fix
   const today = new Date().toISOString().split('T')[0];
 
+  // Trim SELECT to the columns the UI actually displays. The full
+  // congress_trades row has 30+ columns; the list view uses ~14.
+  const LIST_COLS = 'id, member_name, member_chamber, member_party, member_state, ticker, company_name, transaction_type, asset_type, amount_min, amount_max, amount_range, transaction_date, filed_date, disclosure_year, source_system, flags, signal_type, has_federal_contract, conflict_score, conflict_tier, conflict_reasons, related_contracts, created_at';
+
   let query = supabaseAdmin
     .from('congress_trades')
-    .select('*', { count: 'exact' })
+    .select(LIST_COLS, { count: 'estimated' })
     .lte('transaction_date', today)
     .range(offset, offset + limit - 1);
 
