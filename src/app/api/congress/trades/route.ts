@@ -105,7 +105,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<TradesResp
   const total = count ?? 0;
   const trades = (data ?? []) as CongressTrade[];
 
-  // BATCHED enrichment: 1 round-trip for the whole page, regardless of how
+  // BATCHED enrichment: 1 RPC call for the whole page, regardless of how
   // many BUY+has_contract trades are in it. Replaces the prior N+1.
   const processedTrades = await enrichTradesBatched(trades);
 
@@ -119,27 +119,21 @@ export async function GET(request: NextRequest): Promise<NextResponse<TradesResp
 }
 
 /**
- * Batch version of the per-trade enrichment.
+ * Single-RPC enrichment.
  *
  * For each trade with has_federal_contract=true AND transaction_type='BUY',
- * we want to find any awards >$10M with recipient_name or recipient_parent_name
+ * find up to 3 awards >$10M with recipient_name or recipient_parent_name
  * matching the trade's company name, where posted_date is within 30 days
  * before / 60 days after the trade's transaction_date.
  *
- * Strategy:
- *   1. Build the union of all (company_name, start_date, end_date) windows
- *      for the candidate trades.
- *   2. Fire ONE Supabase OR query covering the full date range, with the
- *      first 2 words of each company name as the OR filter.
- *   3. Group the awards in JS, filter per-trade against the actual date
- *      window. Cap at 3 per trade.
+ * Implementation: calls the get_trade_related_contracts(jsonb) PL/pgSQL
+ * function which does the matching entirely in Postgres. The function
+ * returns rows pre-grouped by (company_name, tx_date) with match_rank,
+ * so we just bucket them in JS.
  *
- * Replaces up to 1,222 sequential round-trips (worst case) with a
- * single round-trip. 5-50x faster on cold pages.
- *
- * NOTE: The awards table doesn't have a ticker column. The OR filter uses
- * the first 2 words of the company_name (e.g. "Palantir Technologies")
- * against recipient_name / recipient_parent_name.
+ * Replaces the prior 1-query-per-candidate pattern (up to 1,222 round-trips)
+ * with a single round-trip. The whole enrichment is ~50-200ms instead of
+ * potentially tens of seconds.
  */
 async function enrichTradesBatched(trades: CongressTrade[]): Promise<CongressTrade[]> {
   if (!supabaseAdmin) {
@@ -150,101 +144,80 @@ async function enrichTradesBatched(trades: CongressTrade[]): Promise<CongressTra
   type Candidate = { trade: CongressTrade; idx: number };
   const candidates: Candidate[] = trades
     .map((t, i) => ({ trade: t, idx: i }))
-    .filter((c) => c.trade.has_federal_contract && c.trade.transaction_type === 'BUY' && !!c.trade.transaction_date);
+    .filter(
+      (c) =>
+        c.trade.has_federal_contract &&
+        c.trade.transaction_type === 'BUY' &&
+        !!c.trade.transaction_date
+    );
 
   if (candidates.length === 0) {
     return trades;
   }
 
-  // Build the global date range covering all candidates' windows.
-  const allDates = candidates.map((c) => c.trade.transaction_date as string).sort();
-  const minDate = addDays(allDates[0], -30);
-  const maxDate = addDays(allDates[allDates.length - 1], 60);
+  // Build the input JSON for the RPC.
+  // Dedupe by (company_name, tx_date) so a popular ticker doesn't bloat
+  // the input. The function groups by this key so duplicates are fine,
+  // but smaller input is better.
+  const seen = new Set<string>();
+  const inputTrades: { company_name: string; tx_date: string }[] = [];
+  for (const c of candidates) {
+    const k = `${c.trade.company_name}::${c.trade.transaction_date}`;
+    if (seen.has(k)) continue;
+    seen.add(k);
+    inputTrades.push({
+      company_name: c.trade.company_name,
+      tx_date: c.trade.transaction_date as string,
+    });
+  }
 
-  // OR filter: each candidate contributes two predicates
-  // (recipient_name contains company_key, recipient_parent_name contains it).
-  // Use the first 2 words of company_name to match the clean recipient_name
-  // format in awards (trade company names often have "Inc. - Class A Common
-  // Stock" suffixes that don't appear in awards).
-  // Dedupe so popular tickers don't blow up the filter.
-  const companyWords = (name: string) =>
-    name
-      .replace(/[,.\-]/g, ' ')
-      .split(/\s+/)
-      .filter((w) => w.length > 2)
-      .slice(0, 2)
-      .join(' ');
-  const companies = Array.from(
-    new Set(candidates.map((c) => companyWords(c.trade.company_name)).filter(Boolean))
+  const { data: matches, error } = await supabaseAdmin.rpc(
+    'get_trade_related_contracts',
+    { trades_json: inputTrades }
   );
-  const nameFilters = companies
-    .flatMap((c) => [`recipient_name.ilike.%${c}%`, `recipient_parent_name.ilike.%${c}%`])
-    .join(',');
-  // PostgREST expects the comma-separated list WITHOUT outer parens.
-  // The or= parameter provides the parens.
-  const orFilter = nameFilters;
 
-  const { data: awards, error } = await supabaseAdmin
-    .from('awards')
-    .select('recipient_name, recipient_parent_name, dollar_amount, posted_date, awarding_agency, description')
-    .or(orFilter)
-    .gte('dollar_amount', 10_000_000)
-    .gte('posted_date', minDate)
-    .lte('posted_date', maxDate)
-    .limit(Math.min(candidates.length * 10, 200));
-
-  if (error || !awards) {
+  if (error) {
     // Fail soft: don't 500 the whole page if the enrichment query errors.
-    // The trades still render with no related_contracts.
-    console.error('[enrichTradesBatched] awards query error:', error?.message);
+    console.error('[enrichTradesBatched] RPC error:', error.message);
+    return trades;
+  }
+  if (!matches || (matches as any[]).length === 0) {
     return trades;
   }
 
-  // For each candidate trade, filter awards whose recipient matches
-  // the trade's company_name (case-insensitive), and whose posted_date
-  // is within the trade's window. Cap at 3 per trade.
-  const tradesWithContracts: CongressTrade[] = trades.map((t) => ({ ...t, related_contracts: [] }));
+  // Bucket the matches back into the trades array.
+  // Key: `${company_name}::${tx_date}` (matches the function's grouping).
+  const matchesByKey = new Map<string, RelatedContract[]>();
+  for (const m of matches as any[]) {
+    const key = `${m.trade_company_name}::${m.trade_tx_date}`;
+    const list = matchesByKey.get(key) ?? [];
+    list.push({
+      recipient_name: m.recipient_name,
+      total: m.dollar_amount,
+      date_signed: m.posted_date,
+      agency: m.awarding_agency || 'Unknown',
+      description: m.description ?? null,
+    });
+    matchesByKey.set(key, list);
+  }
+
+  // Apply matches to original trades.
+  const result: CongressTrade[] = trades.map((t) => ({ ...t, related_contracts: [] }));
   for (const c of candidates) {
-    const t = c.trade;
-    const txStart = addDays(t.transaction_date as string, -30);
-    const txEnd = addDays(t.transaction_date as string, 60);
-    // Re-use the same key the SQL filter used, so any returned award
-    // is a candidate. Just check the date window.
-    const companyKey = companyWords(t.company_name).toLowerCase();
-
-    const matches: RelatedContract[] = (awards as any[])
-      .filter((a) => {
-        if (!a.posted_date) return false;
-        const pd = String(a.posted_date).slice(0, 10);
-        return pd >= txStart && pd <= txEnd;
-      })
-      .filter((a) => {
-        const rn = String(a.recipient_name ?? '').toLowerCase();
-        const pn = String(a.recipient_parent_name ?? '').toLowerCase();
-        return rn.includes(companyKey) || pn.includes(companyKey);
-      })
-      .slice(0, 3)
-      .map((a) => ({
-        recipient_name: a.recipient_name,
-        total: a.dollar_amount,
-        date_signed: a.posted_date,
-        agency: a.awarding_agency || 'Unknown',
-        description: a.description ?? null,
-      }));
-
-    if (matches.length > 0) {
-      const updated: CongressTrade = {
-        ...tradesWithContracts[c.idx],
-        related_contracts: matches,
-        flags: tradesWithContracts[c.idx].flags.includes('pre_award_buy')
-          ? tradesWithContracts[c.idx].flags
-          : [...tradesWithContracts[c.idx].flags, 'pre_award_buy'],
+    const key = `${c.trade.company_name}::${c.trade.transaction_date}`;
+    const matches = matchesByKey.get(key);
+    if (matches && matches.length > 0) {
+      const existingFlags = result[c.idx].flags;
+      const hasPreAward = existingFlags.includes('pre_award_buy');
+      result[c.idx] = {
+        ...result[c.idx],
+        related_contracts: matches.slice(0, 3),
+        flags: hasPreAward ? existingFlags : [...existingFlags, 'pre_award_buy'],
       };
-      tradesWithContracts[c.idx] = updated;
     }
   }
 
-  return tradesWithContracts.map(computeSignalType);
+  return result.map(computeSignalType);
 }
 
 /** Compute the signal_type field from existing flags. Pure function. */
@@ -260,13 +233,6 @@ function computeSignalType(t: CongressTrade): CongressTrade {
     return { ...t, signal_type: 'suspicious' };
   }
   return { ...t, signal_type: 'routine' };
-}
-
-/** Add N days to a YYYY-MM-DD string. Negative N goes backward. */
-function addDays(dateStr: string, days: number): string {
-  const d = new Date(dateStr + 'T00:00:00Z');
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
 }
 
 function getDemoTrades(): CongressTrade[] {
