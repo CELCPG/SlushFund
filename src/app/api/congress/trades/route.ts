@@ -76,7 +76,6 @@ export async function GET(request: NextRequest): Promise<NextResponse<TradesResp
     .lte('transaction_date', today)
     .range(offset, offset + limit - 1);
 
-  // Apply ordering explicitly so it doesn't get lost in chained filters
   if (sortCol === 'amount_max') {
     query = query.order('amount_max', { ascending: sortDir === 'asc', nullsFirst: false });
   } else {
@@ -106,9 +105,8 @@ export async function GET(request: NextRequest): Promise<NextResponse<TradesResp
   const total = count ?? 0;
   const trades = (data ?? []) as CongressTrade[];
 
-  // BATCHED enrich: previously this fired 1 award query per BUY+has_contract
-  // trade (N+1). Now we fire ONE award query that covers every candidate
-  // trade's (ticker, date_window) tuple, then group results in JS.
+  // BATCHED enrichment: 1 round-trip for the whole page, regardless of how
+  // many BUY+has_contract trades are in it. Replaces the prior N+1.
   const processedTrades = await enrichTradesBatched(trades);
 
   return NextResponse.json({
@@ -125,27 +123,27 @@ export async function GET(request: NextRequest): Promise<NextResponse<TradesResp
  *
  * For each trade with has_federal_contract=true AND transaction_type='BUY',
  * we want to find any awards >$10M with recipient_name or recipient_parent_name
- * matching the trade's company, where posted_date is within 30 days before /
- * 60 days after the trade's transaction_date.
+ * matching the trade's company name, where posted_date is within 30 days
+ * before / 60 days after the trade's transaction_date.
  *
  * Strategy:
  *   1. Build the union of all (company_name, start_date, end_date) windows
  *      for the candidate trades.
- *   2. Fire ONE Supabase query covering the full date range, with an OR
- *      filter on recipient_name/recipient_parent_name containing the
- *      company_name.
+ *   2. Fire ONE Supabase OR query covering the full date range, with the
+ *      first 2 words of each company name as the OR filter.
  *   3. Group the awards in JS, filter per-trade against the actual date
- *      window.
+ *      window. Cap at 3 per trade.
  *
- * This replaces up to 1,222 sequential round-trips (worst case) with a
+ * Replaces up to 1,222 sequential round-trips (worst case) with a
  * single round-trip. 5-50x faster on cold pages.
  *
- * NOTE: The awards table doesn't have a ticker column or a date_signed
- * column. We use posted_date as the contract-award date proxy.
+ * NOTE: The awards table doesn't have a ticker column. The OR filter uses
+ * the first 2 words of the company_name (e.g. "Palantir Technologies")
+ * against recipient_name / recipient_parent_name.
  */
 async function enrichTradesBatched(trades: CongressTrade[]): Promise<CongressTrade[]> {
   if (!supabaseAdmin) {
-    return trades.map(computeSignalType);
+    return trades;
   }
 
   // Collect candidate trades that need award enrichment.
@@ -155,7 +153,7 @@ async function enrichTradesBatched(trades: CongressTrade[]): Promise<CongressTra
     .filter((c) => c.trade.has_federal_contract && c.trade.transaction_type === 'BUY' && !!c.trade.transaction_date);
 
   if (candidates.length === 0) {
-    return trades.map(computeSignalType);
+    return trades;
   }
 
   // Build the global date range covering all candidates' windows.
@@ -163,11 +161,11 @@ async function enrichTradesBatched(trades: CongressTrade[]): Promise<CongressTra
   const minDate = addDays(allDates[0], -30);
   const maxDate = addDays(allDates[allDates.length - 1], 60);
 
-  // OR filter: each candidate contributes two predicates (recipient_name
-  // contains company name, recipient_parent_name contains company name).
-  // Use the first 2 words of company_name only — trade company_names often
-  // include "Inc. - Class A Common Stock" type suffixes that won't match
-  // the clean recipient_name in awards.
+  // OR filter: each candidate contributes two predicates
+  // (recipient_name contains company_key, recipient_parent_name contains it).
+  // Use the first 2 words of company_name to match the clean recipient_name
+  // format in awards (trade company names often have "Inc. - Class A Common
+  // Stock" suffixes that don't appear in awards).
   // Dedupe so popular tickers don't blow up the filter.
   const companyWords = (name: string) =>
     name
@@ -182,7 +180,9 @@ async function enrichTradesBatched(trades: CongressTrade[]): Promise<CongressTra
   const nameFilters = companies
     .flatMap((c) => [`recipient_name.ilike.%${c}%`, `recipient_parent_name.ilike.%${c}%`])
     .join(',');
-  const orFilter = `(${nameFilters})`;
+  // PostgREST expects the comma-separated list WITHOUT outer parens.
+  // The or= parameter provides the parens.
+  const orFilter = nameFilters;
 
   const { data: awards, error } = await supabaseAdmin
     .from('awards')
@@ -197,7 +197,7 @@ async function enrichTradesBatched(trades: CongressTrade[]): Promise<CongressTra
     // Fail soft: don't 500 the whole page if the enrichment query errors.
     // The trades still render with no related_contracts.
     console.error('[enrichTradesBatched] awards query error:', error?.message);
-    return trades.map(computeSignalType);
+    return trades;
   }
 
   // For each candidate trade, filter awards whose recipient matches
@@ -208,7 +208,9 @@ async function enrichTradesBatched(trades: CongressTrade[]): Promise<CongressTra
     const t = c.trade;
     const txStart = addDays(t.transaction_date as string, -30);
     const txEnd = addDays(t.transaction_date as string, 60);
-    const companyLower = t.company_name.toLowerCase();
+    // Re-use the same key the SQL filter used, so any returned award
+    // is a candidate. Just check the date window.
+    const companyKey = companyWords(t.company_name).toLowerCase();
 
     const matches: RelatedContract[] = (awards as any[])
       .filter((a) => {
@@ -219,7 +221,7 @@ async function enrichTradesBatched(trades: CongressTrade[]): Promise<CongressTra
       .filter((a) => {
         const rn = String(a.recipient_name ?? '').toLowerCase();
         const pn = String(a.recipient_parent_name ?? '').toLowerCase();
-        return rn.includes(companyLower) || pn.includes(companyLower);
+        return rn.includes(companyKey) || pn.includes(companyKey);
       })
       .slice(0, 3)
       .map((a) => ({
@@ -271,7 +273,7 @@ function getDemoTrades(): CongressTrade[] {
   return [
     { id: 'demo-1', member_name: 'Nancy Pelosi', member_chamber: 'House' as const, member_party: 'Democrat', member_state: 'CA', ticker: 'NVDA', company_name: 'NVIDIA Corporation', transaction_type: 'BUY' as const, asset_type: 'Stock', amount_min: 1_000_000, amount_max: 5_000_000, amount_range: '$1M - $5M', transaction_date: '2025-12-18', filed_date: '2026-01-15', disclosure_year: 2025, source_system: 'House_Clerk', flags: ['federal_contractor_overlap', 'buy', 'large_trade'], signal_type: 'suspicious', has_federal_contract: false, related_contracts: [], created_at: new Date().toISOString() },
     { id: 'demo-2', member_name: 'Tommy Tuberville', member_chamber: 'Senate' as const, member_party: 'Republican', member_state: 'AL', ticker: 'PLTR', company_name: 'Palantir Technologies', transaction_type: 'BUY' as const, asset_type: 'Stock', amount_min: 15_001, amount_max: 50_000, amount_range: '$15K - $50K', transaction_date: '2025-11-05', filed_date: '2025-12-20', disclosure_year: 2025, source_system: 'Senate_EFD', flags: ['federal_contractor_overlap', 'buy'], signal_type: 'routine', has_federal_contract: true, related_contracts: [], created_at: new Date().toISOString() },
-    { id: 'demo-3', member_name: 'Josh Gottheimer', member_chamber: 'House' as const, member_party: 'Democrat', member_state: 'NJ', ticker: 'MSFT', company_name: 'Microsoft Corporation', transaction_type: 'SELL' as const, asset_type: 'Stock', amount_min: 500_001, amount_max: 1_000_000, amount_range: '$500K - $1M', transaction_date: '2025-10-22', filed_date: '2025-12-06', disclosure_year: 2025, source_system: 'House_Clerk', flags: ['sell'], signal_type: 'routine', has_federal_contract: false, related_contracts: [], created_at: new Date().toISOString() },
+    { id: 'demo-3', member_name: 'Josh Gottheimer', member_chamber: 'House' as const, member_party: 'Democrat', member_state: 'NJ', ticker: 'MSFT', company_name: 'Microsoft Corporation - Common', transaction_type: 'SELL' as const, asset_type: 'Stock', amount_min: 500_001, amount_max: 1_000_000, amount_range: '$500K - $1M', transaction_date: '2025-10-22', filed_date: '2025-12-06', disclosure_year: 2025, source_system: 'House_Clerk', flags: ['sell'], signal_type: 'routine', has_federal_contract: false, related_contracts: [], created_at: new Date().toISOString() },
     { id: 'demo-4', member_name: 'Marjorie Taylor Greene', member_chamber: 'House' as const, member_party: 'Republican', member_state: 'GA', ticker: 'NVDA', company_name: 'NVIDIA Corporation', transaction_type: 'BUY' as const, asset_type: 'Stock', amount_min: 100_001, amount_max: 250_000, amount_range: '$100K - $250K', transaction_date: '2025-09-15', filed_date: '2025-10-30', disclosure_year: 2025, source_system: 'House_Clerk', flags: ['buy', 'federal_contractor_overlap'], signal_type: 'routine', has_federal_contract: false, related_contracts: [], created_at: new Date().toISOString() },
     { id: 'demo-5', member_name: 'Ted Cruz', member_chamber: 'Senate' as const, member_party: 'Republican', member_state: 'TX', ticker: 'XOM', company_name: 'Exxon Mobil Corporation', transaction_type: 'BUY' as const, asset_type: 'Stock', amount_min: 250_001, amount_max: 500_000, amount_range: '$250K - $500M', transaction_date: '2025-08-30', filed_date: '2025-10-14', disclosure_year: 2025, source_system: 'Senate_EFD', flags: ['buy'], signal_type: 'routine', has_federal_contract: false, related_contracts: [], created_at: new Date().toISOString() },
     { id: 'demo-6', member_name: 'John Barrasso', member_chamber: 'Senate' as const, member_party: 'Republican', member_state: 'WY', ticker: 'PLTR', company_name: 'Palantir Technologies', transaction_type: 'BUY' as const, asset_type: 'Stock', amount_min: 50_001, amount_max: 100_000, amount_range: '$50K - $100K', transaction_date: '2025-08-12', filed_date: '2025-09-26', disclosure_year: 2025, source_system: 'Senate_EFD', flags: ['buy', 'federal_contractor_overlap'], signal_type: 'routine', has_federal_contract: true, related_contracts: [], created_at: new Date().toISOString() },
