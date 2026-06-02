@@ -12,7 +12,19 @@ import { getHomeStats, formatCompactUSD } from '@/lib/home-stats';
 import Hero from '@/components/home/Hero';
 import WhatIsSlushFund from '@/components/home/WhatIsSlushFund';
 
-import LoopDiagram from '@/components/home/LoopDiagram';
+import dynamic from 'next/dynamic';
+// LoopDiagram is below-the-fold (after Hero + WhatIsSlushFund). Lazy load
+// it to keep the initial bundle small and the FCP/LCP fast.
+// Note: page.tsx is a server component so we can't use ssr:false. The
+// component is itself a 'use client' component, so dynamic gives us
+// bundle splitting without the SSR-disabling requirement.
+const LoopDiagram = dynamic(() => import('@/components/home/LoopDiagram'), {
+  loading: () => (
+    <section className="border-b border-slate-800 bg-slate-950">
+      <div className="max-w-7xl mx-auto px-6 py-16 text-slate-500 text-sm">Loading diagram…</div>
+    </section>
+  ),
+});
 import TrackCard from '@/components/home/TrackCard';
 
 
