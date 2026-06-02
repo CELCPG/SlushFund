@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { FY_DATE_RANGES } from '@/app/api/backfill/route';
+import { FY_DATE_RANGES } from '@/lib/era';
 import { ERA_FYS, type Era } from '@/lib/types';
 
 // POST /api/snapshots/backfill

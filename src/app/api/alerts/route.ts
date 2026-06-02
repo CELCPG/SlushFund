@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { FY_DATE_RANGES } from '@/app/api/backfill/route';
+import { FY_DATE_RANGES } from '@/lib/era';
 import { ERA_FYS, type Era } from '@/lib/types';
+
+// Edge runtime: SQL RPC only, no Node deps.
+export const runtime = 'edge';
 
 // Cache headers: summary stats only change when the awards table or
 // era_snapshots is refreshed. CDN cache 5min, browser 1min, plus SWR.

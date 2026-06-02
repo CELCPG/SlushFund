@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+// Edge runtime: pure PostgREST query. Sub-50ms cold + 5x cheaper.
+export const runtime = 'edge';
+
 // ── Conflict Engine API ────────────────────────────────────────────────────────
 // Serves the ranked "most conflicted members" leaderboard and the highest-scoring
 // flagged trades, computed by src/scripts/compute_conflicts.py.

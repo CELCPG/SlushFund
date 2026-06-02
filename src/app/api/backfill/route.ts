@@ -1,18 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fullBackfill } from '@/lib/sync';
+import { FY_DATE_RANGES } from '@/lib/era';
+// Re-exported for backwards-compatibility with any other route still
+// importing it from this file.
+export { FY_DATE_RANGES };
 
-// ─── FY Date Ranges (used by backfill + era-stats) ───────────────────────────
-export const FY_DATE_RANGES: Record<number, { start: string; end: string }> = {
-  2019: { start: '2018-10-01', end: '2019-09-30' },
-  2020: { start: '2019-10-01', end: '2020-09-30' },
-  2021: { start: '2020-10-01', end: '2021-09-30' },
-  2022: { start: '2021-10-01', end: '2022-09-30' },
-  2023: { start: '2022-10-01', end: '2023-09-30' },
-  2024: { start: '2023-10-01', end: '2024-09-30' },
-  2025: { start: '2024-10-01', end: '2025-09-30' },
-  2026: { start: '2025-10-01', end: new Date().toISOString().split('T')[0] },
-};
-
+// ─── Backfill endpoint ────────────────────────────────────────────────────────
+//
 export const runtime = 'nodejs';
 export const maxDuration = 800; // Vercel Pro max
 

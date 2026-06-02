@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import type { Award, AwardsResponse } from '@/lib/types';
 
+// Edge runtime: pure PostgREST query. No Node deps.
+export const runtime = 'edge';
+
 export async function GET(request: NextRequest): Promise<NextResponse<AwardsResponse>> {
   // Demo mode — Supabase not configured
   if (!supabase) {
