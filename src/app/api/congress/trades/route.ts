@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+// Edge runtime: pure PostgREST + 1 RPC call, no Node deps.
+export const runtime = 'edge';
+
 export interface CongressTrade {
   id: string;
   member_name: string;
