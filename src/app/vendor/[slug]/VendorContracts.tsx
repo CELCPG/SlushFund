@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Search } from 'lucide-react';
 import type { Award } from '@/lib/types';
 import { KpiCard, FlagBadge, Table, type Column } from '@/components/ui';
+import { pickVendorCallout } from './vendor-callouts';
 
 function fmtUSD(n: number): string {
   if (n >= 1e12) return `$${(n / 1e12).toFixed(1)}T`;
@@ -14,8 +15,24 @@ function fmtUSD(n: number): string {
   return `$${n.toFixed(0)}`;
 }
 
-/** Client island: fetches and displays a vendor's federal contracts. */
-export function VendorContracts({ searchTerm }: { searchTerm: string }) {
+/**
+ * Client island: fetches and displays a vendor's federal contracts.
+ *
+ * Search strategy: pass ALL aliases through, joined with "OR" so we catch
+ * awards to any of the vendor's known names. e.g. "Trump Organization" page
+ * also matches "Trump Winery", "DJT Holdings", etc.
+ */
+export function VendorContracts({
+  searchTerm,
+  aliases = [],
+  connectionCategory,
+}: {
+  searchTerm: string;
+  /** Other known names/aliases for this vendor — searched alongside `searchTerm`. */
+  aliases?: string[];
+  /** Category from POLITICAL_ENTITIES — used to route the data-coverage callout. */
+  connectionCategory?: string;
+}) {
   const [awards, setAwards] = useState<Award[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,7 +41,16 @@ export function VendorContracts({ searchTerm }: { searchTerm: string }) {
     (async () => {
       setLoading(true);
       try {
-        const q = new URLSearchParams({ search: searchTerm, limit: '100', sort: 'dollar_amount', dir: 'desc' });
+        // The /api/contracts route accepts a `search` param. It splits on
+        // commas and ORs each term against recipient_name and description,
+        // so we can pass the primary name + every alias as one query.
+        const allTerms = [searchTerm, ...aliases].filter(Boolean);
+        const q = new URLSearchParams({
+          search: allTerms.join(','),
+          limit: '100',
+          sort: 'dollar_amount',
+          dir: 'desc',
+        });
         const res = await fetch(`/api/contracts?${q.toString()}`);
         const data = await res.json();
         if (!cancelled) setAwards(Array.isArray(data.awards) ? data.awards : []);
@@ -37,7 +63,7 @@ export function VendorContracts({ searchTerm }: { searchTerm: string }) {
     return () => {
       cancelled = true;
     };
-  }, [searchTerm]);
+  }, [searchTerm, aliases.join('|')]);
 
   const total = awards.reduce((s, a) => s + Number(a.dollar_amount || 0), 0);
   const noBid = awards.filter((a) => a.flags?.includes('no_bid') || a.flags?.includes('sole_source')).length;
@@ -89,6 +115,9 @@ export function VendorContracts({ searchTerm }: { searchTerm: string }) {
     },
   ];
 
+  // Build the alias list shown in the callout (deduped, capped at 4)
+  const knownAliases = Array.from(new Set([searchTerm, ...aliases])).slice(0, 4);
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -97,6 +126,29 @@ export function VendorContracts({ searchTerm }: { searchTerm: string }) {
         <KpiCard label="No-Bid / Sole-Source" value={loading ? '—' : String(noBid)} color="text-amber-400" highlight={noBid > 0} />
         <KpiCard label="Highest Risk Score" value={loading ? '—' : String(topRisk)} color={topRisk >= 80 ? 'text-rose-400' : 'text-slate-200'} />
       </div>
+
+      {/* Searched-aliases transparency strip. Shows the user exactly which
+          names we tried to match against, so they know why a profile might
+          show zero. */}
+      {knownAliases.length > 1 && (
+        <div className="flex items-start gap-2 rounded-md border border-slate-800 bg-slate-900/50 px-4 py-2.5 text-xs text-slate-400">
+          <Search className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
+          <div>
+            <span className="font-semibold text-slate-300">Searched:</span>{' '}
+            <code className="font-mono text-amber-300/80">{knownAliases.join(' · ')}</code>
+          </div>
+        </div>
+      )}
+
+      {/* Data-coverage callout. Shows when the search returns nothing OR
+          very little, to be honest about the gap between "what we track"
+          and "what's been reported publicly". The callout is routed by the
+          vendor's connection_category (e.g. mar-a-lago → Trump callout)
+          so each entity gets a tailored explanation of where its real
+          federal money actually flows. */}
+      {!loading && awards.length === 0 && (
+        <>{pickVendorCallout({ name: searchTerm, connectionCategory: connectionCategory ?? 'none' })}</>
+      )}
 
       <Table
         columns={columns}

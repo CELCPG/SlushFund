@@ -96,7 +96,7 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile toggle — shown above content on small screens */}
+      {/* Mobile toggle shown above content on small screens */}
       <div className="lg:hidden w-full px-4 py-2 border-b border-slate-800 bg-slate-950">
         <button
           onClick={() => setCollapsed(!collapsed)}

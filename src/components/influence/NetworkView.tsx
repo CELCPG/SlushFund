@@ -4,7 +4,7 @@ import { Badge, toneForConnection } from '@/components/ui/Badge';
 import { CRYPTO_INVESTMENTS } from '@/lib/crypto-data';
 import { BILLS, billsForEntity } from '@/lib/policy-data';
 
-/** Network tab — entity-centric: each investor/donor and the bills it touches. */
+/** Network tab entity-centric: each investor/donor and the bills it touches. */
 export default function NetworkView() {
   // Build a row per investor entity that links to at least one tracked bill.
   const rows = CRYPTO_INVESTMENTS.map((inv) => ({

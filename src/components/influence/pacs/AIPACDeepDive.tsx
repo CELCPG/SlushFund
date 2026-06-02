@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { DollarSign, TrendingUp, AlertTriangle, Landmark, ChevronDown, ChevronUp } from 'lucide-react';
 import { PAC_DATABASE } from '@/lib/pac-data';
 
-// ─── AIPAC Deep Dive — Pro-Israel Money Empire ────────────────────────────────
+// ─── AIPAC Deep Dive. Pro-Israel Money Empire ────────────────────────────────
 // Five section tabs covering money, strategy, top races, top recipients, history.
 export default function AIPACDeepDive() {
   const [openSection, setOpenSection] = useState<string | null>('overview');
@@ -31,11 +31,11 @@ export default function AIPACDeepDive() {
             ))}
           </div>
           <div>
-            <h4 className="text-white text-sm font-bold mb-3 uppercase tracking-widest">The Network — Four Connected Vehicles</h4>
+            <h4 className="text-white text-sm font-bold mb-3 uppercase tracking-widest">The Network. Four Connected Vehicles</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {[
                 { abbr: 'AIPAC PAC', name: 'American Israel Public Affairs Committee PAC', role: 'Direct PAC contributions to candidates', raised: '$85M (2024 cycle)', type: 'PAC', color: '#3b82f6' },
-                { abbr: 'UDP', name: 'United Democracy Project', role: 'Super PAC — unlimited independent expenditures', raised: '$87M (2024 cycle)', type: 'Super PAC', color: '#06b6d4' },
+                { abbr: 'UDP', name: 'United Democracy Project', role: 'Super PAC unlimited independent expenditures', raised: '$87M (2024 cycle)', type: 'Super PAC', color: '#06b6d4' },
                 { abbr: 'DMFI', name: 'Democratic Majority for Israel', role: 'Pro-Israel Democratic spending arm', raised: '$32M (2024 cycle)', type: 'Super PAC', color: '#8b5cf6' },
                 { abbr: 'RJC', name: 'Republican Jewish Coalition', role: 'Pro-Israel Republican spending arm', raised: '$28M (2024 cycle)', type: 'Super PAC', color: '#f97316' },
               ].map((p) => (
@@ -55,7 +55,7 @@ export default function AIPACDeepDive() {
           </div>
           <div className="bg-blue-950/20 border border-blue-900/30 rounded-lg px-4 py-3">
             <div className="text-blue-300 text-xs font-bold uppercase tracking-widest mb-1">Bipartisan strategy</div>
-            <p className="text-slate-300 text-sm">By funding members of both parties, AIPAC ensures pro-Israel legislation gets overwhelming support regardless of which party controls Congress. The 68/32 split toward Democrats reflects their institutional strength in the House — but the $171M to Republicans signals growing GOP alignment with Israel under Trump.</p>
+            <p className="text-slate-300 text-sm">By funding members of both parties, AIPAC ensures pro-Israel legislation gets overwhelming support regardless of which party controls Congress. The 68/32 split toward Democrats reflects their institutional strength in the House but the $171M to Republicans signals growing GOP alignment with Israel under Trump.</p>
           </div>
         </div>
       ),
@@ -100,8 +100,8 @@ export default function AIPACDeepDive() {
             </div>
           </div>
           <div className="bg-purple-950/20 border border-purple-900/30 rounded-lg px-4 py-3">
-            <div className="text-purple-300 text-xs font-bold uppercase tracking-widest mb-1">UDP strategy — "primary the left"</div>
-            <p className="text-slate-300 text-sm">UDP's core tactic is unique in American politics: instead of simply backing friends, AIPAC runs aggressive opposition research ads against progressive candidates critical of Israeli government policy. In 2024, this "primary the left" strategy was the defining feature of AIPAC's political operation — spending tens of millions to defeat Squad members and their allies.</p>
+            <div className="text-purple-300 text-xs font-bold uppercase tracking-widest mb-1">UDP strategy: "primary the left"</div>
+            <p className="text-slate-300 text-sm">UDP's core tactic is unique in American politics: instead of simply backing friends, AIPAC runs aggressive opposition research ads against progressive candidates critical of Israeli government policy. In 2024, this "primary the left" strategy was the defining feature of AIPAC's political operation spending tens of millions to defeat Squad members and their allies.</p>
           </div>
         </div>
       ),
@@ -189,19 +189,19 @@ export default function AIPACDeepDive() {
       content: (
         <div className="space-y-4">
           <div>
-            <h4 className="text-white text-sm font-bold mb-3 uppercase tracking-widest">Top 10 Recipients — 2025–2026 Cycle</h4>
+            <h4 className="text-white text-sm font-bold mb-3 uppercase tracking-widest">Top 10 Recipients, 2025–2026 Cycle</h4>
             <div className="space-y-2">
               {[
-                { rank: '#1', name: 'George Latimer (D-NY)', chamber: 'House', amount: '$22.7M', color: 'text-emerald-400', note: 'Defeated AOC in primary — single largest AIPAC investment ever' },
+                { rank: '#1', name: 'George Latimer (D-NY)', chamber: 'House', amount: '$22.7M', color: 'text-emerald-400', note: 'Defeated AOC in primary single largest AIPAC investment ever' },
                 { rank: '#2', name: 'Wesley Bell (D-MO)', chamber: 'House', amount: '$16.9M', color: 'text-emerald-400', note: 'Defeated Cori Bush in August 2024 primary' },
                 { rank: '#3', name: 'Adam Schiff (D-CA)', chamber: 'Senate', amount: '$9.6M', color: 'text-blue-400', note: 'Took AIPAC money then became Senate Majority Leader' },
-                { rank: '#4', name: 'Haley Stevens (D-MI)', chamber: 'House', amount: '$9.1M', color: 'text-blue-400', note: 'Challenger to Andy Levin — won with heavy AIPAC support' },
+                { rank: '#4', name: 'Haley Stevens (D-MI)', chamber: 'House', amount: '$9.1M', color: 'text-blue-400', note: 'Challenger to Andy Levin won with heavy AIPAC support' },
                 { rank: '#5', name: 'Glenn Ivey (D-MD)', chamber: 'House', amount: '$8.2M', color: 'text-blue-400', note: 'Primary opponent to progressive candidate' },
-                { rank: '#6', name: 'Jacky Rosen (D-NV)', chamber: 'Senate', amount: '$7.6M', color: 'text-blue-400', note: 'GOP target — critical Senate race' },
-                { rank: '#7', name: 'Josh Gottheimer (D-NJ)', chamber: 'House', amount: '$6.7M', color: 'text-blue-400', note: 'Co-chair New Dems — bipartisanship champion' },
-                { rank: '#8', name: 'Brad Schneider (D-IL)', chamber: 'House', amount: '$6.7M', color: 'text-blue-400', note: 'Targeted by Squad in 2022 — survived' },
-                { rank: '#9', name: 'Shontel Brown (D-OH)', chamber: 'House', amount: '$6.6M', color: 'text-blue-400', note: 'Defeated Nina Turner in 2022 primary — AIPAC bet paid off' },
-                { rank: '#10', name: 'Chuck Schumer (D-NY)', chamber: 'Senate', amount: '$6.5M', color: 'text-blue-400', note: 'Senate Majority Leader — AIPAC\'s most important ally' },
+                { rank: '#6', name: 'Jacky Rosen (D-NV)', chamber: 'Senate', amount: '$7.6M', color: 'text-blue-400', note: 'GOP target critical Senate race' },
+                { rank: '#7', name: 'Josh Gottheimer (D-NJ)', chamber: 'House', amount: '$6.7M', color: 'text-blue-400', note: 'Co-chair New Dems bipartisanship champion' },
+                { rank: '#8', name: 'Brad Schneider (D-IL)', chamber: 'House', amount: '$6.7M', color: 'text-blue-400', note: 'Targeted by Squad in 2022 survived' },
+                { rank: '#9', name: 'Shontel Brown (D-OH)', chamber: 'House', amount: '$6.6M', color: 'text-blue-400', note: 'Defeated Nina Turner in 2022 primary. AIPAC bet paid off' },
+                { rank: '#10', name: 'Chuck Schumer (D-NY)', chamber: 'Senate', amount: '$6.5M', color: 'text-blue-400', note: 'Senate Majority Leader. AIPAC\'s most important ally' },
               ].map((r) => (
                 <div key={r.name} className="flex items-center gap-3 bg-black/20 border border-white/5 rounded-lg px-4 py-2.5">
                   <span className="text-slate-600 font-mono text-xs w-6 shrink-0">{r.rank}</span>
@@ -223,7 +223,7 @@ export default function AIPACDeepDive() {
               {[
                 { name: 'Ted Cruz (R-TX)', amount: '$6.1M', color: 'text-orange-400', note: 'Senate Foreign Relations Committee' },
                 { name: 'Lindsey Graham (R-SC)', amount: '$4.6M', color: 'text-orange-400', note: 'Senate Armed Services Committee' },
-                { name: 'Elissa Slotkin (D-MI)', amount: '$4.5M', color: 'text-blue-400', note: 'Defense industry background — Armed Services' },
+                { name: 'Elissa Slotkin (D-MI)', amount: '$4.5M', color: 'text-blue-400', note: 'Defense industry background. Armed Services' },
                 { name: 'Jon Ossoff (D-GA)', amount: '$5.3M', color: 'text-blue-400', note: 'Senate Foreign Relations Committee' },
                 { name: 'Cory Booker (D-NJ)', amount: '$5.8M', color: 'text-blue-400', note: 'Foreign Affairs Committee' },
               ].map((r) => (
@@ -248,15 +248,15 @@ export default function AIPACDeepDive() {
       content: (
         <div className="space-y-4">
           <div>
-            <h4 className="text-white text-sm font-bold mb-3 uppercase tracking-widest">AIPAC Spending Growth — Election Cycle by Cycle</h4>
+            <h4 className="text-white text-sm font-bold mb-3 uppercase tracking-widest">AIPAC Spending Growth. Election Cycle by Cycle</h4>
             <div className="space-y-2">
               {[
                 { cycle: '2016', total: '$30M', breakdown: 'Traditional bipartisan PAC model', color: 'text-slate-400' },
                 { cycle: '2018', total: '$35M', breakdown: 'Intensified Senate/House targeting', color: 'text-slate-400' },
                 { cycle: '2020', total: '$55M', breakdown: 'Major pro-Israel messaging after Gaza conflicts', color: 'text-slate-400' },
-                { cycle: '2022', total: '$80M', breakdown: 'UDP launched — $50M for primaries + general', color: 'text-blue-400' },
+                { cycle: '2022', total: '$80M', breakdown: 'UDP launched, $50M for primaries + general', color: 'text-blue-400' },
                 { cycle: '2024', total: '$126.9M', breakdown: 'Record cycle: ~$55M AIPAC PAC + ~$61M UDP super PAC', color: 'text-emerald-400' },
-                { cycle: '2025–26', total: '$548M', breakdown: 'All-in with affiliates — tracked by gen-us.space', color: 'text-cyan-400' },
+                { cycle: '2025–26', total: '$548M', breakdown: 'All-in with affiliates tracked by gen-us.space', color: 'text-cyan-400' },
               ].map((r) => (
                 <div key={r.cycle} className="flex items-center gap-4 bg-black/20 border border-white/5 rounded-lg px-4 py-2.5">
                   <span className="text-slate-400 font-mono text-sm font-bold w-16 shrink-0">{r.cycle}</span>
@@ -270,19 +270,19 @@ export default function AIPACDeepDive() {
             <div className="bg-black/30 border border-white/10 rounded-xl p-4">
               <h4 className="text-white font-bold text-sm mb-3">Historical Strategy</h4>
               <div className="space-y-2 text-slate-400 text-xs">
-                <p><span className="text-white">1963–2018: Coalition builder.</span> AIPAC built bipartisan consensus by funding members on both sides of the aisle. Its power came from constituent pressure, not just money — members feared AIPAC's voter mobilization and grass-roots infrastructure.</p>
+                <p><span className="text-white">1963–2018: Coalition builder.</span> AIPAC built bipartisan consensus by funding members on both sides of the aisle. Its power came from constituent pressure, not just money members feared AIPAC's voter mobilization and grass-roots infrastructure.</p>
                 <p><span className="text-white">2019–2022: DMFI split.</span> Progressive Jewish donors broke away to form DMFI after AIPAC opposed the Iran nuclear deal. DMFI gave AIPAC's critics an institutional home within the pro-Israel tent.</p>
-                <p><span className="text-white">2022–present: UDP super PAC escalation.</span> AIPAC realized it could weaponize unlimited money through a super PAC. UDP became the primary tool — disbursing roughly $61M in 2024 alongside $55M+ in traditional PAC contributions.</p>
+                <p><span className="text-white">2022–present: UDP super PAC escalation.</span> AIPAC realized it could weaponize unlimited money through a super PAC. UDP became the primary tool disbursing roughly $61M in 2024 alongside $55M+ in traditional PAC contributions.</p>
               </div>
             </div>
             <div className="bg-black/30 border border-white/10 rounded-xl p-4">
-              <h4 className="text-white font-bold text-sm mb-3">Key funders — UDP + AIPAC PAC</h4>
+              <h4 className="text-white font-bold text-sm mb-3">Key funders. UDP + AIPAC PAC</h4>
               <div className="space-y-2">
                 {[
-                  { name: 'Jan Koum', amount: '$5M', role: 'UDP — WhatsApp co-founder', color: 'text-cyan-300' },
-                  { name: 'Jonathan Jacobson', amount: '$4.6M', role: 'UDP — hedge fund financier', color: 'text-cyan-300' },
-                  { name: 'Bernard Marcus', amount: '$3M', role: 'UDP — Home Depot co-founder', color: 'text-cyan-300' },
-                  { name: 'David Zalik', amount: '$2M', role: 'UDP — GreenSky CEO', color: 'text-cyan-300' },
+                  { name: 'Jan Koum', amount: '$5M', role: 'UDP. WhatsApp co-founder', color: 'text-cyan-300' },
+                  { name: 'Jonathan Jacobson', amount: '$4.6M', role: 'UDP hedge fund financier', color: 'text-cyan-300' },
+                  { name: 'Bernard Marcus', amount: '$3M', role: 'UDP. Home Depot co-founder', color: 'text-cyan-300' },
+                  { name: 'David Zalik', amount: '$2M', role: 'UDP. GreenSky CEO', color: 'text-cyan-300' },
                   { name: 'Haim Saban', amount: '$10M+', role: 'DMFI primary funder', color: 'text-blue-300' },
                 ].map((f) => (
                   <div key={f.name} className="flex items-start justify-between">
@@ -294,8 +294,8 @@ export default function AIPACDeepDive() {
             </div>
           </div>
           <div className="bg-amber-950/20 border border-amber-900/30 rounded-lg px-4 py-3">
-            <div className="text-amber-300 text-xs font-bold uppercase tracking-widest mb-1">2026 cycle — What changed</div>
-            <p className="text-slate-300 text-sm">The $548M tracked by gen-us.space for 2025–2026 represents a dramatic escalation — 4x the 2024 cycle total. This reflects UDP's full integration into AIPAC's political operation and the use of 501(c)(4) dark money vehicles for undisclosed portions of spending. The 96% member funding rate (512 of 535) is unmatched by any other PAC in US politics.</p>
+            <div className="text-amber-300 text-xs font-bold uppercase tracking-widest mb-1">2026 cycle. What changed</div>
+            <p className="text-slate-300 text-sm">The $548M tracked by gen-us.space for 2025–2026 represents a dramatic escalation, 4x the 2024 cycle total. This reflects UDP's full integration into AIPAC's political operation and the use of 501(c)(4) dark money vehicles for undisclosed portions of spending. The 96% member funding rate (512 of 535) is unmatched by any other PAC in US politics.</p>
           </div>
         </div>
       ),

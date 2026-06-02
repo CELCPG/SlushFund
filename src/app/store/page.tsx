@@ -3,7 +3,7 @@ import { STORE_PRODUCTS } from '@/data/store_products';
 import { ShoppingBag } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Store — SlushFund',
+  title: 'Store. SlushFund',
   description: 'SlushFund merch. Shirts, hats, and hoodies. Fulfilled by Printful, checkout via Snipcart.',
 };
 

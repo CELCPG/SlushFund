@@ -33,12 +33,12 @@ const WHAT_YOUR_MONEY_DOES = [
   {
     Icon: Database,
     title: 'Keeps the data flowing',
-    body: 'Nightly syncs from USAspending, House & Senate disclosures, FEC, and OpenSecrets — plus the servers that make 16k+ contracts and 25k+ trades searchable.',
+    body: 'Nightly syncs from USAspending, House & Senate disclosures, FEC, and OpenSecrets plus the servers that make 16k+ contracts and 25k+ trades searchable.',
   },
   {
     Icon: Search,
     title: 'Funds new investigations',
-    body: 'Every dollar buys time to chase the next no-bid contract, dark-money PAC, or conflicted trade — and to build the tools that surface them.',
+    body: 'Every dollar buys time to chase the next no-bid contract, dark-money PAC, or conflicted trade and to build the tools that surface them.',
   },
   {
     Icon: ShieldCheck,
@@ -75,7 +75,7 @@ export default function SupportPage() {
       <PageHeader
         eyebrow="Reader-funded accountability"
         title="Keep the money trackable."
-        description="SlushFund is free for everyone — reporters, researchers, and citizens. We don't run ads or sell data. We follow the money, and readers like you fund the work."
+        description="SlushFund is free for everyone reporters, researchers, and citizens. We don't run ads or sell data. We follow the money, and readers like you fund the work."
       />
 
       <Container className="space-y-12 py-12">
@@ -84,7 +84,7 @@ export default function SupportPage() {
           <div className="mb-4">
             <h2 className="text-xl font-bold text-white">Become a member</h2>
             <p className="mt-1 text-sm text-slate-400">
-              Recurring support is what keeps the lights on. Cancel anytime — every tier gets the same full access.
+              Recurring support is what keeps the lights on. Cancel anytime every tier gets the same full access.
             </p>
           </div>
           <TierGrid tiers={MONTHLY_TIERS} />
@@ -112,12 +112,12 @@ export default function SupportPage() {
             ))}
           </div>
           <p className="mt-4 text-xs text-slate-500">
-            SlushFund is an independent project, not a registered 501(c)(3) — contributions support the work but are
+            SlushFund is an independent project, not a registered 501(c)(3) contributions support the work but are
             not tax-deductible. Payments are processed securely by Stripe.
           </p>
         </section>
 
-        {/* Free alternative — newsletter */}
+        {/* Free alternative newsletter */}
         <section>
           <Card padding="lg" className="bg-gradient-to-br from-red-950/30 via-slate-900 to-slate-900">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

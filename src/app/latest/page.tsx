@@ -9,21 +9,21 @@ import { LatestFeed } from './LatestFeed';
 const OG = `/api/og?title=${encodeURIComponent('Latest Activity')}&eyebrow=${encodeURIComponent('Live Feed')}&stat=${encodeURIComponent('Daily')}&statLabel=${encodeURIComponent('new flagged contracts & trades')}`;
 
 export const metadata: Metadata = {
-  title: 'Latest — New Flagged Contracts & Congressional Trades',
+  title: 'Latest. New Flagged Contracts & Congressional Trades',
   description:
     'The newest high-risk federal contracts and notable congressional stock trades, updated continuously. Track the money as it moves.',
   alternates: {
     canonical: '/latest',
-    types: { 'application/rss+xml': [{ url: '/latest.xml', title: 'SlushFund — Latest Activity' }] },
+    types: { 'application/rss+xml': [{ url: '/latest.xml', title: 'SlushFund. Latest Activity' }] },
   },
   openGraph: {
     type: 'website',
     url: 'https://slushfund.net/latest',
-    title: 'SlushFund — Latest Activity',
+    title: 'SlushFund. Latest Activity',
     description: 'The newest high-risk federal contracts and notable congressional stock trades.',
     images: [{ url: OG, width: 1200, height: 630, alt: 'SlushFund Latest Activity' }],
   },
-  twitter: { card: 'summary_large_image', title: 'SlushFund — Latest Activity', images: [OG] },
+  twitter: { card: 'summary_large_image', title: 'SlushFund. Latest Activity', images: [OG] },
 };
 
 export default function LatestPage() {

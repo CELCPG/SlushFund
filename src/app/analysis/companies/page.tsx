@@ -112,10 +112,10 @@ const MLP_TICKERS = new Set([
   'TRGP',  // Targa Resources
   'ENB',   // Enbridge
   'EPD',   // Enterprise Products Partners
-  'CMRE',  // Costamare (but wait — CMRE is Costamare, a shipping company)
+  'CMRE',  // Costamare (but wait. CMRE is Costamare, a shipping company)
   'PSX',   // Phillips 66
   'HES',   // Hess Midstream
-  'AM',    // Antero Midstream (wait — AM is Antero Midstream which is listed)
+  'AM',    // Antero Midstream (wait. AM is Antero Midstream which is listed)
 ]);
 
 function isPublicTicker(ticker: string): boolean {
@@ -224,7 +224,7 @@ function PrivateDataPanel({ company }: { company: Company }) {
           </svg>
         </div>
         <div className="text-slate-500 text-xs font-semibold">No Public Market Data</div>
-        <div className="text-slate-600 text-xs mt-0.5">Private company — not publicly traded</div>
+        <div className="text-slate-600 text-xs mt-0.5">Private company not publicly traded</div>
       </div>
     </div>
   );
@@ -276,7 +276,7 @@ function CompanyCard({ company, onSelect }: { company: Company; onSelect: () => 
         </div>
       </div>
 
-      {/* Chart / Data panel — uniform height for all cards */}
+      {/* Chart / Data panel uniform height for all cards */}
       <div className="mb-3">
         {isPublic ? (
           <StockChart ticker={company.ticker} />
@@ -309,7 +309,7 @@ function CompanyCard({ company, onSelect }: { company: Company; onSelect: () => 
         ))}
       </div>
 
-      {/* Related contracts strip — only show if not already in PrivateDataPanel */}
+      {/* Related contracts strip only show if not already in PrivateDataPanel */}
       {company.related_contracts.length > 0 && isPublic && (
         <div className="bg-slate-800/60 rounded-lg px-3 py-2 mb-3">
           <div className="text-slate-500 text-xs mb-1">Related federal contracts</div>
@@ -353,7 +353,7 @@ function ConflictAlert({ company, trades }: { company: Company; trades: Trade[] 
         </div>
         <div className="bg-red-900/20 border border-red-800/50 rounded-lg px-4 py-3">
           <div className="text-red-400 text-xs uppercase tracking-widest mb-1">Federal Contractor Status</div>
-          <div className="text-white font-black text-2xl">{company.has_contract ? 'YES — Active Contract' : 'Not flagged'}</div>
+          <div className="text-white font-black text-2xl">{company.has_contract ? 'YES. Active Contract' : 'Not flagged'}</div>
           <div className="text-slate-400 text-xs mt-1">{contractStr}</div>
         </div>
         <div className="bg-red-900/20 border border-red-800/50 rounded-lg px-4 py-3">
@@ -388,7 +388,7 @@ function JournalistFindings({ company, trades, contracts }: { company: Company; 
           <span className="text-white font-semibold"> {company.trade_count} transactions</span> totaling
           <span className="text-emerald-400 font-semibold"> {formatMoney(company.total_volume)}</span>.
           {company.has_contract && (
-            <span className="text-red-400"> The company holds <span className="font-black">{contracts.length > 0 ? formatMoney(contracts[0].total) : 'active'} federal contracts</span> — creating a direct conflict when legislators trade its stock while overseeing the agencies awarding those contracts.</span>
+            <span className="text-red-400"> The company holds <span className="font-black">{contracts.length > 0 ? formatMoney(contracts[0].total) : 'active'} federal contracts</span> creating a direct conflict when legislators trade its stock while overseeing the agencies awarding those contracts.</span>
           )}
         </p>
       </div>
@@ -436,7 +436,7 @@ function JournalistFindings({ company, trades, contracts }: { company: Company; 
         <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-800">
             <h3 className="text-white font-bold text-sm uppercase tracking-widest">
-              High-Value Trades (≥$50K) — {highValueTrades.length} transactions
+              High-Value Trades (≥$50K) | {highValueTrades.length} transactions
             </h3>
           </div>
           <div className="divide-y divide-slate-800">
@@ -467,7 +467,7 @@ function JournalistFindings({ company, trades, contracts }: { company: Company; 
             <div className="flex items-center gap-2">
               <AlertTriangle size={14} className="text-amber-400" />
               <h3 className="text-amber-400 font-bold text-sm uppercase tracking-widest">
-                Suspicious / High-Value Signals — {suspiciousTrades.length} flagged
+                Suspicious / High-Value Signals | {suspiciousTrades.length} flagged
               </h3>
             </div>
           </div>
@@ -486,7 +486,7 @@ function JournalistFindings({ company, trades, contracts }: { company: Company; 
                     <div className="text-slate-400 text-xs mt-1">{t.transaction_date} · {t.member_party} · {t.member_chamber}</div>
                     {t.signal_type && t.signal_type !== 'routine' && (
                       <div className="mt-1.5 bg-amber-900/30 border border-amber-700/50 rounded px-2 py-1 text-amber-300 text-xs">
-                        Signal: {t.signal_type} — trade occurred near federal contract activity period
+                        Signal: {t.signal_type} trade occurred near federal contract activity period
                       </div>
                     )}
                   </div>
@@ -504,7 +504,7 @@ function JournalistFindings({ company, trades, contracts }: { company: Company; 
             <div className="flex items-center gap-2">
               <Building2 size={14} className="text-emerald-400" />
               <h3 className="text-white font-bold text-sm uppercase tracking-widest">
-                Federal Contracts — {contracts.length} awards totaling {formatMoney(contracts.reduce((s, c) => s + c.total, 0))}
+                Federal Contracts | {contracts.length} awards totaling {formatMoney(contracts.reduce((s, c) => s + c.total, 0))}
               </h3>
             </div>
           </div>
@@ -752,7 +752,7 @@ export default function CompaniesPage() {
                     <StockChart ticker={getTickerDisplayInfo(selected.ticker).displayTicker} />
                   </div>
                 ) : (
-                  <div className="mt-2 text-xs text-slate-600 italic">Private company — no public stock data</div>
+                  <div className="mt-2 text-xs text-slate-600 italic">Private company no public stock data</div>
                 )}
               </div>
             </div>
@@ -783,7 +783,7 @@ export default function CompaniesPage() {
                 <>
                   <div className="flex items-center gap-2 mb-4">
                     <Shield size={14} className="text-emerald-400" />
-                    <h2 className="text-emerald-400 font-bold text-sm uppercase tracking-widest">Federal Contractors — Priority Review</h2>
+                    <h2 className="text-emerald-400 font-bold text-sm uppercase tracking-widest">Federal Contractors. Priority Review</h2>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                     {contractHolders.map(c => (

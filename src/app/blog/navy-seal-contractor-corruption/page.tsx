@@ -70,7 +70,7 @@ export default function NavySealContractorCorruptionPage() {
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">The Case Study: A $900M No-Bid Contract</h2>
           <p className="text-slate-300 mb-4">
-            In March 2024, the Naval Sea Systems Command awarded a $900 million contract for "logistics modernization services" to Meridian Solutions Group, LLC — a company incorporated in Delaware three months before the award. The contract was awarded under Federal Acquisition Regulation (FAR) exception 15.501 — the "urgency" exception, which allows agencies to bypass competitive bidding when "delay would harm the government&apos;s interest."
+            In March 2024, the Naval Sea Systems Command awarded a $900 million contract for "logistics modernization services" to Meridian Solutions Group, LLC a company incorporated in Delaware three months before the award. The contract was awarded under Federal Acquisition Regulation (FAR) exception 15.501 the "urgency" exception, which allows agencies to bypass competitive bidding when "delay would harm the government&apos;s interest."
           </p>
           <p className="text-slate-300 mb-4">
             SlushFund identified Meridian Solutions Group as a portfolio company of HPS Investment Partners, a private equity firm. HPS Investment Partners is co-founded by a business partner who is married to the sister of Rep. James Langevin (D-RI), a senior member of the House Armed Services Committee. Rep. Langevin had voted the previous month to increase the Navy&apos;s FY2025 procurement budget.
@@ -82,13 +82,13 @@ export default function NavySealContractorCorruptionPage() {
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">The Seven FAR Exceptions That Swallow 40% of Spending</h2>
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 mb-6 space-y-3">
             {[
-              { exception: 'FAR 15.501 — Urgency', pct: '18%', description: '"Unusual and compelling urgency" — used when agency waited too long to compete' },
-              { exception: 'FAR 6.302-1 — Only One Responsible Source', pct: '11%', description: 'Used for classified programs or when only one company can do the work' },
-              { exception: 'FAR 18.102 — Simplified Procedures', pct: '6%', description: 'For commercial acquisitions under $7.5M, with minimal documentation' },
-              { exception: 'FAR 6.302-3 — Industrial Mobilization', pct: '3%', description: 'For "essential government interest" in domestic industrial base' },
-              { exception: 'FAR 6.302-4 — International Agreement', pct: '1%', description: 'For contracts required by treaty or international agreement' },
-              { exception: 'FAR 6.302-6 — Competition Inadequate', pct: '0.5%', description: 'When competition was attempted but produced inadequate results' },
-              { exception: 'FAR 13.104 — Simplified Competition', pct: '0.5%', description: 'Market research only, no formal solicitation' },
+              { exception: 'FAR 15.501. Urgency', pct: '18%', description: '"Unusual and compelling urgency" used when agency waited too long to compete' },
+              { exception: 'FAR 6.302-1. Only One Responsible Source', pct: '11%', description: 'Used for classified programs or when only one company can do the work' },
+              { exception: 'FAR 18.102. Simplified Procedures', pct: '6%', description: 'For commercial acquisitions under $7.5M, with minimal documentation' },
+              { exception: 'FAR 6.302-3. Industrial Mobilization', pct: '3%', description: 'For "essential government interest" in domestic industrial base' },
+              { exception: 'FAR 6.302-4. International Agreement', pct: '1%', description: 'For contracts required by treaty or international agreement' },
+              { exception: 'FAR 6.302-6. Competition Inadequate', pct: '0.5%', description: 'When competition was attempted but produced inadequate results' },
+              { exception: 'FAR 13.104. Simplified Competition', pct: '0.5%', description: 'Market research only, no formal solicitation' },
             ].map((item, i) => (
               <div key={i} className="flex gap-3 items-start bg-slate-800/60 rounded-lg p-3">
                 <span className="text-red-400 font-mono font-bold text-sm w-12 shrink-0">{item.pct}</span>
@@ -106,7 +106,7 @@ export default function NavySealContractorCorruptionPage() {
               <div>
                 <p className="text-amber-200 font-semibold mb-1">The GAO Finding</p>
                 <p className="text-amber-100/80 text-sm">
-                  GAO's 2024 protest review found that the "urgency" exception was improperly invoked in 41% of cases reviewed. In 73% of those improper invocations, the agency had known about the deadline for more than 6 months. The pattern suggests that "urgency" has become a standard procurement tool rather than an emergency exception — meaning the exception has become the rule.
+                  GAO's 2024 protest review found that the "urgency" exception was improperly invoked in 41% of cases reviewed. In 73% of those improper invocations, the agency had known about the deadline for more than 6 months. The pattern suggests that "urgency" has become a standard procurement tool rather than an emergency exception meaning the exception has become the rule.
                 </p>
               </div>
             </div>
@@ -117,7 +117,7 @@ export default function NavySealContractorCorruptionPage() {
             The House Armed Services Committee has not held a hearing on acquisition reform or no-bid contracting since 2021. The Senate Armed Services Committee last addressed sole-source contracts in a 2023 hearing that lasted 90 minutes and produced no legislation. The congressional defense procurement oversight subcommittees have a combined staff of 14 people to oversee $886 billion in annual defense spending.
           </p>
           <p className="text-slate-300 mb-4">
-            The lack of oversight is not incidental. The members who benefit from no-bid contracting — through their committee positions and their investments — are the same ones who control the oversight budget.
+            The lack of oversight is not incidental. The members who benefit from no-bid contracting through their committee positions and their investments are the same ones who control the oversight budget.
           </p>
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">The Broader Pattern</h2>

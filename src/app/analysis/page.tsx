@@ -141,9 +141,16 @@ function MonthlyTrendChart({ data }: { data: { month: string; label: string; tot
 
 // ─── Top Agencies Chart ────────────────────────────────────────────────────────
 function TopAgenciesChart({ alerts }: { alerts: any }) {
+  // get_top_agencies already deduplicates by awarding_agency (most-used code
+  // wins), so we can use the rows directly.
   const agencies = (alerts?.top_agencies ?? []).slice(0, 8);
   const chartData = agencies.map((a: any) => ({
-    name: a.agency.replace('Department of ', 'DoD: ').replace('Department of ', 'Do'),
+    name: String(a.agency ?? '')
+      .replace('Department of Homeland Security', 'Homeland Sec')
+      .replace('Department of Defense', 'Defense')
+      .replace('Department of Health and Human Services', 'HHS')
+      .replace('Department of ', '')
+      .replace('General Services Administration', 'GSA'),
     total: a.total,
     connected: a.connected,
     pct: a.total > 0 ? Math.round((a.connected / a.total) * 100) : 0,
@@ -184,9 +191,9 @@ function CostOverrunTable({ data }: { data: any[] }) {
       <div className="px-5 py-4 border-b border-slate-800">
         <div className="flex items-center gap-2 mb-1">
           <AlertTriangle size={14} className="text-amber-400" />
-          <h3 className="text-white font-bold text-sm uppercase tracking-widest">Cost Overruns — Project Inflation Tracker</h3>
+          <h3 className="text-white font-bold text-sm uppercase tracking-widest">Cost Overruns. Project Inflation Tracker</h3>
         </div>
-        <p className="text-slate-500 text-xs">Federal projects that ballooned beyond original budget. Median overrun: 167%. These are documented cases — actual system-wide waste is likely higher.</p>
+        <p className="text-slate-500 text-xs">Federal projects that ballooned beyond original budget. Median overrun: 167%. These are documented cases actual system-wide waste is likely higher.</p>
       </div>
       <div className="divide-y divide-slate-800">
         {visible.map((co: any) => (
@@ -465,7 +472,7 @@ export default function AnalysisPage() {
         <div>
           <h1 className="text-4xl font-black text-white mb-2">Deep Analytics</h1>
           <p className="text-slate-400 text-sm leading-relaxed max-w-2xl">
-            Federal spending mapped to political connections — cost overruns, insider trading correlations, money flow from contracts to politician stock portfolios.
+            Federal spending mapped to political connections cost overruns, insider trading correlations, money flow from contracts to politician stock portfolios.
           </p>
         </div>
 
@@ -491,7 +498,7 @@ export default function AnalysisPage() {
           <TopAgenciesChart alerts={alerts} />
         </div>
 
-        {/* Monthly Trend — real data from DB */}
+        {/* Monthly Trend real data from DB */}
         {spendingTrend?.months && <MonthlyTrendChart data={spendingTrend.months} />}
 
         {/* Money Flow */}

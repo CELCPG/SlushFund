@@ -131,7 +131,7 @@ export default function NoBidContractsPage() {
               <div>
                 <p className="text-amber-200 font-semibold mb-1">The Urgency Exception Is Being Abused</p>
                 <p className="text-amber-100/80 text-sm">
-                  The &quot;unusual and compelling urgency&quot; exception was invoked 847 times in FY2024. Of those, 612 — 72% — went to companies whose executives had made political donations to the current administration within the prior 24 months. The correlation is not coincidence. It is selection.
+                  The &quot;unusual and compelling urgency&quot; exception was invoked 847 times in FY2024. Of those, 612, 72% went to companies whose executives had made political donations to the current administration within the prior 24 months. The correlation is not coincidence. It is selection.
                 </p>
               </div>
             </div>
@@ -148,7 +148,7 @@ export default function NoBidContractsPage() {
             <li>A competitive bidding preference for all awards above $10M regardless of claimed exception</li>
           </ul>
           <p className="text-slate-300 mb-4">
-            The bill has never reached a floor vote. In the four Congresses where it was introduced, it died in committee — primarily due to opposition from defense contractors and the lobbying apparatus that represents them. The same contractors who benefit most from the no-bid system are the most effective at killing reform.
+            The bill has never reached a floor vote. In the four Congresses where it was introduced, it died in committee primarily due to opposition from defense contractors and the lobbying apparatus that represents them. The same contractors who benefit most from the no-bid system are the most effective at killing reform.
           </p>
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">What You Can Do</h2>

@@ -143,10 +143,10 @@ export default function MilitaryContractorsDodBudgetPage() {
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">Why Competition Is a Myth</h2>
           <p className="text-slate-300 mb-4">
-            Defense procurement is structured around a concept called "required source" — meaning certain contracts can only go to certain companies because of intellectual property, classified access, or "industrial base" considerations. In practice, this means the five primes compete with each other for program wins, but the competition itself is managed by the same congressional committees that own their stock.
+            Defense procurement is structured around a concept called "required source" meaning certain contracts can only go to certain companies because of intellectual property, classified access, or "industrial base" considerations. In practice, this means the five primes compete with each other for program wins, but the competition itself is managed by the same congressional committees that own their stock.
           </p>
           <p className="text-slate-300 mb-4">
-            The Government Accountability Office found in a 2024 report that sole-source awards — contracts awarded without competitive bidding — now account for approximately 40% of all major defense acquisitions by dollar value. The "industrial base" justification was used in 73% of those sole-source determinations.
+            The Government Accountability Office found in a 2024 report that sole-source awards contracts awarded without competitive bidding now account for approximately 40% of all major defense acquisitions by dollar value. The "industrial base" justification was used in 73% of those sole-source determinations.
           </p>
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">What the Revolving Door Adds</h2>
@@ -159,7 +159,7 @@ export default function MilitaryContractorsDodBudgetPage() {
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">The Bottom Line</h2>
           <p className="text-slate-300 mb-4">
-            The oversight structure of U.S. defense procurement was not designed to prevent these conflicts. It was designed by the same people who benefit from them. Until the people who regulate defense spending are prohibited from owning the companies they regulate — which is current law in nearly every other wealthy democracy — the structural conflict will persist.
+            The oversight structure of U.S. defense procurement was not designed to prevent these conflicts. It was designed by the same people who benefit from them. Until the people who regulate defense spending are prohibited from owning the companies they regulate which is current law in nearly every other wealthy democracy the structural conflict will persist.
           </p>
 
           <div className="border-t border-slate-800 pt-8 mt-10">

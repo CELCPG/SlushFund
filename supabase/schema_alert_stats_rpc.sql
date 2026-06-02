@@ -51,18 +51,47 @@ returns table (
 language sql
 stable
 as $$
+  -- Pick the most-used agency_code per awarding_agency. USAspending records
+  -- the same agency under both a 3-digit CGAC code (e.g. 097) and a 4-digit
+  -- fiscal/funding code (e.g. 9700); grouping by both would split agencies
+  -- across two rows. We rank by row count per code and keep the winner.
+  with code_counts as (
+    select
+      awarding_agency,
+      awarding_agency_code,
+      count(*) as n
+    from awards
+    where awarding_agency is not null
+    group by awarding_agency, awarding_agency_code
+  ),
+  ranked as (
+    select
+      awarding_agency,
+      awarding_agency_code,
+      row_number() over (
+        partition by awarding_agency
+        order by n desc, awarding_agency_code
+      ) as rn
+    from code_counts
+  ),
+  canonical as (
+    select awarding_agency, awarding_agency_code as canonical_code
+    from ranked
+    where rn = 1
+  )
   select
-    awarding_agency as agency,
-    awarding_agency_code as agency_code,
-    sum(dollar_amount)::bigint as total,
-    sum(case when connection_type is not null and connection_type != 'none' then dollar_amount else 0 end)::bigint as connected,
-    sum(case when array_length(flags, 1) > 0 then dollar_amount else 0 end)::bigint as flagged,
+    a.awarding_agency as agency,
+    c.canonical_code as agency_code,
+    sum(a.dollar_amount)::bigint as total,
+    sum(case when a.connection_type is not null and a.connection_type != 'none' then a.dollar_amount else 0 end)::bigint as connected,
+    sum(case when array_length(a.flags, 1) > 0 then a.dollar_amount else 0 end)::bigint as flagged,
     count(*)::bigint as award_count
-  from awards
-  where risk_score >= min_risk
-    and (start_date is null or posted_date >= start_date)
-    and (end_date is null or posted_date <= end_date)
-  group by awarding_agency, awarding_agency_code
+  from awards a
+  join canonical c on c.awarding_agency = a.awarding_agency
+  where a.risk_score >= min_risk
+    and (start_date is null or a.posted_date >= start_date)
+    and (end_date is null or a.posted_date <= end_date)
+  group by a.awarding_agency, c.canonical_code
   order by total desc
   limit result_limit;
 $$;
@@ -187,8 +216,13 @@ begin
     'total_covid_awards', count(*),
     'total_covid_obligations', coalesce(sum(covid_obligations), 0),
     'total_covid_outlays', coalesce(sum(covid_outlays), 0),
-    'covid_no_bid_count', count(*) filter (where competition_status in ('no_bid', 'sole_source')),
-    'covid_no_bid_dollars', coalesce(sum(covid_obligations) filter (where competition_status in ('no_bid', 'sole_source')), 0),
+    -- COVID competition signal: try `flags` first ('no_bid' / 'sole_source'),
+    -- fall back to `competition_status` for older awards that don't have
+    -- pipeline-inferred flags. The flags array currently has no 'no_bid'
+    -- values for COVID awards (only covid_related/matched_connection/large_award/related_party),
+    -- so this resolves to 0 — which is the honest answer.
+    'covid_no_bid_count', count(*) filter (where 'no_bid' = any(flags) or 'sole_source' = any(flags) or competition_status in ('no_bid', 'sole_source')),
+    'covid_no_bid_dollars', coalesce(sum(covid_obligations) filter (where 'no_bid' = any(flags) or 'sole_source' = any(flags) or competition_status in ('no_bid', 'sole_source')), 0),
     'by_agency', (
       select coalesce(jsonb_agg(row_to_json(t) order by total_covid_obligations desc), '[]'::jsonb)
       from (
@@ -196,8 +230,11 @@ begin
           awarding_agency as agency,
           count(*) as award_count,
           sum(covid_obligations) as total_covid_obligations,
-          count(*) filter (where competition_status in ('no_bid', 'sole_source')) as no_bid_count,
-          coalesce(sum(covid_obligations) filter (where competition_status in ('no_bid', 'sole_source')), 0) as no_bid_dollars
+          -- Same combined signal as the top-level field. Currently 0 across
+          -- the board for COVID-tagged awards because no row has the right
+          -- flag and almost none have a non-'unknown' competition_status.
+          count(*) filter (where 'no_bid' = any(flags) or 'sole_source' = any(flags) or competition_status in ('no_bid', 'sole_source')) as no_bid_count,
+          coalesce(sum(covid_obligations) filter (where 'no_bid' = any(flags) or 'sole_source' = any(flags) or competition_status in ('no_bid', 'sole_source')), 0) as no_bid_dollars
         from awards
         where covid_obligations > 0
         group by awarding_agency
@@ -238,3 +275,48 @@ end;
 $$;
 
 grant execute on function get_covid_stats() to anon, authenticated;
+
+-- ─── Competition status coverage + cross-signal analysis ──────────────────────
+-- Two parallel signals exist for "this award was non-competitive":
+--   1. competition_status: a real field with values open_competition | no_bid |
+--      sole_source | limited_competition | full_competition | unknown
+--   2. flags array: may contain no_bid | sole_source | limited_competition |
+--      no_compete_high_value
+-- They don't fully agree. This RPC returns both so the dashboard can show the
+-- honest picture (e.g. "21 from competition_status, 30 from no_compete_high_value
+-- flag, 16,129 unknown") instead of a single number that hides the gap.
+create or replace function get_competition_coverage()
+returns jsonb
+language sql
+stable
+as $$
+  with totals as (
+    select
+      count(*)::bigint as total_awards,
+      count(*) filter (where 'no_compete_high_value' = any(flags))::bigint as by_no_compete_flag,
+      count(*) filter (where competition_status in ('no_bid', 'sole_source'))::bigint as non_competitive_from_status,
+      count(*) filter (where competition_status is null or competition_status = 'unknown')::bigint as unknown_or_null,
+      count(*) filter (where competition_status is not null and competition_status != 'unknown')::bigint as has_competition_data
+    from awards
+  )
+  select jsonb_build_object(
+    'total_awards', (select total_awards from totals),
+    'by_competition_status', (
+      select coalesce(jsonb_agg(row_to_json(t) order by n desc), '[]'::jsonb)
+      from (
+        select
+          coalesce(competition_status, 'NULL') as status,
+          count(*) as n,
+          sum(dollar_amount)::bigint as total
+        from awards
+        group by competition_status
+      ) t
+    ),
+    'by_no_compete_flag', (select by_no_compete_flag from totals),
+    'non_competitive_from_status', (select non_competitive_from_status from totals),
+    'unknown_or_null', (select unknown_or_null from totals),
+    'has_competition_data', (select has_competition_data from totals)
+  );
+$$;
+
+grant execute on function get_competition_coverage() to anon, authenticated;

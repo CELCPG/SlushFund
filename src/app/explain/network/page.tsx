@@ -83,7 +83,7 @@ const MOCK_GRAPH: GraphData = {
     { id: 'grf', type: 'pac', label: 'Guam Republicans Fund', size: 14, x: 0, y: 0, vx: 0, vy: 0, fixed: false, totalSpending:  8e6, description: 'Territorial GOP PAC' },
   ],
   edges: [
-    // Stock ownership — politician → contractor
+    // Stock ownership politician → contractor
     { id: 'e1', source: 'mike-turner', target: 'pltr', type: 'stock', value: 250000, label: '$250K shares' },
     { id: 'e2', source: 'mike-turner', target: 'rtx', type: 'stock', value: 180000, label: '$180K shares' },
     { id: 'e3', source: 'cathy-mcmorris', target: 'coi', type: 'stock', value: 95000, label: '$95K COIN' },
@@ -95,7 +95,7 @@ const MOCK_GRAPH: GraphData = {
     { id: 'e9', source: 'cathy-mcmorris', target: 'nvda', type: 'stock', value: 65000, label: '$65K NVDA' },
     { id: 'e10', source: 'maxine-waters', target: 'ba', type: 'stock', value: 45000, label: '$45K BA' },
 
-    // Contract award — agency → contractor (thicker = more $)
+    // Contract award agency → contractor (thicker = more $)
     { id: 'e11', source: ' dod', target: 'ba', type: 'contract', value: 48e9, label: '$48B DoD' },
     { id: 'e12', source: ' dod', target: 'rtx', type: 'contract', value: 32e9, label: '$32B DoD' },
     { id: 'e13', source: ' dod', target: 'pltr', type: 'contract', value: 2.4e9, label: '$2.4B DoD' },
@@ -108,7 +108,7 @@ const MOCK_GRAPH: GraphData = {
     { id: 'e20', source: ' va', target: 'msft', type: 'contract', value: 1.8e9, label: '$1.8B VA' },
     { id: 'e21', source: 'hhs', target: 'pltr', type: 'contract', value: 600e6, label: '$600M HHS' },
 
-    // PAC donation — PAC → politician
+    // PAC donation. PAC → politician
     { id: 'e22', source: 'america-pac', target: 'mike-turner', type: 'pac_donation', value: 2.5e6, label: '$2.5M' },
     { id: 'e23', source: 'america-pac', target: 'darin-lahood', type: 'pac_donation', value: 1.8e6, label: '$1.8M' },
     { id: 'e24', source: 'america-pac', target: 'brian-mast', type: 'pac_donation', value: 1.5e6, label: '$1.5M' },
@@ -120,7 +120,7 @@ const MOCK_GRAPH: GraphData = {
     { id: 'e30', source: 'america-pac', target: 'al-franks', type: 'pac_donation', value: 1.1e6, label: '$1.1M' },
     { id: 'e31', source: 'grf', target: 'cathy-mcmorris', type: 'pac_donation', value: 250000, label: '$250K' },
 
-    // Committee oversight — politician → agency
+    // Committee oversight politician → agency
     { id: 'e32', source: 'mike-turner', target: ' dod', type: 'oversight', value: 0, label: 'House Intel' },
     { id: 'e33', source: 'cathy-mcmorris', target: 'hhs', type: 'oversight', value: 0, label: 'E&C Comm' },
     { id: 'e34', source: 'cynthia-lummis', target: 'treas', type: 'oversight', value: 0, label: 'Banking Comm' },
@@ -368,7 +368,7 @@ function GraphSVG({
     isDraggingRef.current = false;
     dragNodeIdRef.current = nodeId;
     lastMouseRef.current = { x: e.clientX, y: e.clientY };
-    // Don't call onNodeDrag here — only start dragging if mouse actually moves
+    // Don't call onNodeDrag here only start dragging if mouse actually moves
   }
 
   function nodeMouseMove(e: React.MouseEvent) {
@@ -376,7 +376,7 @@ function GraphSVG({
     const dx = e.clientX - lastMouseRef.current.x;
     const dy = e.clientY - lastMouseRef.current.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist < 4) return; // movement threshold — ignore tiny jitters
+    if (dist < 4) return; // movement threshold ignore tiny jitters
     isDraggingRef.current = true;
     lastMouseRef.current = { x: e.clientX, y: e.clientY };
     const svgX = toSvgX(e.clientX);

@@ -94,7 +94,7 @@ export default function KochDarkMoneyMachinePage() {
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-full bg-amber-600 flex items-center justify-center text-white font-black text-sm shrink-0 mt-0.5">1</div>
               <div>
-                <div className="text-white font-bold mb-1">Donor Class — The Billionaire Network</div>
+                <div className="text-white font-bold mb-1">Donor Class. The Billionaire Network</div>
                 <div className="text-slate-400 text-sm">
                   Charles Koch, his brother Bill Koch (now largely estranged), and a network of approximately 500 high-net-worth donors contribute to the central pooling vehicle. The identity of this class is not required to be disclosed.
                 </div>
@@ -112,7 +112,7 @@ export default function KochDarkMoneyMachinePage() {
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-full bg-amber-600 flex items-center justify-center text-white font-black text-sm shrink-0 mt-0.5">3</div>
               <div>
-                <div className="text-white font-bold mb-1">Operating Organizations — Americans for Prosperity, etc.</div>
+                <div className="text-white font-bold mb-1">Operating Organizations. Americans for Prosperity, etc.</div>
                 <div className="text-slate-400 text-sm">
                   501(c)(4) social welfare organizations like AFP, the Libre Initiative, and Americans for Prosperity Action can engage in political activity without disclosing their original donors. They report expenditures, not contributions.
                 </div>
@@ -122,14 +122,14 @@ export default function KochDarkMoneyMachinePage() {
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">The Policy Payoff</h2>
           <p className="text-slate-300 mb-4">
-            Money flows where incentives align. The Koch network's policy portfolio is not random — it tracks precisely with the financial interests of its donor class. In 2024 and 2025, the network spent an estimated $180 million advocating for:
+            Money flows where incentives align. The Koch network's policy portfolio is not random it tracks precisely with the financial interests of its donor class. In 2024 and 2025, the network spent an estimated $180 million advocating for:
           </p>
           <ul className="text-slate-300 space-y-2 mb-6">
             <li>Elimination of the corporate alternative minimum tax (saves Koch Industries an estimated $400M+ annually)</li>
             <li>Blocking the SEC&apos;s climate disclosure rule (directly affects Koch-linked energy companies)</li>
             <li>Weakening of the National Labor Relations Board (directly affects union-free workplaces)</li>
             <li>Opposing the EPA&apos;s methane fee (Koch Industries is a major natural gas producer)</li>
-            <li>Blocking campaign finance reform — specifically the DISCLOSE Act, which would require 501(c)(4) organizations to disclose donors above $10,000</li>
+            <li>Blocking campaign finance reform specifically the DISCLOSE Act, which would require 501(c)(4) organizations to disclose donors above $10,000</li>
           </ul>
 
           <div className="bg-amber-900/20 border border-amber-700/40 rounded-xl p-6 my-8">
@@ -138,7 +138,7 @@ export default function KochDarkMoneyMachinePage() {
               <div>
                 <p className="text-amber-200 font-semibold mb-1">The DISCLOSE Act Problem</p>
                 <p className="text-amber-100/80 text-sm">
-                  Every major dark money organization — Koch, Arabella, and others — spent heavily to kill the DISCLOSE Act in 2024. The Act would have required any organization spending more than $10,000 on politics to disclose donors above that threshold. It died in the Senate. The Koch network spent an estimated $12 million lobbying against it.
+                  Every major dark money organization. Koch, Arabella, and others spent heavily to kill the DISCLOSE Act in 2024. The Act would have required any organization spending more than $10,000 on politics to disclose donors above that threshold. It died in the Senate. The Koch network spent an estimated $12 million lobbying against it.
                 </p>
               </div>
             </div>

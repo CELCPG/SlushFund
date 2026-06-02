@@ -38,19 +38,24 @@ function formatLargeNum(n: number): string {
   return `$${n}`;
 }
 
-// ─── The Bottom Line — Deep Insights ───────────────────────────────────────────
-function BottomLine({ stats, analytics }: { stats: any; analytics: any }) {
+// ─── The Bottom Line: Deep Insights ───────────────────────────────────────────
+function BottomLine({ stats, analytics, competition }: { stats: any; analytics: any; competition: any }) {
   const connected = stats?.summary?.connected_dollars ?? 0;
   const total = stats?.summary?.total_dollars ?? 1;
   const connectedPct = ((connected / total) * 100).toFixed(1);
+  const connectedCount = stats?.summary?.connected_count ?? 0;
   const noBid = stats?.summary?.no_bid_dollars ?? 0;
   const noBidPct = ((noBid / total) * 100).toFixed(1);
+  const noBidCount = stats?.summary?.no_bid_count ?? 0;
   const overrunDollars = analytics?.summary?.total_overrun_dollars ?? 0;
   const dbSeeded = (analytics?.summary?.total_insider_signals ?? 0) > 0;
-  const avgOverrun = dbSeeded ? (analytics?.summary?.avg_overrun_pct ?? 0) : 167;
-  const insiderSignals = dbSeeded ? (analytics?.summary?.total_insider_signals ?? 0) : 10;
-  const overrunProjects = dbSeeded ? (analytics?.summary?.total_overrun_projects ?? 0) : 15;
+  const avgOverrun = dbSeeded ? (analytics?.summary?.avg_overrun_pct ?? 0) : null;
+  const insiderSignals = dbSeeded ? (analytics?.summary?.total_insider_signals ?? 0) : 0;
+  const overrunProjects = dbSeeded ? (analytics?.summary?.total_overrun_projects ?? 0) : 0;
 
+  // The hardcoded "40-60% above market" claim is removed: the live dataset
+  // has price_premium_pct = null for almost all awards, so we don't have
+  // the data to back that specific number up. We surface what we actually have.
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
       <div className="flex items-center gap-2 mb-4">
@@ -61,33 +66,34 @@ function BottomLine({ stats, analytics }: { stats: any; analytics: any }) {
         <div className="space-y-2">
           <div className="text-red-400 text-xs font-bold uppercase tracking-widest">Connected Spending</div>
           <p className="text-slate-300 text-sm leading-relaxed">
-            <span className="text-white font-semibold">{connectedPct}%</span> of all tracked federal spending goes to companies with direct political connections to the Trump administration, Musk, or their inner circle — totaling{' '}
-            <span className="text-red-400 font-semibold">{formatLargeNum(connected)}</span>.
+            <span className="text-white font-semibold">{connectedPct}%</span> of all tracked federal spending goes to companies with direct political connections to the Trump administration, Musk, or their inner circle, totaling{' '}
+            <span className="text-red-400 font-semibold">{formatLargeNum(connected)}</span> across <span className="text-white font-semibold">{connectedCount.toLocaleString()}</span> awards.
           </p>
           <p className="text-slate-400 text-xs leading-relaxed">
-            These awards are disproportionately no-bid or sole-source. The median risk score for connected awards is{' '}
-            <span className="text-amber-400 font-semibold">87/100</span> — "extreme risk."
+            The top connected vendors (SpaceX, Palantir, xAI, Anduril) account for most of that figure. See the &ldquo;Who Benefits Most&rdquo; section below for the breakdown.
           </p>
         </div>
         <div className="space-y-2">
           <div className="text-amber-400 text-xs font-bold uppercase tracking-widest">No-Bid / Sole-Source</div>
           <p className="text-slate-300 text-sm leading-relaxed">
-            <span className="text-white font-semibold">{noBidPct}%</span> of all tracked spending bypassed competitive bidding — <span className="text-amber-400 font-semibold">{formatLargeNum(noBid)}</span> in contracts with zero competitive pressure.
+            <span className="text-white font-semibold">{noBidPct}%</span> of tracked spending bypassed competitive bidding: <span className="text-amber-400 font-semibold">{formatLargeNum(noBid)}</span> across <span className="text-white font-semibold">{noBidCount.toLocaleString()}</span> {noBidCount === 1 ? 'award' : 'awards'}.
           </p>
           <p className="text-slate-400 text-xs leading-relaxed">
-            Without competition, agencies have no leverage on price. Contracts marked "inflated" show premiums of{' '}
-            <span className="text-amber-400 font-semibold">40–60%</span> above independent market estimates. These premiums are effectively profit margins — at taxpayer expense.
+            The {noBidCount}-award count is the strict <code className="text-amber-400">competition_status = no_bid / sole_source</code> signal. The <code className="text-amber-400">no_compete_high_value</code> flag (risk-engine signal) surfaces {competition?.by_no_compete_flag ?? 0} additional non-competitive awards that the status field has not been updated for. {competition && (
+              <>{competition.unknown_or_null?.toLocaleString() ?? '—'} of {competition.total_awards?.toLocaleString() ?? '—'} tracked awards have <code className="text-amber-400">competition_status = unknown</code>, so the true no-bid exposure is likely higher. The biggest known no-bid contracts (SpaceX, Palantir, GSA EV) are surfaced in the <Link href="/analysis/conflicts" className="text-blue-400 hover:underline">Conflicts</Link> and <Link href="/analysis/cost-overruns" className="text-blue-400 hover:underline">Cost Overruns</Link> pages.</>
+            )}
           </p>
         </div>
         <div className="space-y-2">
           <div className="text-emerald-400 text-xs font-bold uppercase tracking-widest">Cost Overruns</div>
           <p className="text-slate-300 text-sm leading-relaxed">
-            <span className="text-white font-semibold">{overrunProjects}</span> federally-documented cost overrun projects tracked — from the $20M Reflection Pool to the VA EHR modernization at 281% over budget.
+            <span className="text-white font-semibold">{overrunProjects}</span> federally-documented cost overrun projects tracked, from the $20M Reflection Pool to the VA EHR modernization at 281% over budget. Total overrun value: <span className="text-emerald-400 font-semibold">{formatLargeNum(overrunDollars)}</span>.
           </p>
-          <p className="text-slate-400 text-xs leading-relaxed">
-            These are not normal project variances. The scale — averaging <span className="text-amber-400 font-semibold">{avgOverrun}% above original estimates</span> — is consistent with{' '}
-            <span className="text-red-400 font-semibold">embezzlement via contract inflation</span>: contracts awarded high, then inflated further through change orders.
-          </p>
+          {avgOverrun !== null && (
+            <p className="text-slate-400 text-xs leading-relaxed">
+              Average overrun is <span className="text-amber-400 font-semibold">{avgOverrun}% above original estimates</span>. These are not normal project variances. Many are GAO-flagged, some under OIG investigation.
+            </p>
+          )}
         </div>
       </div>
     </div>
@@ -101,8 +107,13 @@ function WhoBenefitsMost({ stats }: { stats: any }) {
     .filter((b: any) => b.connection_type !== 'none')
     .sort((a: any, b: any) => b.total - a.total);
 
-  const total = stats?.total_dollars ?? 1;
-  const connected = stats?.connected_dollars ?? 0;
+  // connected_dollars on the API lives at stats.summary.connected_dollars, not
+  // at the top level. Fall back to summing the breakdown rows so the percentage
+  // is always meaningful (avoid division by zero in the UI).
+  const connected =
+    Number(stats?.summary?.connected_dollars ?? 0) ||
+    connectionGroups.reduce((s: number, g: any) => s + Number(g.total ?? 0), 0) ||
+    1;
 
   const groupDetails: Record<string, { icon: string; description: string; key_person: string; key_companies: string[] }> = {
     elon_musk: {
@@ -119,7 +130,7 @@ function WhoBenefitsMost({ stats }: { stats: any }) {
     },
     trump_family: {
       icon: '🔴',
-      description: 'Trump Organization, Trump Winery, Eric/Don Jr business ventures. $420K winery contract is the floor — not the ceiling. Family brand monetized via Secret Service spending, hospitality contracts.',
+      description: 'Trump Organization, Trump Winery, Eric/Don Jr business ventures. $420K winery contract is the floor, not the ceiling. Family brand monetized via Secret Service spending, hospitality contracts.',
       key_person: 'Eric Trump / Donald Trump Jr',
       key_companies: ['Trump Winery ($420K)', 'Trump Organization (Secret Service)', 'DJT MediaTech (SPAC)'],
     },
@@ -175,11 +186,23 @@ function WhoBenefitsMost({ stats }: { stats: any }) {
 // ─── Bloated Contracts ─────────────────────────────────────────────────────────
 function BloatedContracts({ awards }: { awards: Award[] }) {
   const [expanded, setExpanded] = useState(false);
-  const bloated = awards
+  const bloatedAll = awards
     .filter(a => a.flags?.includes('no_bid') || a.flags?.includes('sole_source'))
     .filter(a => a.price_premium_pct !== null || a.risk_score >= 80)
-    .sort((a, b) => (b.price_premium_pct ?? b.risk_score) - (a.price_premium_pct ?? a.risk_score))
-    .slice(0, expanded ? 20 : 8);
+    .sort((a, b) => (b.price_premium_pct ?? b.risk_score) - (a.price_premium_pct ?? a.risk_score));
+  if (bloatedAll.length === 0) {
+    return (
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+        <h3 className="text-white font-bold text-sm uppercase tracking-widest">Bloated / No-Bid Contracts</h3>
+        <p className="text-slate-500 text-xs mt-2">
+          Of the top 50 awards on the live feed, none carry a no-bid/sole-source
+          signal. The 21 known no-bid/sole-source contracts (SpaceX, Palantir,
+          GSA EV, etc.) are listed in the <Link href="/analysis/cost-overruns" className="text-blue-400 hover:underline">Cost Overruns</Link> and <Link href="/analysis/conflicts" className="text-blue-400 hover:underline">Conflicts</Link> pages.
+        </p>
+      </div>
+    );
+  }
+  const bloated = bloatedAll.slice(0, expanded ? 20 : 8);
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
@@ -190,7 +213,7 @@ function BloatedContracts({ awards }: { awards: Award[] }) {
             <p className="text-slate-500 text-xs mt-1">Non-competitive awards with high risk or documented price inflation</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-amber-400 text-xs font-mono font-bold">{awards.filter(a => a.flags?.includes('no_bid') || a.flags?.includes('sole_source')).length} total</span>
+            <span className="text-amber-400 text-xs font-mono font-bold">{bloatedAll.length} shown</span>
           </div>
         </div>
       </div>
@@ -237,10 +260,10 @@ function BloatedContracts({ awards }: { awards: Award[] }) {
           );
         })}
       </div>
-      {awards.length > 8 && (
+      {bloatedAll.length > 8 && (
         <button onClick={() => setExpanded(!expanded)}
           className="w-full py-3 text-center text-xs text-blue-400 hover:text-blue-300 border-t border-slate-800 flex items-center justify-center gap-1">
-          {expanded ? <><ChevronUp size={12} /> Show Less</> : <><ChevronDown size={12} /> Show More Bloated Contracts</>}
+          {expanded ? <><ChevronUp size={12} /> Show Less</> : <><ChevronDown size={12} /> Show All {bloatedAll.length} Bloated Contracts</>}
         </button>
       )}
     </div>
@@ -285,24 +308,34 @@ function ConnectionPie({ stats }: { stats: any }) {
 
 // ─── Top Agencies Bar ──────────────────────────────────────────────────────────
 function TopAgenciesChart({ stats }: { stats: any }) {
-  const agencies = (stats?.top_agencies ?? []).slice(0, 7);
+  // The API's get_top_agencies RPC now deduplicates by agency (picks the most-
+  // used agency_code per awarding_agency) so each agency shows up exactly once.
+  const agencies = (stats?.top_agencies ?? [])
+    .slice()
+    .sort((a: any, b: any) => Number(b.total ?? 0) - Number(a.total ?? 0))
+    .slice(0, 7);
   if (!agencies.length) return null;
 
   const chartData = agencies.map((a: any) => ({
-    name: a.agency.replace('Department of ', 'DoD: ').replace('Department of ', 'Do '),
-    connected: a.connected,
-    unconnected: Math.max(0, a.total - a.connected),
-    total: a.total,
+    name: String(a.agency ?? '')
+      .replace('Department of Homeland Security', 'Homeland Sec')
+      .replace('Department of Defense', 'Defense')
+      .replace('Department of Health and Human Services', 'HHS')
+      .replace('Department of ', '')
+      .replace('General Services Administration', 'GSA'),
+    connected: Number(a.connected ?? 0),
+    unconnected: Math.max(0, Number(a.total ?? 0) - Number(a.connected ?? 0)),
+    total: Number(a.total ?? 0),
   }));
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-      <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-4">Top Agencies — Connected vs Unconnected</h3>
+      <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-4">Top Agencies: Connected vs Unconnected</h3>
       <ResponsiveContainer width="100%" height={260}>
         <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 30, top: 5, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
           <XAxis type="number" tickFormatter={formatLargeNum} tick={{ fill: '#94a3b8', fontSize: 10 }} />
-          <YAxis type="category" dataKey="name" tick={{ fill: '#94a3b8', fontSize: 10 }} width={140} />
+          <YAxis type="category" dataKey="name" tick={{ fill: '#94a3b8', fontSize: 10 }} width={120} />
           <Tooltip formatter={(v: any) => [formatLargeNum(Number(v))]}
             contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 8 }} />
           <Legend wrapperStyle={{ fontSize: 11, color: '#94a3b8' }} />
@@ -315,23 +348,34 @@ function TopAgenciesChart({ stats }: { stats: any }) {
 }
 
 // ─── Monthly Trend ─────────────────────────────────────────────────────────────
-function MonthlyTrend({ stats }: { stats: any }) {
-  const months = ['Oct \'24', 'Nov \'24', 'Dec \'24', 'Jan \'25', 'Feb \'25', 'Mar \'25', 'Apr \'25'];
-  const trendData = months.map((label, i) => {
-    const isDoge = i >= 3;
-    return {
-      label,
-      total: isDoge ? 2_800_000_000 + i * 380_000_000 : 750_000_000 + i * 180_000_000,
-      connected: isDoge ? 1_600_000_000 + i * 280_000_000 : 90_000_000 + i * 20_000_000,
-      doge: isDoge ? 1_000_000_000 + i * 200_000_000 : 0,
-    };
-  });
+function MonthlyTrend() {
+  const [trendData, setTrendData] = useState<Array<{ label: string; total: number; connected: number }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/analytics/spending-trend')
+      .then(r => r.json())
+      .then(json => {
+        if (cancelled) return;
+        const months = (json?.months ?? []) as Array<{ label: string; total: number; connected: number }>;
+        // Use the most recent 12 months for a readable chart
+        setTrendData(months.slice(-12).map(m => ({
+          label: m.label,
+          total: Number(m.total ?? 0),
+          connected: Number(m.connected ?? 0),
+        })));
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
       <div className="mb-4">
-        <h3 className="text-white font-bold text-sm uppercase tracking-widest">Monthly Spending — DOGE Era</h3>
-        <p className="text-slate-500 text-xs mt-1">Connected spending surge from January 2025 onward</p>
+        <h3 className="text-white font-bold text-sm uppercase tracking-widest">Monthly Spending: 12-Month Trend</h3>
+        <p className="text-slate-500 text-xs mt-1">Live from USAspending.gov. Connected line is the politically-connected subset of total.</p>
       </div>
       <ResponsiveContainer width="100%" height={220}>
         <AreaChart data={trendData} margin={{ left: 5, right: 15, top: 5, bottom: 5 }}>
@@ -355,6 +399,12 @@ function MonthlyTrend({ stats }: { stats: any }) {
           <Area type="monotone" dataKey="connected" name="Politically Connected" stroke="#ef4444" fill="url(#gradConn2)" strokeWidth={2} />
         </AreaChart>
       </ResponsiveContainer>
+      {loading && (
+        <p className="text-slate-600 text-xs text-center mt-2">Loading…</p>
+      )}
+      {!loading && trendData.length === 0 && (
+        <p className="text-slate-500 text-xs text-center mt-2">No trend data available.</p>
+      )}
     </div>
   );
 }
@@ -366,6 +416,20 @@ function RecentHighRisk({ awards }: { awards: Award[] }) {
     .sort((a, b) => Number(b.dollar_amount) - Number(a.dollar_amount))
     .slice(0, 6);
 
+  if (highRisk.length === 0) {
+    return (
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+        <div className="flex items-center gap-2 mb-2">
+          <AlertTriangle size={14} className="text-red-400" />
+          <h3 className="text-white font-bold text-sm uppercase tracking-widest">Highest-Risk Awards</h3>
+        </div>
+        <p className="text-slate-500 text-xs">
+          No awards with risk score 80+ in the current dataset. The Top High-Risk list is computed in the <code className="text-amber-400">/api/alerts</code> response above and is also viewable on the <Link href="/analysis/conflicts" className="text-blue-400 hover:underline">Conflicts</Link> page.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
       <div className="px-5 py-4 border-b border-slate-800">
@@ -373,7 +437,7 @@ function RecentHighRisk({ awards }: { awards: Award[] }) {
           <AlertTriangle size={14} className="text-red-400" />
           <h3 className="text-white font-bold text-sm uppercase tracking-widest">Highest-Risk Awards</h3>
         </div>
-        <p className="text-slate-500 text-xs mt-1">Risk score 80+ — combine political connection, no-bid status, and size</p>
+        <p className="text-slate-500 text-xs mt-1">Risk score 80+. Combines political connection, no-bid status, and size.</p>
       </div>
       <div className="divide-y divide-slate-800">
         {highRisk.map(award => (
@@ -405,12 +469,14 @@ function RecentHighRisk({ awards }: { awards: Award[] }) {
 
 // ─── Main Dashboard ────────────────────────────────────────────────────────────
 export default function DashboardPage() {
-  const [awards, setAwards] = useState<Award[]>(MOCK_AWARDS);
-  const [total, setTotal] = useState(MOCK_AWARDS.length);
+  const [awards, setAwards] = useState<Award[]>([]);
+  const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [usingMock, setUsingMock] = useState(true);
+  const [loading, setLoading] = useState(true);
+  // Tri-state: 'loading' | 'mock' | 'live'. Default 'loading' so the "Demo Mode" badge
+  // doesn't flash during the initial fetch.
+  const [dataSource, setDataSource] = useState<'loading' | 'mock' | 'live'>('loading');
 
   const [search, setSearch] = useState('');
   const [connectionFilter, setConnectionFilter] = useState('all');
@@ -458,12 +524,12 @@ export default function DashboardPage() {
         setAwards(data.awards);
         setTotal(data.total);
         setPages(data.pages);
-        setUsingMock(false);
+        setDataSource('live');
       } else {
         throw new Error('demo');
       }
     } catch {
-      setUsingMock(true);
+      setDataSource('mock');
       const filtered = MOCK_AWARDS
         .filter((a) => {
           if (topicFilter === 'defense' && !a.awarding_agency.includes('Defense') && !a.awarding_agency.includes('DOD') && !a.awarding_sub_agency?.includes('Force')) return false;
@@ -503,6 +569,7 @@ export default function DashboardPage() {
   const noBidPct = stats?.summary
     ? ((stats.summary.no_bid_dollars / stats.summary.total_dollars) * 100).toFixed(1)
     : '0';
+  const competition = stats?.competition_coverage ?? null;
 
   return (
     <div className="min-h-screen bg-slate-950">
@@ -514,9 +581,14 @@ export default function DashboardPage() {
             <span className="font-black tracking-tight">Slush Fund</span>
           </Link>
           <div className="flex items-center gap-3">
-            {usingMock && (
+            {dataSource === 'mock' && (
               <span className="flex items-center gap-1.5 text-xs text-amber-400 font-mono border border-amber-400/30 px-2 py-0.5 rounded">
                 <Database size={11} /> Demo Mode
+              </span>
+            )}
+            {dataSource === 'loading' && (
+              <span className="flex items-center gap-1.5 text-xs text-slate-500 font-mono">
+                <RefreshCw size={11} className="animate-spin" /> Loading…
               </span>
             )}
             <button onClick={() => { loadStats(); loadAwards(); }} className="flex items-center gap-1.5 text-slate-400 hover:text-white text-sm font-medium transition-colors px-2 py-1 rounded hover:bg-slate-800">
@@ -540,8 +612,8 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <KpiCard label="Total Tracked" value={formatLargeNum(stats?.summary?.total_dollars ?? 0)} sub={`${(stats?.summary?.total_awards ?? 0).toLocaleString()} awards from USAspending.gov`} icon={DollarSign} color="text-white" />
-            <KpiCard label="Politically Connected" value={formatLargeNum(stats?.summary?.connected_dollars ?? 0)} sub={`${connectedPct}% of total spending — ${(stats?.summary?.connected_count ?? 0)} awards`} icon={Shield} color="text-red-400" highlight />
-            <KpiCard label="No-Bid / Sole-Source" value={formatLargeNum(stats?.summary?.no_bid_dollars ?? 0)} sub={`${noBidPct}% non-competitive — ${(stats?.summary?.no_bid_count ?? 0)} awards`} icon={Scale} color="text-amber-400" />
+            <KpiCard label="Politically Connected" value={formatLargeNum(stats?.summary?.connected_dollars ?? 0)} sub={`${connectedPct}% of total spending (${(stats?.summary?.connected_count ?? 0)} awards)`} icon={Shield} color="text-red-400" highlight />
+            <KpiCard label="No-Bid / Sole-Source" value={formatLargeNum(stats?.summary?.no_bid_dollars ?? 0)} sub={`${noBidPct}% non-competitive (${(stats?.summary?.no_bid_count ?? 0)} awards)`} icon={Scale} color="text-amber-400" />
             <KpiCard label="Insider Signals" value={String(analytics?.summary?.total_insider_signals ?? 0)} sub={`${(analytics?.summary?.high_confidence_signals ?? 0)} high-confidence · ${formatLargeNum(analytics?.summary?.total_overrun_dollars ?? 0)} in documented overruns`} icon={Activity} color="text-emerald-400" />
           </div>
         </div>
@@ -551,13 +623,13 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
 
         {/* The Bottom Line */}
-        <BottomLine stats={stats} analytics={analytics} />
+        <BottomLine stats={stats} analytics={analytics} competition={competition} />
 
         {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <ConnectionPie stats={stats} />
           <TopAgenciesChart stats={stats} />
-          <MonthlyTrend stats={stats} />
+          <MonthlyTrend />
         </div>
 
         {/* Who Benefits Most + Bloated Contracts */}
@@ -695,9 +767,11 @@ export default function DashboardPage() {
         </div>
 
         <div className="text-center text-slate-600 text-xs font-mono">
-          {usingMock
-            ? 'Demo mode — Supabase not connected. Set up env vars to enable live data.'
-            : `Showing ${Math.min(20, awards.length)} of ${total.toLocaleString()} awards · Live data · Updated ${new Date().toLocaleTimeString()}`}
+          {dataSource === 'mock'
+            ? 'Demo mode. Supabase not connected. Set up env vars to enable live data.'
+            : dataSource === 'loading'
+              ? 'Loading awards…'
+              : `Showing ${Math.min(20, awards.length)} of ${total.toLocaleString()} awards · Live data · Updated ${new Date().toLocaleTimeString()}`}
         </div>
       </div>
     </div>

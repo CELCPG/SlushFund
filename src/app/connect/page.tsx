@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import NewsletterSignup from '@/components/NewsletterSignup';
 
 export const metadata: Metadata = {
-  title: 'Connect — SlushFund',
+  title: 'Connect. SlushFund',
   description: 'Follow SlushFund on TikTok and Reddit, or sign up for the Slush Report newsletter.',
 };
 
@@ -12,7 +12,7 @@ export default function ConnectPage() {
       <header className="mb-10">
         <h1 className="text-4xl font-black text-white mb-3">Connect with SlushFund</h1>
         <p className="text-slate-300 text-lg">
-          We're not running an inbox anymore. Follow us where the conversation actually happens — or
+          We're not running an inbox anymore. Follow us where the conversation actually happens or
           subscribe to the newsletter if you want the cleanest signal.
         </p>
       </header>

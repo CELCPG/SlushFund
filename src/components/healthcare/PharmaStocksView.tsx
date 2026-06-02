@@ -138,7 +138,7 @@ export default function PharmaStocksView() {
           Congress Pharma Stock Trades
         </h1>
         <p className="mt-2 max-w-3xl text-slate-400 text-sm leading-relaxed">
-          Which congress members own pharmaceutical and healthcare stocks — tagged from the existing congress trading database.
+          Which congress members own pharmaceutical and healthcare stocks tagged from the existing congress trading database.
           Showing {trades.length} pharma trades from 2024–2026.
         </p>
       </header>

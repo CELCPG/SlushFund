@@ -1094,9 +1094,9 @@ export const PAC_CATEGORY_TOTALS = [
 // ─── White House Spending distribution ───────────────────────────────────────────
 
 export const WHITE_HOUSE_DONATIONS_2016_2024 = [
-  { cycle: '2016', trump: 300_000_000, clinton: 250_000_000, other: 50_000_000 },
-  { cycle: '2020', trump: 800_000_000, biden: 500_000_000, other: 80_000_000 },
-  { cycle: '2024', trump: 1_200_000_000, harris: 600_000_000, other: 100_000_000 },
+  { cycle: '2016', dem_nominee: 'Clinton',  trump: 300_000_000, dem: 250_000_000, other: 50_000_000 },
+  { cycle: '2020', dem_nominee: 'Biden',    trump: 800_000_000, dem: 500_000_000, other: 80_000_000 },
+  { cycle: '2024', dem_nominee: 'Harris',   trump: 1_200_000_000, dem: 600_000_000, other: 100_000_000 },
 ];
 
 // ─── Top recipients by office ─────────────────────────────────────────────────

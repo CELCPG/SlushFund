@@ -4,7 +4,7 @@ import { cn } from '@/lib/cn';
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
-/** Structural icon type — robust across lucide-react versions. */
+/** Structural icon type robust across lucide-react versions. */
 type IconComponent = React.ComponentType<{ className?: string }>;
 
 const VARIANT: Record<ButtonVariant, string> = {

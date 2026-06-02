@@ -119,7 +119,7 @@ export default function CorrelationView() {
     };
   });
 
-  // Top pharma traders who aren't already matched to an OpenSecrets recipient —
+  // Top pharma traders who aren't already matched to an OpenSecrets recipient.
   // surface the actual heavy pharma traders so the chart shows real activity even
   // when lobby-cash leaders don't trade.
   const matchedTradeNames = new Set<string>();
@@ -168,7 +168,7 @@ export default function CorrelationView() {
         </h1>
         <p className="mt-2 max-w-3xl text-slate-400 text-sm leading-relaxed">
           The link between pharmaceutical lobby cash flowing to Congress members and those same members holding pharma stocks.
-          If a senator receives hundreds of thousands in pharma lobbying and also trades pharma stocks — that's the connection.
+          If a senator receives hundreds of thousands in pharma lobbying and also trades pharma stocks that's the connection.
         </p>
       </header>
 
@@ -217,7 +217,7 @@ export default function CorrelationView() {
       {/* Connection table */}
       <section>
         <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-4">
-          Congress Members — Both Pharma Lobby Cash &amp; Pharma Stock Trades
+          Congress Members. Both Pharma Lobby Cash &amp; Pharma Stock Trades
         </h2>
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 overflow-hidden">
           <table className="w-full text-sm">
@@ -263,13 +263,13 @@ export default function CorrelationView() {
         </h2>
         <div className="text-slate-400 text-sm leading-relaxed space-y-3">
           <p>
-            <strong className="text-slate-200">Pharmaceutical companies</strong> spend hundreds of millions of dollars lobbying the federal government every year — ranking #1 among all industry sectors at over $130 million annually for pharma alone.
+            <strong className="text-slate-200">Pharmaceutical companies</strong> spend hundreds of millions of dollars lobbying the federal government every year ranking #1 among all industry sectors at over $130 million annually for pharma alone.
           </p>
           <p>
-            Congress members receive this lobby cash through their official offices. At the same time, many of those same members file stock trades showing purchases in pharmaceutical companies — creating a direct financial relationship between legislators and the industry they regulate.
+            Congress members receive this lobby cash through their official offices. At the same time, many of those same members file stock trades showing purchases in pharmaceutical companies creating a direct financial relationship between legislators and the industry they regulate.
           </p>
           <p>
-            This tab cross-references OpenSecrets.org lobbying receipts (who gives money to whom) with the congressional stock trading database (who owns which pharma stocks) to surface members with <strong className="text-slate-200">dual exposure</strong> — benefiting from both the industry's lobbying spend and their personal investment returns.
+            This tab cross-references OpenSecrets.org lobbying receipts (who gives money to whom) with the congressional stock trading database (who owns which pharma stocks) to surface members with <strong className="text-slate-200">dual exposure</strong> benefiting from both the industry's lobbying spend and their personal investment returns.
           </p>
           <p className="text-xs text-slate-600">
             Note: Pharma stock trades are tagged by ticker from the existing {trades.length > 0 ? `congress_trades database (${trades.length} total trades loaded)` : 'congress_trades database'}.

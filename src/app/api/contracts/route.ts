@@ -64,7 +64,21 @@ export async function GET(request: NextRequest): Promise<NextResponse<AwardsResp
   }
 
   if (search) {
-    query = query.or(`recipient_name.ilike.%${search}%,description.ilike.%${search}%`);
+    // The search param may contain a single name or a comma-separated list
+    // (used by vendor profile pages that want to OR across all aliases).
+    // Build a single PostgREST `.or()` filter that matches any term against
+    // either recipient_name or description.
+    const terms = search.split(',').map((s) => s.trim()).filter(Boolean);
+    const orParts = terms.flatMap((t) => {
+      // Escape PostgREST/ilike pattern metachars so a term like "10%"
+      // doesn't get interpreted as a wildcard.
+      const safe = t.replace(/[%_]/g, '\\$&');
+      return [
+        `recipient_name.ilike.%${safe}%`,
+        `description.ilike.%${safe}%`,
+      ];
+    });
+    query = query.or(orParts.join(','));
   }
 
   if (minAmount) {

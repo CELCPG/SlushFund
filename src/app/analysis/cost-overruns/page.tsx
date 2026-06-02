@@ -388,7 +388,7 @@ export default function CostOverrunsPage() {
               <p className="text-slate-400 text-sm leading-relaxed max-w-2xl">
                 Federal projects that ballooned beyond their original budget with little oversight or accountability.
                 {medianOverrunPct > 0 && <> Median overrun across all projects: <strong className="text-amber-400">{medianOverrunPct}%</strong>.</>}
-                {' '}These are documented cases — actual system-wide waste is significantly higher.
+                {' '}These are documented cases actual system-wide waste is significantly higher.
               </p>
             </div>
           </div>
@@ -619,7 +619,7 @@ export default function CostOverrunsPage() {
         <div className="mt-8 bg-slate-900/50 border border-slate-800 rounded-xl px-5 py-4 flex gap-3">
           <Info size={14} className="text-slate-600 mt-0.5 shrink-0" />
           <p className="text-slate-500 text-xs leading-relaxed">
-            All cost data is sourced from publicly available GAO reports, OIG investigations, congressional testimony, NASA/Navy/DoD budget documents, and USAspending.gov. Overrun percentages are calculated from the original budgeted cost versus the most recent approved estimate or final cost. Some projects may have had legitimate scope changes that justify cost growth — the purpose of this tracker is accountability, not presumption of fraud. Median overrun across all projects: <strong className="text-slate-400">{medianOverrunPct}%</strong>.
+            All cost data is sourced from publicly available GAO reports, OIG investigations, congressional testimony, NASA/Navy/DoD budget documents, and USAspending.gov. Overrun percentages are calculated from the original budgeted cost versus the most recent approved estimate or final cost. Some projects may have had legitimate scope changes that justify cost growth the purpose of this tracker is accountability, not presumption of fraud. Median overrun across all projects: <strong className="text-slate-400">{medianOverrunPct}%</strong>.
           </p>
         </div>
       </div>

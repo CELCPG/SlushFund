@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const vendor = getVendorBySlug(slug);
   if (!vendor) return { title: 'Vendor not found' };
 
-  const title = `${vendor.name} — Federal Contracts & Political Connections`;
+  const title = `${vendor.name}. Federal Contracts & Political Connections`;
   const description = `${vendor.description} Track ${vendor.name}'s federal contracts, no-bid awards, and risk flags on SlushFund.`;
   const og = `/api/og?title=${encodeURIComponent(vendor.name)}&eyebrow=${encodeURIComponent(vendor.connectionLabel)}&stat=${encodeURIComponent('Federal')}&statLabel=${encodeURIComponent('contracts & connections')}`;
 
@@ -70,7 +70,11 @@ export default async function VendorPage({ params }: { params: Promise<{ slug: s
           <ArrowLeft className="h-4 w-4" /> All vendors
         </Link>
 
-        <VendorContracts searchTerm={vendor.name} />
+        <VendorContracts
+          searchTerm={vendor.name}
+          aliases={vendor.aliases}
+          connectionCategory={vendor.connection_category}
+        />
 
         {vendor.aliases.length > 0 && (
           <div className="text-xs text-slate-500">

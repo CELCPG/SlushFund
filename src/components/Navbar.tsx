@@ -107,7 +107,7 @@ export default function Navbar() {
     return pathname.startsWith(href.split('?')[0].split('#')[0]);
   }
 
-  // Hover handlers — open on hover, close after a short delay (desktop)
+  // Hover handlers open on hover, close after a short delay (desktop)
   function openOnHover(label: string) {
     if (closeTimer.current) clearTimeout(closeTimer.current);
     setOpenDropdown(label);
@@ -236,7 +236,7 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile menu — per-section accordion */}
+        {/* Mobile menu per-section accordion */}
         {mobileOpen && (
           <div className="lg:hidden border-t border-slate-800 py-3 space-y-1">
             {NAV_SECTIONS.map((section) => {

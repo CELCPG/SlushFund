@@ -11,7 +11,7 @@ const PADDING: Record<CardPadding, string> = {
 };
 
 export interface CardProps {
-  /** Danger-tinted surface — matches the dashboard KPI highlight. */
+  /** Danger-tinted surface matches the dashboard KPI highlight. */
   highlight?: boolean;
   padding?: CardPadding;
   className?: string;

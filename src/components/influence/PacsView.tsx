@@ -15,6 +15,7 @@ import Pactable from './pacs/Pactable';
 // Lazy-load the three heaviest sub-components. They sit below the fold or are
 // inside their own disclosure sections, so deferring their JS to the client
 // trims ~700 LOC of recharts/SVG from the initial /influence bundle.
+const MoneyFlowSankey = dynamic(() => import('./pacs/MoneyFlowSankey'), { ssr: false });
 const NetworkViz = dynamic(() => import('./pacs/NetworkViz'), { ssr: false });
 const AIPACDeepDive = dynamic(() => import('./pacs/AIPACDeepDive'), { ssr: false });
 const APACDeepDive = dynamic(() => import('./pacs/APACDeepDive'), { ssr: false });
@@ -51,9 +52,9 @@ export default function PacsView() {
             <Landmark size={18} className="text-blue-400" />
             <span className="text-blue-400 text-sm font-mono uppercase tracking-widest">PAC / Super PAC / Dark Money Database</span>
           </div>
-          <h1 className="text-5xl font-black text-white mb-3">PAC Money Flow<span className="text-blue-400"> — 2016–2024</span></h1>
+          <h1 className="text-5xl font-black text-white mb-3">PAC Money Flow<span className="text-blue-400">, 2016–2024</span></h1>
           <p className="text-slate-400 text-base leading-relaxed max-w-3xl">
-            Tracking $9.5B+ in political action committee spending — from Trump/Musk America PAC to Koch network dark money to Arabella Advisors-managed progressive funding pipelines. Mapping the full web of who funds American politics and where the money flows.
+            Tracking $9.5B+ in political action committee spending from Trump/Musk America PAC to Koch network dark money to Arabella Advisors-managed progressive funding pipelines. Mapping the full web of who funds American politics and where the money flows.
           </p>
         </div>
 
@@ -64,7 +65,13 @@ export default function PacsView() {
           <StatCard label="GOP vs Dem Funding" value={`${fmtM(connectedToTrump)} vs ${fmtM(connectedToDems)}`} sub="GOP dark money vs Dem dark money" icon={Scale} color="text-amber-400" />
         </div>
 
-        {/* PAC network visualization (lazy-loaded) */}
+        {/* Money-flow Sankey (lazy-loaded). Replaces the old force-laid-out
+            network graph with a left-to-right flow that the eye can actually
+            follow: top donors → their PACs → election outcomes. */}
+        <MoneyFlowSankey />
+
+        {/* PAC network visualization (lazy-loaded, kept as a secondary view
+            for users who want the 20-PAC node graph with edges) */}
         <NetworkViz />
 
         <ExpandableMoneyFlow />
@@ -89,7 +96,7 @@ export default function PacsView() {
                   <span className="text-xs text-slate-400">Founded 1963 · Active</span>
                 </div>
                 <h2 className="text-white font-black text-2xl mb-1">The AIPAC Money Empire</h2>
-                <p className="text-slate-300 text-sm max-w-2xl leading-relaxed">AIPAC and its affiliated network of super PACs spent $548M in the 2025–2026 cycle — funding 512 of 535 members of Congress. It is the most broadly bipartisan PAC operation in American politics, with a strategic split: 68% to Democrats, 32% to Republicans.</p>
+                <p className="text-slate-300 text-sm max-w-2xl leading-relaxed">AIPAC and its affiliated network of super PACs spent $548M in the 2025–2026 cycle funding 512 of 535 members of Congress. It is the most broadly bipartisan PAC operation in American politics, with a strategic split: 68% to Democrats, 32% to Republicans.</p>
               </div>
               <div className="text-right shrink-0">
                 <div className="text-white font-black text-3xl font-mono">$548M</div>

@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'About SlushFund — Our Mission & Methodology',
+  title: 'About SlushFund. Our Mission & Methodology',
   description: "Learn how SlushFund tracks federal spending, identifies political connections, and flags conflicts of interest. Full transparency on our data sources and limitations.",
 };
 
@@ -25,7 +25,7 @@ const WHAT_WE_TRACK = [
     bg: 'bg-emerald-900/30',
     border: 'border-emerald-800',
     title: 'Federal Contracts & Grants',
-    desc: 'Every contract, grant, and loan from USAspending.gov — cross-referenced against the companies and people connected to the officials who award them.',
+    desc: 'Every contract, grant, and loan from USAspending.gov cross-referenced against the companies and people connected to the officials who award them.',
     href: '/dashboard',
     cta: 'Browse contracts',
   },
@@ -45,7 +45,7 @@ const WHAT_WE_TRACK = [
     bg: 'bg-amber-900/30',
     border: 'border-amber-800',
     title: 'PAC Money & Dark Money',
-    desc: 'Federal PAC contributions layered with 501(c)(4) dark money networks. We track what is legally disclosed — and show the gaps.',
+    desc: 'Federal PAC contributions layered with 501(c)(4) dark money networks. We track what is legally disclosed and show the gaps.',
     href: '/influence',
     cta: 'Follow the money',
   },
@@ -107,7 +107,7 @@ export default function AboutPage() {
               {
                 fact: '38%',
                 label: 'of federal contracts in FY2024 were awarded without competitive bidding',
-                detail: 'The "urgency" exception was used 847 times — 72% went to companies whose executives donated to the current administration.',
+                detail: 'The "urgency" exception was used 847 times, 72% went to companies whose executives donated to the current administration.',
               },
               {
                 fact: '45 days',
@@ -117,7 +117,7 @@ export default function AboutPage() {
               {
                 fact: '$400M+',
                 label: 'flows through Koch-affiliated dark money groups annually with no public disclosure',
-                detail: 'Donors to 501(c)(4) groups are never required to be identified. We show what is known — not everything that exists.',
+                detail: 'Donors to 501(c)(4) groups are never required to be identified. We show what is known not everything that exists.',
               },
             ].map(item => (
               <div key={item.fact} className="bg-slate-900 border border-slate-800 rounded-xl p-6">
@@ -211,7 +211,7 @@ export default function AboutPage() {
                 ))}
               </div>
               <p className="text-slate-500 text-xs border-l-2 border-amber-600 pl-3">
-                <span className="text-amber-400 font-semibold">Note:</span> Pre-award buy signals are not indicators of illegality. They represent an overlap between disclosed trading activity and public contract data. The STOCK Act prohibits insider trading using nonpublic information — public contract announcements are not nonpublic. However, patterns are worth independent investigation.
+                <span className="text-amber-400 font-semibold">Note:</span> Pre-award buy signals are not indicators of illegality. They represent an overlap between disclosed trading activity and public contract data. The STOCK Act prohibits insider trading using nonpublic information public contract announcements are not nonpublic. However, patterns are worth independent investigation.
               </p>
             </div>
 
@@ -353,7 +353,7 @@ export default function AboutPage() {
           </div>
           <h2 className="text-white font-black text-3xl mb-4">We Make Mistakes.<br />Here&apos;s What Happens When We Do.</h2>
           <p className="text-slate-300 leading-relaxed mb-4">
-            SlushFund is a data transparency tool, not a legal judgment. Our flags are signals, not verdicts. When we get something wrong — a misattributed contract, an incorrect donation amount, a missing trade — we correct it visibly.
+            SlushFund is a data transparency tool, not a legal judgment. Our flags are signals, not verdicts. When we get something wrong a misattributed contract, an incorrect donation amount, a missing trade we correct it visibly.
           </p>
           <p className="text-slate-300 leading-relaxed">
             Found an error? Contact us and we will investigate and correct within 48 hours. Corrections are logged at the bottom of the relevant page with a timestamp and description of what was changed.

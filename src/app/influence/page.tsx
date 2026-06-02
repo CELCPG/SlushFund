@@ -7,7 +7,7 @@ import { Tabs, TabDef } from '@/components/ui/Tabs';
 import OverviewView from '@/components/influence/OverviewView';
 
 // Overview loads eagerly (default tab). The rest are code-split so the initial
-// hub payload stays small — CryptoView and PacsView are each ~800–1200 lines.
+// hub payload stays small. CryptoView and PacsView are each ~800–1200 lines.
 const TabLoading = () => (
   <div className="max-w-7xl mx-auto px-4 lg:px-6 py-16 text-center text-sm text-slate-500">
     Loading…

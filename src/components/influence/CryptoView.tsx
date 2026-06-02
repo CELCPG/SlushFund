@@ -158,7 +158,7 @@ function CompanyTable() {
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
       <div className="px-5 py-4 border-b border-slate-800">
-        <h3 className="text-white font-bold text-sm uppercase tracking-widest">Crypto Companies — Political Connections</h3>
+        <h3 className="text-white font-bold text-sm uppercase tracking-widest">Crypto Companies. Political Connections</h3>
         <p className="text-slate-500 text-xs mt-1">Which crypto companies have federal contracts, political donations, or regulatory ties</p>
       </div>
       <div className="divide-y divide-slate-800">
@@ -207,7 +207,7 @@ function MiningTable() {
       <div className="px-5 py-4 border-b border-slate-800">
         <div className="flex items-center gap-2">
           <Pickaxe size={14} className="text-orange-400" />
-          <h3 className="text-white font-bold text-sm uppercase tracking-widest">Bitcoin Mining Facilities — US Operations</h3>
+          <h3 className="text-white font-bold text-sm uppercase tracking-widest">Bitcoin Mining Facilities. US Operations</h3>
         </div>
         <p className="text-slate-500 text-xs mt-1">Crypto mining facilities with energy source, political connections, and state data</p>
       </div>
@@ -256,7 +256,7 @@ function PACBreakdown() {
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-      <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-4">Crypto PAC Fundraising — 2024 Cycle</h3>
+      <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-4">Crypto PAC Fundraising, 2024 Cycle</h3>
       <ResponsiveContainer width="100%" height={200}>
         <PieChart>
           <Pie data={data} nameKey="name" dataKey="value" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }: any) => `${name} ${(Number(percent ?? 0) * 100).toFixed(0)}%`} labelLine={false}>
@@ -292,7 +292,7 @@ function MoneyFlowViz() {
 
       {/* Layer 1: Sources */}
       <div className="mb-4">
-        <div className="text-slate-400 text-xs uppercase tracking-widest mb-2">Step 1 — Crypto PAC Money ($178M+ raised)</div>
+        <div className="text-slate-400 text-xs uppercase tracking-widest mb-2">Step 1. Crypto PAC Money ($178M+ raised)</div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           {CRYPTO_PACS.slice(0, 3).map((pac) => (
             <div key={pac.pac_name} className="bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2">
@@ -311,12 +311,12 @@ function MoneyFlowViz() {
 
       {/* Layer 2: Outcomes */}
       <div className="mb-4">
-        <div className="text-slate-400 text-xs uppercase tracking-widest mb-2">Step 2 — Regulatory Wins for Crypto</div>
+        <div className="text-slate-400 text-xs uppercase tracking-widest mb-2">Step 2. Regulatory Wins for Crypto</div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
           {[
             { title: 'SEC Enforcement Halted', desc: 'Gensler replaced. Coinbase/SBF cases dropped or settled cheaply.', color: 'border-emerald-700 bg-emerald-900/20' },
-            { title: 'FIT21 Act Passed', desc: 'Comprehensive crypto regulatory framework — passed House 2025.', color: 'border-blue-700 bg-blue-900/20' },
-            { title: 'BITCOIN Act Proposed', desc: 'Lummis bill — proposes 5% of Treasury holdings in bitcoin.', color: 'border-orange-700 bg-orange-900/20' },
+            { title: 'FIT21 Act Passed', desc: 'Comprehensive crypto regulatory framework passed House 2025.', color: 'border-blue-700 bg-blue-900/20' },
+            { title: 'BITCOIN Act Proposed', desc: 'Lummis bill proposes 5% of Treasury holdings in bitcoin.', color: 'border-orange-700 bg-orange-900/20' },
           ].map((item) => (
             <div key={item.title} className={`border rounded-lg px-3 py-2 ${item.color}`}>
               <div className="text-white text-xs font-semibold">{item.title}</div>
@@ -333,7 +333,7 @@ function MoneyFlowViz() {
 
       {/* Layer 3: Outcomes */}
       <div>
-        <div className="text-slate-400 text-xs uppercase tracking-widest mb-2">Step 3 — Who Benefits</div>
+        <div className="text-slate-400 text-xs uppercase tracking-widest mb-2">Step 3. Who Benefits</div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {[
             { name: 'Tesla / Elon Musk', detail: 'Holds $1B+ in BTC · DOGE shapes crypto regulation', amount: '$1B+ corporate BTC holdings', color: 'text-purple-400' },
@@ -389,7 +389,7 @@ export default function CryptoView() {
             Crypto <span className="text-orange-400">& Government</span>
           </h1>
           <p className="text-slate-400 text-sm leading-relaxed max-w-2xl">
-            The 360° view of all ties between the cryptocurrency industry and the federal government — politicians who own crypto, crypto company political donations, bitcoin mining facilities, regulatory capture, and the money flow from PAC contributions to policy decisions.
+            The 360° view of all ties between the cryptocurrency industry and the federal government politicians who own crypto, crypto company political donations, bitcoin mining facilities, regulatory capture, and the money flow from PAC contributions to policy decisions.
           </p>
         </div>
 
@@ -452,7 +452,7 @@ export default function CryptoView() {
           <div className="space-y-6">
             <div>
               <h2 className="text-white font-bold text-xl mb-1 uppercase tracking-widest text-emerald-400">Pro-Crypto Politicians</h2>
-              <p className="text-slate-500 text-xs">Elected officials who support cryptocurrency — through legislation, disclosures, or public advocacy</p>
+              <p className="text-slate-500 text-xs">Elected officials who support cryptocurrency through legislation, disclosures, or public advocacy</p>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
               {CRYPTO_POLITICIANS.filter(p => p.crypto_stance === 'pro-crypto').map(p => (
@@ -476,7 +476,7 @@ export default function CryptoView() {
           <div className="space-y-6">
             <div>
               <h2 className="text-white font-bold text-xl mb-1 uppercase tracking-widest">Crypto Industry Political Donations</h2>
-              <p className="text-slate-500 text-xs">PAC fundraising by crypto industry players in the 2024 election cycle — bipartisan strategy is intentional</p>
+              <p className="text-slate-500 text-xs">PAC fundraising by crypto industry players in the 2024 election cycle bipartisan strategy is intentional</p>
             </div>
             <div className="space-y-3">
               {CRYPTO_PACS.map(pac => <PACRow key={pac.pac_name} pac={pac} />)}
@@ -490,7 +490,7 @@ export default function CryptoView() {
           <div className="space-y-6">
             <div>
               <h2 className="text-white font-bold text-xl mb-1 uppercase tracking-widest text-orange-400">Bitcoin Mining in America</h2>
-              <p className="text-slate-500 text-xs">US bitcoin mining facilities — their energy sources, political connections, and regulatory exposure</p>
+              <p className="text-slate-500 text-xs">US bitcoin mining facilities their energy sources, political connections, and regulatory exposure</p>
             </div>
             <MiningTable />
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
@@ -498,7 +498,7 @@ export default function CryptoView() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-400 leading-relaxed">
                 <div>
                   <span className="text-slate-200 font-medium">Energy Consumption</span><br />
-                  Bitcoin mining now consumes ~15-20 GW in the US — equivalent to ~15 million homes. Mostly in Texas (ERCOT grid) using gas and coal.
+                  Bitcoin mining now consumes ~15-20 GW in the US equivalent to ~15 million homes. Mostly in Texas (ERCOT grid) using gas and coal.
                 </div>
                 <div>
                   <span className="text-slate-200 font-medium">Political Power</span><br />
@@ -506,7 +506,7 @@ export default function CryptoView() {
                 </div>
                 <div>
                   <span className="text-slate-200 font-medium"> Musk Connection</span><br />
-                  Tesla holds $1B+ in Bitcoin on its balance sheet. Musk\'s DOGE role shapes energy AND crypto policy — both his personal crypto interests and federal spending on energy.
+                  Tesla holds $1B+ in Bitcoin on its balance sheet. Musk\'s DOGE role shapes energy AND crypto policy both his personal crypto interests and federal spending on energy.
                 </div>
               </div>
             </div>
@@ -800,7 +800,7 @@ export default function CryptoView() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-slate-400 leading-relaxed">
             <div>
               <span className="text-slate-200 font-medium">Political Donations</span><br />
-              Federal Election Commission (FEC.gov), OpenSecrets.org — individual contributions and PAC filings. PAC donations aggregated by OpenSecrets 2024 cycle data.
+              Federal Election Commission (FEC.gov), OpenSecrets.org individual contributions and PAC filings. PAC donations aggregated by OpenSecrets 2024 cycle data.
             </div>
             <div>
               <span className="text-slate-200 font-medium">Crypto Holdings</span><br />
@@ -812,7 +812,7 @@ export default function CryptoView() {
             </div>
             <div>
               <span className="text-slate-200 font-medium">Limitations</span><br />
-              This page tracks public disclosures and documented connections. Many political cryptocurrency connections are not publicly disclosed. This is investigative journalism — not legal advice.
+              This page tracks public disclosures and documented connections. Many political cryptocurrency connections are not publicly disclosed. This is investigative journalism not legal advice.
             </div>
           </div>
         </div>

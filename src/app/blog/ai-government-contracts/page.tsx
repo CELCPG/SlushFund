@@ -95,7 +95,7 @@ export default function AiGovernmentContractsPage() {
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">Anduril: The Defense Tech Unicorn</h2>
           <p className="text-slate-300 mb-4">
-            Anduril Industries, founded by Oculus inventor Palmer Luckey, has won $1.1 billion in federal contracts since 2024, primarily for autonomous drone systems, AI-powered ISR (intelligence, surveillance, and reconnaissance) platforms, and the Pentagon&apos;s Replicator autonomous weapons initiative. The company is not publicly traded — but Series D and Series E investors include several members of Congress who invested through a special purpose vehicle set up in Delaware.
+            Anduril Industries, founded by Oculus inventor Palmer Luckey, has won $1.1 billion in federal contracts since 2024, primarily for autonomous drone systems, AI-powered ISR (intelligence, surveillance, and reconnaissance) platforms, and the Pentagon&apos;s Replicator autonomous weapons initiative. The company is not publicly traded but Series D and Series E investors include several members of Congress who invested through a special purpose vehicle set up in Delaware.
           </p>
           <p className="text-slate-300 mb-4">
             Two senators and one representative who sit on the Senate Armed Services Committee and House AI Caucus invested in Anduril through a 2019 private placement that was not disclosed in their original financial disclosures. Amended filings in 2025 and 2026 disclosed these positions after SlushFund identified them through Delaware corporate records.
@@ -107,7 +107,7 @@ export default function AiGovernmentContractsPage() {
               <div>
                 <p className="text-amber-200 font-semibold mb-1">The Congressional AI Caucus Stock Problem</p>
                 <p className="text-amber-100/80 text-sm">
-                  The Congressional AI Caucus has 87 members. At least 22 of them hold direct equity positions in AI companies that have received or are positioned to receive federal contracts. The AI Caucus also authored the DEEPFAKE Act and the AI Accountability Act — legislation that would directly affect the valuation of companies its members own. No recusals have been filed.
+                  The Congressional AI Caucus has 87 members. At least 22 of them hold direct equity positions in AI companies that have received or are positioned to receive federal contracts. The AI Caucus also authored the DEEPFAKE Act and the AI Accountability Act legislation that would directly affect the valuation of companies its members own. No recusals have been filed.
                 </p>
               </div>
             </div>
@@ -118,7 +118,7 @@ export default function AiGovernmentContractsPage() {
             Scale AI has won $440M in federal contracts since 2024, primarily for data labeling services used to train AI models for defense applications. The company is the primary vendor for the DoD&apos;s Chief Digital and Artificial Intelligence Office (CDAO) data标注 contract. Its CEO, Alexandr Wang, has publicly testified before the Senate AI Caucus.
           </p>
           <p className="text-slate-300 mb-4">
-            One senator on the Senate Armed Services Committee disclosed a position in Scale AI in January 2026 — six months after Scale AI won a $180M contract extension from the DoD.
+            One senator on the Senate Armed Services Committee disclosed a position in Scale AI in January 2026 six months after Scale AI won a $180M contract extension from the DoD.
           </p>
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">The Policy Connection</h2>
@@ -126,12 +126,12 @@ export default function AiGovernmentContractsPage() {
             The $52 billion CHIPS Act passed in 2022 was supposed to rebuild domestic semiconductor manufacturing. It has also become a de facto AI infrastructure subsidy. The act&apos;s advanced packaging and AI chip manufacturing provisions directly benefit three companies whose stock is held by Armed Services Committee members.
           </p>
           <p className="text-slate-300 mb-4">
-            The AI Executive Order of January 2025 directed federal agencies to prioritize AI procurement from companies meeting certain domestic content requirements. The specific requirements were written in a way that only Palantir, Anduril, and Scale AI — the three companies with active lobbying operations on the order — could immediately satisfy them.
+            The AI Executive Order of January 2025 directed federal agencies to prioritize AI procurement from companies meeting certain domestic content requirements. The specific requirements were written in a way that only Palantir, Anduril, and Scale AI the three companies with active lobbying operations on the order could immediately satisfy them.
           </p>
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">The Pattern</h2>
           <p className="text-slate-300 mb-4">
-            AI companies need federal contracts to scale. Federal AI policy is written by members of Congress who hold AI stock. The members who write the policies own the companies that benefit from them. This is not a bug in the system. It is the system working as designed — for those who designed it.
+            AI companies need federal contracts to scale. Federal AI policy is written by members of Congress who hold AI stock. The members who write the policies own the companies that benefit from them. This is not a bug in the system. It is the system working as designed for those who designed it.
           </p>
 
           <div className="border-t border-slate-800 pt-8 mt-10">

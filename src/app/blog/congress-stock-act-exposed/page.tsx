@@ -78,9 +78,9 @@ export default function CongressStockActExposedPage() {
           <ul className="text-slate-300 space-y-2 mb-6">
             <li>It did not prohibit trading on non-public committee information</li>
             <li>It did not give the SEC enforcement authority over congressional trades</li>
-            <li>It did not criminalize violations — only civil penalties up to $200</li>
+            <li>It did not criminalize violations only civil penalties up to $200</li>
             <li>It did not cover legislative staff who routinely receive material non-public information</li>
-            <li>Congressional members are explicitly exempt from Section 10(b) of the Securities Exchange Act — the primary anti-fraud statute used to prosecute insider trading</li>
+            <li>Congressional members are explicitly exempt from Section 10(b) of the Securities Exchange Act the primary anti-fraud statute used to prosecute insider trading</li>
           </ul>
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">The Timeline: How Enforcement Got Stripped Out</h2>
@@ -90,7 +90,7 @@ export default function CongressStockActExposedPage() {
               { date: 'June 2013', event: 'House passes amendment to weaken the Act. Electronic disclosure requirement gutted. Reporting window extended to 90 days.' },
               { date: 'August 2013', event: 'Senate passes matching bill. President Obama signs despite calling the roll-back "a mistake."' },
               { date: '2014–2019', event: 'OGE, which manages the disclosure system, stops enforcing the 30-day rule entirely. No penalties issued.' },
-              { date: '2021–2024', event: 'Multiple attempts to strengthen the Act die in committee. The House Administration Committee — which controls disclosure rules — has not held a hearing on STOCK Act reform since 2019.' },
+              { date: '2021–2024', event: 'Multiple attempts to strengthen the Act die in committee. The House Administration Committee which controls disclosure rules has not held a hearing on STOCK Act reform since 2019.' },
             ].map((item, i) => (
               <div key={i} className="flex gap-4">
                 <span className="text-red-400 font-mono font-bold text-sm shrink-0 w-20">{item.date}</span>
@@ -101,7 +101,7 @@ export default function CongressStockActExposedPage() {
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">The $200 Problem</h2>
           <p className="text-slate-300 mb-4">
-            The maximum civil penalty for a STOCK Act violation is $200. Not per day. Not per trade. $200 total, flat. Compare that to the average insider trading prison sentence for a regular citizen: 3 to 5 years. The Mens Rea requirement — intent to profit from non-public information — is nearly impossible to prove for a congressperson who can simply claim they read a newspaper report.
+            The maximum civil penalty for a STOCK Act violation is $200. Not per day. Not per trade. $200 total, flat. Compare that to the average insider trading prison sentence for a regular citizen: 3 to 5 years. The Mens Rea requirement intent to profit from non-public information is nearly impossible to prove for a congressperson who can simply claim they read a newspaper report.
           </p>
           <p className="text-slate-300 mb-4">
             There has never been a criminal prosecution of a member of Congress for insider trading. Not one. The legal infrastructure exists on paper. It does not exist in practice.
@@ -140,7 +140,7 @@ export default function CongressStockActExposedPage() {
             The transparent markets act, the Congressional Stock Trading Investigation Act, and the Ban Congressional Stock Trading Act have been introduced in various forms since 2012. None have passed. The members who would benefit most from stricter enforcement are the same ones who control the committee agenda.
           </p>
           <p className="text-slate-300 mb-4">
-            The system will not fix itself. That is not a pessimistic take — it is an observation about incentives.
+            The system will not fix itself. That is not a pessimistic take it is an observation about incentives.
           </p>
 
           <div className="border-t border-slate-800 pt-8 mt-10">

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { DollarSign, Building2, Landmark, Scale } from 'lucide-react';
 
-// ─── APAC Deep Dive — Musk-Trump Pipeline ────────────────────────────────────
+// ─── APAC Deep Dive. Musk-Trump Pipeline ────────────────────────────────────
 // Four section tabs: money trail, White House access, congressional races, SCOTUS.
 export default function APACDeepDive() {
   const [openSection, setOpenSection] = useState<string | null>('money');
@@ -51,7 +51,7 @@ export default function APACDeepDive() {
           </div>
           <div className="bg-amber-950/20 border border-amber-900/30 rounded-lg px-4 py-3">
             <div className="text-amber-300 text-xs font-bold uppercase tracking-widest mb-1">Key insight</div>
-            <p className="text-slate-300 text-sm">APAC was not a traditional PAC. It was built to funnel maximum money in minimum time — Musk wrote a $250M check 5 days after Trump clinched the nomination. No donor base. No small-dollar operation. Just one man's wire transfer to win an election.</p>
+            <p className="text-slate-300 text-sm">APAC was not a traditional PAC. It was built to funnel maximum money in minimum time. Musk wrote a $250M check 5 days after Trump clinched the nomination. No donor base. No small-dollar operation. Just one man's wire transfer to win an election.</p>
           </div>
         </div>
       ),
@@ -69,8 +69,8 @@ export default function APACDeepDive() {
               <div className="space-y-3">
                 {[
                   { step: 'Step 1', actor: 'Musk wires $250M to America PAC', detail: 'May 2024. FEC filing shows single contribution.' },
-                  { step: 'Step 2', actor: 'APAC transfers $100M+ to RNC JFC', detail: 'RNC Joint Fundraising committee — coordinates RNC and campaign spending.' },
-                  { step: 'Step 3', actor: 'APAC wires $80M+ to SAVE America PAC', detail: "Trump's personal PAC — pays for travel, staff, rallies, legal bills." },
+                  { step: 'Step 2', actor: 'APAC transfers $100M+ to RNC JFC', detail: 'RNC Joint Fundraising committee coordinates RNC and campaign spending.' },
+                  { step: 'Step 3', actor: 'APAC wires $80M+ to SAVE America PAC', detail: "Trump's personal PAC pays for travel, staff, rallies, legal bills." },
                   { step: 'Step 4', actor: 'RNC + SVAM pay Trump campaign expenses', detail: 'Coordinated spending on field, digital, mail.' },
                 ].map((s) => (
                   <div key={s.step} className="flex items-start gap-2">
@@ -117,12 +117,12 @@ export default function APACDeepDive() {
       content: (
         <div className="space-y-4">
           <div>
-            <h4 className="text-white text-sm font-bold mb-3 uppercase tracking-widest">Senate — APAC-Funded Races</h4>
+            <h4 className="text-white text-sm font-bold mb-3 uppercase tracking-widest">Senate. APAC-Funded Races</h4>
             <div className="space-y-2">
               {[
-                { name: 'Josh Hammer (R-FL)', amount: '$20M+', race: 'FL Senate — Open seat', impact: 'Flip. Hammer elected.', color: 'text-emerald-400' },
-                { name: 'Dave McCormick (R-PA)', amount: '$18M+', race: 'PA Senate — Open seat', impact: 'Flip. McCormick defeated Casey.', color: 'text-emerald-400' },
-                { name: 'Bernie Moreno (R-OH)', amount: '$15M+', race: 'OH Senate — Brown seat', impact: 'Flip. Moreno beat Brown.', color: 'text-emerald-400' },
+                { name: 'Josh Hammer (R-FL)', amount: '$20M+', race: 'FL Senate. Open seat', impact: 'Flip. Hammer elected.', color: 'text-emerald-400' },
+                { name: 'Dave McCormick (R-PA)', amount: '$18M+', race: 'PA Senate. Open seat', impact: 'Flip. McCormick defeated Casey.', color: 'text-emerald-400' },
+                { name: 'Bernie Moreno (R-OH)', amount: '$15M+', race: 'OH Senate. Brown seat', impact: 'Flip. Moreno beat Brown.', color: 'text-emerald-400' },
                 { name: 'Ted Cruz (R-TX)', amount: '$8M+', race: 'TX Senate', impact: 'Held. Cruz by 10pts.', color: 'text-slate-400' },
                 { name: 'Joni Ernst (R-IA)', amount: '$5M+', race: 'IA Senate', impact: 'Held. Ernst by 6pts.', color: 'text-slate-400' },
                 { name: 'Deb Fischer (R-NE)', amount: '$3M+', race: 'NE Senate', impact: 'Held. Fischer by 18pts.', color: 'text-slate-400' },
@@ -142,15 +142,15 @@ export default function APACDeepDive() {
             </div>
           </div>
           <div>
-            <h4 className="text-white text-sm font-bold mb-3 uppercase tracking-widest">House — Key MAGA Recipients</h4>
+            <h4 className="text-white text-sm font-bold mb-3 uppercase tracking-widest">House. Key MAGA Recipients</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {[
-                { name: 'Elise Stefanik (R-NY)', amount: '$2.5M+', seat: 'NY-21 — House Conference Chair', color: 'text-white' },
-                { name: 'Matt Gaetz (R-FL)', amount: '$3M+', seat: 'FL-1 — House Judiciary', color: 'text-white' },
-                { name: 'Anna Paulina Luna (R-FL)', amount: '$2M+', seat: 'FL-13 — Veterans Affairs', color: 'text-white' },
-                { name: 'Andy Harris (R-MD)', amount: '$1.5M+', seat: 'MD-1 — Appropriations', color: 'text-white' },
-                { name: 'Chip Roy (R-TX)', amount: '$2M+', seat: 'TX-21 — Freedom Caucus', color: 'text-white' },
-                { name: 'Kat Cammack (R-FL)', amount: '$1.5M+', seat: 'FL-11 — Foreign Affairs', color: 'text-white' },
+                { name: 'Elise Stefanik (R-NY)', amount: '$2.5M+', seat: 'NY-21. House Conference Chair', color: 'text-white' },
+                { name: 'Matt Gaetz (R-FL)', amount: '$3M+', seat: 'FL-1. House Judiciary', color: 'text-white' },
+                { name: 'Anna Paulina Luna (R-FL)', amount: '$2M+', seat: 'FL-13. Veterans Affairs', color: 'text-white' },
+                { name: 'Andy Harris (R-MD)', amount: '$1.5M+', seat: 'MD-1. Appropriations', color: 'text-white' },
+                { name: 'Chip Roy (R-TX)', amount: '$2M+', seat: 'TX-21. Freedom Caucus', color: 'text-white' },
+                { name: 'Kat Cammack (R-FL)', amount: '$1.5M+', seat: 'FL-11. Foreign Affairs', color: 'text-white' },
               ].map((r) => (
                 <div key={r.name} className="flex items-center justify-between bg-black/20 border border-white/5 rounded-lg px-3 py-2">
                   <div>
@@ -164,7 +164,7 @@ export default function APACDeepDive() {
           </div>
           <div className="bg-blue-950/20 border border-blue-900/30 rounded-lg px-4 py-3">
             <div className="text-blue-300 text-xs font-bold uppercase tracking-widest mb-1">Net result</div>
-            <p className="text-slate-300 text-sm">APAC targeted Senate races most likely to flip control. Three Democratic seats (FL, PA, OH) flipped to Republicans — directly attributable to the $53M+ APAC invested in those states. Combined with SLF's $420M, the Senate flipped 4 seats net in 2024.</p>
+            <p className="text-slate-300 text-sm">APAC targeted Senate races most likely to flip control. Three Democratic seats (FL, PA, OH) flipped to Republicans directly attributable to the $53M+ APAC invested in those states. Combined with SLF's $420M, the Senate flipped 4 seats net in 2024.</p>
           </div>
         </div>
       ),
@@ -201,11 +201,11 @@ export default function APACDeepDive() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="bg-black/30 border border-white/10 rounded-xl p-4">
               <h4 className="text-white text-sm font-bold mb-2">Miriam Adelson SCOTUS Connection</h4>
-              <p className="text-slate-400 text-xs leading-relaxed">Sheldon Adelson died January 2021. Miriam has continued funding Trump and conservative courts. Sheldon Adelson privately funded Liberty Counsel — which argued 10 cases before SCOTUS in 2023-2024 alone. Adelson family has direct financial interest in at least 3 pending Supreme Court cases.</p>
+              <p className="text-slate-400 text-xs leading-relaxed">Sheldon Adelson died January 2021. Miriam has continued funding Trump and conservative courts. Sheldon Adelson privately funded Liberty Counsel which argued 10 cases before SCOTUS in 2023-2024 alone. Adelson family has direct financial interest in at least 3 pending Supreme Court cases.</p>
             </div>
             <div className="bg-black/30 border border-white/10 rounded-xl p-4">
-              <h4 className="text-white text-sm font-bold mb-2">Federalist Society — The Vetting Machine</h4>
-              <p className="text-slate-400 text-xs leading-relaxed">Every Trump-appointed judge was screened by the Federalist Society. APAC/SLF/Koch money funds Federalist Society infrastructure. Trump appointed 226 federal judges in his first term — 100% Federalist Society vetted. This is the long-game return on every dollar to the APAC/SLF/Koch axis.</p>
+              <h4 className="text-white text-sm font-bold mb-2">Federalist Society. The Vetting Machine</h4>
+              <p className="text-slate-400 text-xs leading-relaxed">Every Trump-appointed judge was screened by the Federalist Society. APAC/SLF/Koch money funds Federalist Society infrastructure. Trump appointed 226 federal judges in his first term, 100% Federalist Society vetted. This is the long-game return on every dollar to the APAC/SLF/Koch axis.</p>
             </div>
           </div>
           <div className="bg-slate-800/50 border border-white/10 rounded-lg px-4 py-3">

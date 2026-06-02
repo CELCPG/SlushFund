@@ -109,7 +109,7 @@ export function LobbyingView() {
 
       <p className="flex items-center gap-1.5 text-xs text-slate-500">
         <ExternalLink className="h-3 w-3" />
-        Source: <a href="https://lda.senate.gov" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">Senate Office of Public Records — Lobbying Disclosure Act filings</a>.
+        Source: <a href="https://lda.senate.gov" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">Senate Office of Public Records: Lobbying Disclosure Act filings</a>.
       </p>
     </div>
   );

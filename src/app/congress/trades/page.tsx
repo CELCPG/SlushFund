@@ -322,12 +322,12 @@ function StockHeatmap({
 
   return (
     <div className="space-y-4">
-      {/* Sector bars — computed from ALL trades */}
+      {/* Sector bars computed from ALL trades */}
       <div className="bg-slate-900 rounded-xl border border-slate-800 p-5">
         <div className="flex items-center justify-between mb-1">
           <h3 className="text-white font-semibold text-sm uppercase tracking-wider flex items-center gap-2">
             <Activity size={14} className="text-purple-400" />
-            Sector Volume — Congressional Trading (180d)
+            Sector Volume. Congressional Trading (180d)
           </h3>
           <span className="text-slate-500 text-xs">{allSectorData.length} sectors</span>
         </div>
@@ -338,7 +338,7 @@ function StockHeatmap({
           <div className="mb-3 p-3 bg-slate-800/60 border border-slate-700 rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <span className="text-amber-400 text-xs font-bold uppercase tracking-wider">
-                Catch-All / Misc — {miscSorted.length} tickers ({miscData?.[1].count ?? 0} trades)
+                Catch-All / Misc ({miscSorted.length} tickers) ({miscData?.[1].count ?? 0} trades)
               </span>
               <button onClick={() => setExpandedOther(false)} className="text-slate-500 hover:text-white text-xs">✕ close</button>
             </div>
@@ -396,7 +396,7 @@ function StockHeatmap({
                 {/* Hover tooltip: show top tickers in this sector */}
                 {isHovered && data.tickers.length > 0 && (
                   <div className="absolute left-0 top-full z-20 mt-1 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl p-3 min-w-[240px]">
-                    <div className="text-white text-xs font-bold mb-2">{sector} — {data.tickers.length} tickers</div>
+                    <div className="text-white text-xs font-bold mb-2">{sector} ({data.tickers.length} tickers)</div>
                     <div className="flex flex-wrap gap-1">
                       {data.tickers.slice(0, 20).map(t => (
                         <span key={t} className="px-1.5 py-0.5 bg-slate-700 rounded text-white text-xs font-mono">{t}</span>
@@ -659,7 +659,7 @@ export default function CongressTradesPage() {
               <h1 className="text-2xl font-black text-white">
                 Politician <span className="text-emerald-400">Stock Trading</span>
               </h1>
-              <p className="text-slate-400 text-sm mt-1">Stock Act disclosures — tracking who profits from their power</p>
+              <p className="text-slate-400 text-sm mt-1">Stock Act disclosures tracking who profits from their power</p>
               <div className="flex items-center gap-2 mt-2">
                 <span className="text-blue-400 text-xs hover:text-blue-300 font-medium">
                   <Link href="/analysis/history" className="flex items-center gap-1">
@@ -710,7 +710,7 @@ export default function CongressTradesPage() {
                 <AlertTriangle size={14} className="text-red-400" />
                 <span className="text-red-400 text-xs font-bold uppercase tracking-widest">New Analysis</span>
               </div>
-              <h3 className="text-white font-black text-xl mb-1">Company Deep Dives — Conflict of Interest Tracker</h3>
+              <h3 className="text-white font-black text-xl mb-1">Company Deep Dives. Conflict of Interest Tracker</h3>
               <p className="text-slate-400 text-sm">Cross-reference congressional stock trades against federal contract data. Track which politicians are buying stock in companies that receive government contracts.</p>
             </div>
             <Link href="/analysis/companies" className="ml-6 shrink-0 flex items-center gap-2 bg-red-900/40 border border-red-700 hover:bg-red-900/60 text-red-300 hover:text-red-200 px-4 py-3 rounded-xl text-sm font-bold transition-all">
@@ -734,13 +734,13 @@ export default function CongressTradesPage() {
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left — Leaderboard + Party chart */}
+          {/* Left. Leaderboard + Party chart */}
           <div className="space-y-6">
             <Leaderboard members={summary?.topMembers ?? []} />
             <PartyChart trades={trades} />
           </div>
 
-          {/* Center — Trades table (spans 2 cols visually via CSS) */}
+          {/* Center. Trades table (spans 2 cols visually via CSS) */}
           <div className="lg:col-span-2">
             <TradesTable trades={trades} onSearch={() => {}} />
           </div>
@@ -762,7 +762,7 @@ export default function CongressTradesPage() {
             <p className="text-slate-400 text-xs leading-relaxed">
               Congressional stock trades are disclosed under the STOCK Act (2012) within 45 days of execution.
               Amounts shown are ranges (e.g., $1M-$5M), not exact figures. "Federal contractor overlap" means
-              the traded company holds active federal contracts — cross-referenced with SlushFund's $17B award database.
+              the traded company holds active federal contracts cross-referenced with SlushFund's $17B award database.
               Data sourced from House Clerk Financial Disclosure + Senate EFD systems.
             </p>
           </div>

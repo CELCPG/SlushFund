@@ -18,7 +18,7 @@ export default function FunderWeb() {
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
       <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-1">Top Individual / Corporate Funders</h3>
-      <p className="text-slate-500 text-xs mb-4">The people and companies behind the PACs — 2016–2024 total contributions</p>
+      <p className="text-slate-500 text-xs mb-4">The people and companies behind the PACs, 2016–2024 total contributions</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {topFunders.map((f) => (
           <div key={f.name} className="bg-slate-800/50 rounded-lg px-4 py-3 flex items-center gap-3">

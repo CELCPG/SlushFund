@@ -67,7 +67,7 @@ export default function ExpandableMoneyFlow() {
         { name: 'New Georgia Project', role: 'Voter registration in GA. Arabella-staffed.', color: 'text-indigo-300' },
         { name: 'Sierra Club (c4)', role: 'Environmental dark money. $50M+ per cycle.', color: 'text-green-300' },
       ],
-      howItWorks: 'Wealthy donors give to Sixteen Thirty Fund (c4 — not required to disclose donors). 16:30 passes to SMP and HMP (c6 — can donate to other c4s). SMP and HMP fund Senate/House races. A portion goes to Priorities USA for media. Donors include: George Soros, Michael Bloomberg, Trial lawyers, Tech elites. The network uses layered nonprofits to obscure the original source.',
+      howItWorks: 'Wealthy donors give to Sixteen Thirty Fund (c4 not required to disclose donors). 16:30 passes to SMP and HMP (c6 can donate to other c4s). SMP and HMP fund Senate/House races. A portion goes to Priorities USA for media. Donors include: George Soros, Michael Bloomberg, Trial lawyers, Tech elites. The network uses layered nonprofits to obscure the original source.',
       amounts: [
         { label: 'Sixteen Thirty Fund (total 2016-2024)', value: '$1.47B', source: 'OpenSecrets, FEC filings' },
         { label: 'Sixteen Thirty Fund 2024 alone', value: '$280M', source: 'FEC 2024' },
@@ -84,7 +84,7 @@ export default function ExpandableMoneyFlow() {
       label: 'Crypto Industry PACs',
       amount: '$252M',
       color: 'border-green-800 bg-gradient-to-br from-green-950 to-slate-950',
-      summary: 'Crypto industry deployed $252M in 2024 cycle, making it the largest single-sector dark money player in the last election. Fairshake PAC alone raised $190M — the largest pro-crypto super PAC in history.',
+      summary: 'Crypto industry deployed $252M in 2024 cycle, making it the largest single-sector dark money player in the last election. Fairshake PAC alone raised $190M the largest pro-crypto super PAC in history.',
       players: [
         { name: 'Fairshake PAC', role: 'Main crypto super PAC. $190M in 2024.', color: 'text-green-300' },
         { name: 'Stand With Crypto PAC', role: 'Grassroots crypto advocacy + voter contact.', color: 'text-emerald-300' },
@@ -119,14 +119,14 @@ export default function ExpandableMoneyFlow() {
         { label: 'Boeing PAC 2024', value: '$8M', source: 'FEC 2024' },
         { label: 'Total defense PAC giving', value: '$255M', source: 'OpenSecrets 2024' },
       ],
-      impact: 'Defense contractors maintain stable funding by supporting Armed Services Committee members in both chambers. Top recipients: Inhofe (R-OK), Wilson (R-NM), Kilmer (D-WA) — all receive LM/RTX PAC funds. Defense spending has increased 40% since 2018.',
+      impact: 'Defense contractors maintain stable funding by supporting Armed Services Committee members in both chambers. Top recipients: Inhofe (R-OK), Wilson (R-NM), Kilmer (D-WA) all receive LM/RTX PAC funds. Defense spending has increased 40% since 2018.',
       oversight: 'Senate Armed Services Committee (Reed, D-RI; Wicker, R-MS) oversees DoD budget. House Armed Services (Rogers, R-AL; Smith, D-WA) has DoD oversight. Defense contractors receiving large DOD contracts: Lockheed Martin ($50B+), Raytheon ($30B+), Boeing ($25B+).',
     },
   ];
 
   return (
     <div className="space-y-4">
-      <h2 className="text-white font-black text-xl uppercase tracking-widest">Follow the Money — Key Funding Networks</h2>
+      <h2 className="text-white font-black text-xl uppercase tracking-widest">Follow the Money. Key Funding Networks</h2>
       <p className="text-slate-500 text-sm">Click any network to see the full breakdown: key players, how money flows, amounts, impact, and congressional oversight connections.</p>
       <div className="space-y-3">
         {networks.map((n) => {

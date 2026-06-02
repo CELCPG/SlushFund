@@ -36,4 +36,26 @@ export function getVendorBySlug(slug: string): Vendor | undefined {
   return VENDORS.find((v) => v.slug === slug);
 }
 
+/**
+ * Sibling vendors: every other entity in the same connection_category
+ * (e.g. "trump_family" returns Trump Organization, Trump Winery, Trump
+ * Hotels, Eric Trump as a vendor, etc.). Used by the vendor profile page
+ * so that "Trump Organization" doesn't show $0 just because the only
+ * direct federal award is on the sibling entity "Trump Winery".
+ */
+export function getSiblingVendorSearchTerms(
+  vendor: Vendor,
+  opts: { excludePersonNames?: boolean } = {},
+): string[] {
+  const out = new Set<string>([vendor.name, ...vendor.aliases]);
+  for (const v of VENDORS) {
+    if (v.slug === vendor.slug) continue;
+    if (v.connection_category !== vendor.connection_category) continue;
+    if (opts.excludePersonNames && v.entity_type === 'person') continue;
+    out.add(v.name);
+    for (const a of v.aliases) out.add(a);
+  }
+  return Array.from(out);
+}
+
 export type { ConnectionCategory };

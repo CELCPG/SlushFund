@@ -65,7 +65,7 @@ export default function AmericaPacMoneyPipelinePage() {
       <div className="max-w-3xl mx-auto px-6 py-12">
         <div className="prose prose-invert prose-lg max-w-none">
           <p className="text-xl text-slate-300 leading-relaxed font-medium border-l-4 border-purple-600 pl-6 mb-8">
-            Elon Musk launched America PAC in July 2024 with a stated mission: register 5 million new voters. The actual expenditure breakdown tells a different story — and FEC filings reveal a $250M pipeline flowing mostly to firms with deep GOP and Koch connections.
+            Elon Musk launched America PAC in July 2024 with a stated mission: register 5 million new voters. The actual expenditure breakdown tells a different story and FEC filings reveal a $250M pipeline flowing mostly to firms with deep GOP and Koch connections.
           </p>
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">What the FEC Records Show</h2>
@@ -73,13 +73,13 @@ export default function AmericaPacMoneyPipelinePage() {
             America PAC filed its final 2024 election cycle report with the Federal Election Commission in January 2025. The numbers are unambiguous:
           </p>
           <ul className="text-slate-300 space-y-2 mb-6">
-            <li>Total receipts: $250M (all from a single mega-donor — identity undisclosed)</li>
+            <li>Total receipts: $250M (all from a single mega-donor identity undisclosed)</li>
             <li>Total disbursements: $238M</li>
             <li>Voter registration operations: $20M (8.4% of spending)</li>
             <li>Get-out-the-vote (GOTV) operations: $15M (6.3%)</li>
             <li>Paid canvassers and field staff: $45M (18.9%)</li>
             <li>Digital advertising and media: $30M (12.6%)</li>
-            <li>"Consulting fees": $85M (35.7%) — to firms with Trump and Koch ties</li>
+            <li>"Consulting fees": $85M (35.7%) to firms with Trump and Koch ties</li>
             <li>Operations overhead and misc: $43M (18.1%)</li>
           </ul>
 
@@ -89,7 +89,7 @@ export default function AmericaPacMoneyPipelinePage() {
               <div>
                 <p className="text-purple-200 font-semibold mb-1">The Legal Loophole</p>
                 <p className="text-purple-100/80 text-sm">
-                  America PAC is a 501(c)(4) "social welfare" organization — not a traditional PAC. Under current IRS rules, it is not required to disclose its donors until after the election. The $250M could have come from one person, ten people, or a foreign entity. We do not know. And under the law, we cannot find out.
+                  America PAC is a 501(c)(4) "social welfare" organization not a traditional PAC. Under current IRS rules, it is not required to disclose its donors until after the election. The $250M could have come from one person, ten people, or a foreign entity. We do not know. And under the law, we cannot find out.
                 </p>
               </div>
             </div>
@@ -115,7 +115,7 @@ export default function AmericaPacMoneyPipelinePage() {
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">The Voter Registration Claim</h2>
           <p className="text-slate-300 mb-4">
-            America PAC claimed to have registered 1.2 million voters in battleground states. This figure has not been independently verified. Multiple nonpartisan election analysts note that 1.2M registrations from a $20M spend works out to roughly $16.67 per registration — reasonable on paper, but the actual number of verified new registrations is disputed.
+            America PAC claimed to have registered 1.2 million voters in battleground states. This figure has not been independently verified. Multiple nonpartisan election analysts note that 1.2M registrations from a $20M spend works out to roughly $16.67 per registration reasonable on paper, but the actual number of verified new registrations is disputed.
           </p>
           <p className="text-slate-300 mb-4">
             The PAC did not file expenditure reports itemizing which states received funding, which vendors were used for registration drives, or how many of those registrations were ultimately valid and non-duplicative.
@@ -129,7 +129,7 @@ export default function AmericaPacMoneyPipelinePage() {
             <li>Make America Great Again Inc. (Trump-aligned Super PAC): $210M spent</li>
             <li>Future of America PAC (传统的共和党Super PAC): $95M spent</li>
             <li>Club for Growth Action (conservative dark money): $75M spent</li>
-            <li>America PAC: $238M spent — more than all of the above</li>
+            <li>America PAC: $238M spent more than all of the above</li>
           </ul>
 
           <div className="bg-amber-900/20 border border-amber-700/40 rounded-xl p-6 my-8">
@@ -138,7 +138,7 @@ export default function AmericaPacMoneyPipelinePage() {
               <div>
                 <p className="text-amber-200 font-semibold mb-1">Why This Matters</p>
                 <p className="text-amber-100/80 text-sm">
-                  The $250M was laundered through a dark money c4 before reaching a political PAC — a structure specifically designed to prevent public disclosure of the original donor. This is not hypothetical. This is documented in IRS Form 990 filings and FEC records. The pipeline is legal. The transparency is zero.
+                  The $250M was laundered through a dark money c4 before reaching a political PAC a structure specifically designed to prevent public disclosure of the original donor. This is not hypothetical. This is documented in IRS Form 990 filings and FEC records. The pipeline is legal. The transparency is zero.
                 </p>
               </div>
             </div>
@@ -146,7 +146,7 @@ export default function AmericaPacMoneyPipelinePage() {
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">What Comes Next</h2>
           <p className="text-slate-300 mb-4">
-            Post-election FEC filings will eventually require disclosure of donors above certain thresholds — but only for donations made directly to the PAC, not to the upstream c4. The original $250M source will remain legally undisclosed unless a whistleblower or investigative journalist exposes it.
+            Post-election FEC filings will eventually require disclosure of donors above certain thresholds but only for donations made directly to the PAC, not to the upstream c4. The original $250M source will remain legally undisclosed unless a whistleblower or investigative journalist exposes it.
           </p>
           <p className="text-slate-300 mb-6">
             We are tracking every dollar. Subscribe to our investigation feed for updates as more data becomes available.

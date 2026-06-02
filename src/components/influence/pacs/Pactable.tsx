@@ -59,7 +59,7 @@ export default function Pactable({ pacs }: { pacs: PACDonation[] }) {
     <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
       <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
         <div>
-          <h3 className="text-white font-bold text-sm uppercase tracking-widest">All PACs Tracked — {PAC_DATABASE.length} PACs</h3>
+          <h3 className="text-white font-bold text-sm uppercase tracking-widest">All PACs Tracked ({PAC_DATABASE.length} PACs)</h3>
           <p className="text-slate-500 text-xs mt-1">Click column headers to sort. Showing {visible.length} of {sorted.length}.</p>
         </div>
         <div className="flex items-center gap-2">

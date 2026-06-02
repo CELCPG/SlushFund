@@ -5,12 +5,12 @@ import { websiteSchema } from '@/lib/schema';
 const OG = `/api/og?title=${encodeURIComponent('Investigations')}&eyebrow=${encodeURIComponent('SlushFund')}&stat=${encodeURIComponent('16')}&statLabel=${encodeURIComponent('investigations and counting')}`;
 
 export const metadata: Metadata = {
-  title: 'Blog & Investigations — SlushFund',
+  title: 'Blog & Investigations. SlushFund',
   description:
     'Original reporting on federal spending, congressional stock trading, and political money flows. No agenda except the truth.',
   alternates: {
     canonical: '/blog',
-    types: { 'application/rss+xml': [{ url: '/feed.xml', title: 'SlushFund — Investigations' }] },
+    types: { 'application/rss+xml': [{ url: '/feed.xml', title: 'SlushFund. Investigations' }] },
   },
   openGraph: {
     type: 'website',

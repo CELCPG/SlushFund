@@ -87,7 +87,7 @@ export default function ConflictsPage() {
             trades, scored against four documented signals: whether the member sits on a
             committee with jurisdiction over the company, whether that company holds federal
             contracts, whether the disclosure broke the STOCK Act&apos;s 45-day deadline, and
-            the size of the position. Each flag is a verifiable fact — not a legal conclusion.
+            the size of the position. Each flag is a verifiable fact not a legal conclusion.
           </p>
         </div>
 
@@ -232,16 +232,16 @@ export default function ConflictsPage() {
                 <Building2 size={14} /> How the score is built
               </div>
               <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5 text-xs text-slate-400">
-                <p><span className="text-red-300 font-mono">+45</span> Committee jurisdiction — member sits on a committee overseeing the traded company&apos;s sector (current assignments).</p>
-                <p><span className="text-red-300 font-mono">+30</span> Federal contractor — the company holds federal contracts, verified against USAspending award records.</p>
-                <p><span className="text-red-300 font-mono">+15</span> STOCK Act violation — disclosed more than 45 days after the trade.</p>
-                <p><span className="text-red-300 font-mono">+10</span> Large position — disclosed amount range tops $250,000.</p>
+                <p><span className="text-red-300 font-mono">+45</span> Committee jurisdiction member sits on a committee overseeing the traded company&apos;s sector (current assignments).</p>
+                <p><span className="text-red-300 font-mono">+30</span> Federal contractor the company holds federal contracts, verified against USAspending award records.</p>
+                <p><span className="text-red-300 font-mono">+15</span> STOCK Act violation disclosed more than 45 days after the trade.</p>
+                <p><span className="text-red-300 font-mono">+10</span> Large position disclosed amount range tops $250,000.</p>
               </div>
               <p className="text-slate-600 text-xs mt-3 leading-relaxed">
                 Tiers: severe ≥ 70, high ≥ 45, elevated ≥ 20. Committee conflicts are scored
                 against present-day committee assignments, so older trades reflect the
                 member&apos;s current jurisdiction. Every signal links back to a primary
-                source; a conflict score documents timing and overlap — it is not an
+                source; a conflict score documents timing and overlap it is not an
                 allegation of a crime.
               </p>
             </div>

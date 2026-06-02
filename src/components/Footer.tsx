@@ -11,7 +11,7 @@ export default function Footer() {
             source="footer"
             variant="stacked"
             heading="The Slush Report"
-            blurb="New flagged contracts, congressional trades, and investigations — straight to your inbox. No spam."
+            blurb="New flagged contracts, congressional trades, and investigations straight to your inbox. No spam."
           />
         </div>
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">

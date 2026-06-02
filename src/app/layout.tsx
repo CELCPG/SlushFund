@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
   title: {
-    default: 'SlushFund — Federal Spending Tracker',
+    default: 'SlushFund. Federal Spending Tracker',
     template: '%s | SlushFund',
   },
   description: 'Tracking federal contracts, grants, and congressional stock trades linked to political connections. Your taxes. Your 401k. Their slush fund.',
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/',
     types: {
-      'application/rss+xml': [{ url: '/feed.xml', title: 'SlushFund — Investigations' }],
+      'application/rss+xml': [{ url: '/feed.xml', title: 'SlushFund. Investigations' }],
     },
   },
   openGraph: {
@@ -25,14 +25,14 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://slushfund.net',
     siteName: 'SlushFund',
-    title: 'SlushFund — Federal Spending Tracker',
+    title: 'SlushFund. Federal Spending Tracker',
     description: 'Tracking federal contracts, grants, and congressional stock trades linked to political connections.',
     images: [
       {
         url: 'https://slushfund.net/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'SlushFund — Federal Spending Tracker',
+        alt: 'SlushFund. Federal Spending Tracker',
       },
     ],
   },
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@slushfund',
     creator: '@slushfund',
-    title: 'SlushFund — Federal Spending Tracker',
+    title: 'SlushFund. Federal Spending Tracker',
     description: 'Tracking federal contracts, grants, and congressional stock trades linked to political connections.',
     images: ['https://slushfund.net/og-image.png'],
   },

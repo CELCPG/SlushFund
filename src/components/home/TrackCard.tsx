@@ -52,7 +52,7 @@ export interface TrackCardProps {
   href: string;
   ctaLabel: string;
   stats: TrackStat[];
-  /** Mini-bar values for visual interest — relative magnitudes only. */
+  /** Mini-bar values for visual interest relative magnitudes only. */
   chartData: number[];
 }
 

@@ -482,7 +482,7 @@ export default function TechPage() {
             {/* Bottom note */}
             <div className="text-center text-slate-600 text-xs font-mono">
               {usingMock
-                ? 'Demo mode — showing mock data. Connect Supabase to enable live data.'
+                ? 'Demo mode showing mock data. Connect Supabase to enable live data.'
                 : `Showing ${awards.length} tech awards · Data from USAspending.gov · Updated ${new Date().toLocaleTimeString()}`}
             </div>
           </div>

@@ -59,8 +59,8 @@ export async function GET(request: NextRequest) {
   }
 
   // Fire the summary RPC + connection breakdown view + top-agencies RPC
-  // + high-risk list in parallel — they don't depend on each other.
-  const [summaryResult, breakdownResult, agenciesResult, highRiskResult] = await Promise.all([
+  // + high-risk list + competition-coverage RPC in parallel.
+  const [summaryResult, breakdownResult, agenciesResult, highRiskResult, competitionResult] = await Promise.all([
     supabase.rpc('get_alert_summary', {
       start_date: startDate ?? undefined,
       end_date: endDate ?? undefined,
@@ -85,6 +85,7 @@ export async function GET(request: NextRequest) {
       if (endDate) hrQuery = hrQuery.lte('posted_date', endDate);
       return hrQuery;
     })(),
+    supabase.rpc('get_competition_coverage'),
   ]);
 
   if (summaryResult.error) {
@@ -94,6 +95,9 @@ export async function GET(request: NextRequest) {
   if (agenciesResult.error) {
     console.error('[alerts] get_top_agencies RPC error:', agenciesResult.error);
     return NextResponse.json({ error: 'Agency query failed' }, { status: 500 });
+  }
+  if (competitionResult.error) {
+    console.error('[alerts] get_competition_coverage RPC error:', competitionResult.error);
   }
 
   const summary = (summaryResult.data as Record<string, number>) ?? {};
@@ -132,6 +136,7 @@ export async function GET(request: NextRequest) {
     breakdown,
     high_risk_awards: highRiskResult.data ?? [],
     top_agencies: topAgencies,
+    competition_coverage: (competitionResult.data as Record<string, unknown>) ?? null,
     generated_at: new Date().toISOString(),
   }, { headers: CACHE_HEADERS });
 }

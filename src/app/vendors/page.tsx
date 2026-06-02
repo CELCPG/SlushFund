@@ -11,8 +11,8 @@ import { Badge, toneForConnection } from '@/components/ui/Badge';
 const OG = `/api/og?title=${encodeURIComponent('Vendor Directory')}&eyebrow=${encodeURIComponent('SlushFund')}&stat=${encodeURIComponent(String(VENDORS.length))}&statLabel=${encodeURIComponent('politically connected vendors')}`;
 
 export const metadata: Metadata = {
-  title: 'Vendor Directory — Politically Connected Federal Contractors',
-  description: `Browse ${VENDORS.length} federal contractors with documented political connections — Trump family, Elon Musk companies, Trump allies, and major donors. Track their contracts and conflicts on SlushFund.`,
+  title: 'Vendor Directory. Politically Connected Federal Contractors',
+  description: `Browse ${VENDORS.length} federal contractors with documented political connections. Trump family, Elon Musk companies, Trump allies, and major donors. Track their contracts and conflicts on SlushFund.`,
   alternates: { canonical: '/vendors' },
   openGraph: {
     type: 'website',
@@ -39,7 +39,7 @@ export default function VendorsPage() {
       <PageHeader
         eyebrow="Programmatic directory"
         title="Vendor Directory"
-        description={`${VENDORS.length} federal contractors with documented political connections. Every profile tracks their contracts, no-bid awards, and risk flags — with sources.`}
+        description={`${VENDORS.length} federal contractors with documented political connections. Every profile tracks their contracts, no-bid awards, and risk flags with sources.`}
       />
 
       <Container className="space-y-10 py-10">

@@ -4,7 +4,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const memberName = id.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
   return {
-    title: `${memberName} — Congressional Stock Trading Profile | SlushFund`,
+    title: `${memberName}. Congressional Stock Trading Profile | SlushFund`,
     description: `Full stock trading history for ${memberName}. Every trade, ticker, volume, and federal contractor overlap. Complete disclosure data from Congress.`,
   };
 }

@@ -636,7 +636,7 @@ export default function MemberProfilePage() {
                   <AlertTriangle size={16} className="text-amber-400 mt-0.5 shrink-0" />
                   <p className="text-amber-200 text-sm leading-relaxed">
                     <strong>{decodedName}</strong> holds positions in {contractTickers.length} federal contractor{contractTickers.length !== 1 ? 's' : ''}.
-                    These companies collectively receive billions in government contracts — contracts that Congress controls.
+                    These companies collectively receive billions in government contracts contracts that Congress controls.
                   </p>
                 </div>
                 <ContractTickerCards tickers={contractTickers} memberName={decodedName} />
@@ -654,7 +654,7 @@ export default function MemberProfilePage() {
             <h4 className="text-white font-semibold text-sm mb-1">About This Data</h4>
             <p className="text-slate-400 text-xs leading-relaxed">
               Congressional stock trades disclosed under the STOCK Act (2012) within 45 days. Amounts shown are ranges.
-              &quot;Federal contractor&quot; means the company holds active federal contracts — cross-referenced with SlushFund&apos;s award database.
+              &quot;Federal contractor&quot; means the company holds active federal contracts cross-referenced with SlushFund&apos;s award database.
               Source: House Clerk Financial Disclosure + Senate EFD.
             </p>
           </div>
