@@ -171,3 +171,70 @@ end;
 $$;
 
 grant execute on function backfill_era_snapshots(jsonb) to service_role;
+
+-- COVID stats aggregates. The /api/covid-stats route used to scan every
+-- award with covid_obligations > 0 and reduce in JS. This function returns
+-- the same shape in one round-trip.
+create or replace function get_covid_stats()
+returns jsonb
+language plpgsql
+stable
+as $$
+declare
+  result jsonb;
+begin
+  select jsonb_build_object(
+    'total_covid_awards', count(*),
+    'total_covid_obligations', coalesce(sum(covid_obligations), 0),
+    'total_covid_outlays', coalesce(sum(covid_outlays), 0),
+    'covid_no_bid_count', count(*) filter (where competition_status in ('no_bid', 'sole_source')),
+    'covid_no_bid_dollars', coalesce(sum(covid_obligations) filter (where competition_status in ('no_bid', 'sole_source')), 0),
+    'by_agency', (
+      select coalesce(jsonb_agg(row_to_json(t) order by total_covid_obligations desc), '[]'::jsonb)
+      from (
+        select
+          awarding_agency as agency,
+          count(*) as award_count,
+          sum(covid_obligations) as total_covid_obligations,
+          count(*) filter (where competition_status in ('no_bid', 'sole_source')) as no_bid_count,
+          coalesce(sum(covid_obligations) filter (where competition_status in ('no_bid', 'sole_source')), 0) as no_bid_dollars
+        from awards
+        where covid_obligations > 0
+        group by awarding_agency
+        order by total_covid_obligations desc
+      ) t
+    ),
+    'top_vendors', (
+      select coalesce(jsonb_agg(row_to_json(t) order by total_covid_obligations desc), '[]'::jsonb)
+      from (
+        select
+          recipient_name as name,
+          sum(covid_obligations) as total_covid_obligations,
+          count(*) as award_count
+        from awards
+        where covid_obligations > 0
+        group by recipient_name
+        order by total_covid_obligations desc
+        limit 20
+      ) t
+    ),
+    'by_quarter', (
+      select coalesce(jsonb_object_agg(quarter, total), '{}'::jsonb)
+      from (
+        select
+          'Q' || ceil((extract(month from posted_date)::numeric) / 3)::text || ' FY' || extract(year from posted_date)::text as quarter,
+          sum(covid_obligations) as total
+        from awards
+        where covid_obligations > 0 and posted_date is not null
+        group by 1
+      ) q
+    )
+  ) into result
+  from awards
+  where covid_obligations > 0;
+
+  return result;
+end;
+$$;
+
+grant execute on function get_covid_stats() to anon, authenticated;

@@ -3,6 +3,12 @@ import { supabase } from '@/lib/supabase';
 import { FY_DATE_RANGES } from '@/app/api/backfill/route';
 import { ERA_FYS, type Era } from '@/lib/types';
 
+// Cache headers: summary stats only change when the awards table or
+// era_snapshots is refreshed. CDN cache 5min, browser 1min, plus SWR.
+const CACHE_HEADERS = {
+  'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=600',
+};
+
 // GET /api/alerts — aggregate stats for the dashboard
 //
 // Performance: as of sprint 5, this route no longer pulls raw rows from
@@ -124,5 +130,5 @@ export async function GET(request: NextRequest) {
     high_risk_awards: highRiskResult.data ?? [],
     top_agencies: topAgencies,
     generated_at: new Date().toISOString(),
-  });
+  }, { headers: CACHE_HEADERS });
 }

@@ -3,39 +3,49 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 const MONTH_NAMES = ['', 'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
+// GET /api/analytics/spending-trend
+//
+// Returns the last 18 months of spending, aggregated by month.
+//
+// Performance: reads from the existing `monthly_spending_trend` view which
+// is GROUP BY (month, award_category) — i.e. one row per (month, category).
+// The view aggregates in Postgres; we collapse across categories in JS.
+// A 2-year window produces ~50 rows total. Replaces the prior implementation
+// that pulled every row of the awards table just to do a JS month groupBy.
 export async function GET() {
   if (!supabaseAdmin) {
     return NextResponse.json({ months: [], error: 'DB not configured' });
   }
 
+  // Date range: 18 months back from today
+  const today = new Date();
+  const minDate = new Date(today);
+  minDate.setMonth(minDate.getMonth() - 18);
+  const minMonth = `${minDate.getFullYear()}-${String(minDate.getMonth() + 1).padStart(2, '0')}`;
+
   const { data, error } = await supabaseAdmin
-    .from('awards')
-    .select('posted_date, dollar_amount, connection_type');
+    .from('monthly_spending_trend')
+    .select('month, award_category, award_count, total_dollars, connected_dollars, non_competitive_dollars')
+    .gte('month', minMonth)
+    .order('month', { ascending: true });
 
   if (error) {
     return NextResponse.json({ months: [], error: error.message });
   }
 
-  // Aggregate by month
+  // Collapse by month across categories
   const monthMap: Record<string, { total: number; connected: number; count: number }> = {};
-  for (const row of (data ?? [])) {
-    const d = String(row.posted_date ?? '');
-    if (!d) continue;
-    const m = d.substring(0, 7); // "YYYY-MM"
-    if (!monthMap[m]) monthMap[m] = { total: 0, connected: 0, count: 0 };
-    const amt = Number(row.dollar_amount) || 0;
-    monthMap[m].total += amt;
-    monthMap[m].count += 1;
-    if (row.connection_type && row.connection_type !== 'none' && row.connection_type !== 'None' && row.connection_type !== null) {
-      monthMap[m].connected += amt;
-    }
+  for (const row of data ?? []) {
+    if (!row.month) continue;
+    if (!monthMap[row.month]) monthMap[row.month] = { total: 0, connected: 0, count: 0 };
+    monthMap[row.month].total += Number(row.total_dollars) || 0;
+    monthMap[row.month].connected += Number(row.connected_dollars) || 0;
+    monthMap[row.month].count += Number(row.award_count) || 0;
   }
 
   const months = Object.keys(monthMap)
     .sort()
-    .filter(m => m >= '2024-06')
-    .slice(-18) // last 18 months of available data
-    .map(m => {
+    .map((m) => {
       const [, mon] = m.split('-');
       return {
         month: m,
