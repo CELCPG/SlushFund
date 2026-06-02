@@ -3,6 +3,9 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { FY_DATE_RANGES } from '@/lib/era';
 import { ERA_FYS, type Era } from '@/lib/types';
 
+// Edge runtime: only calls a PL/pgSQL RPC. No Node deps.
+export const runtime = 'edge';
+
 // POST /api/snapshots/backfill
 //
 // Refreshes the era_snapshots table by calling the backfill_era_snapshots RPC
@@ -12,6 +15,9 @@ import { ERA_FYS, type Era } from '@/lib/types';
 // appends `?cron_secret=...` when the CRON_SECRET env var is set in the project.
 // We verify the secret in addition to checking that the request comes from
 // the configured Vercel deployment.
+//
+// Vercel cron sends GET by default, so we expose both GET and POST.
+export const GET = POST;
 export async function POST(request: Request) {
   // Vercel cron auth (https://vercel.com/docs/cron-jobs/manage-cron-jobs#securing-cron-jobs)
   const authHeader = request.headers.get('authorization');
@@ -66,6 +72,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
-
-// GET also allowed for manual triggering from the browser / curl
-export const GET = POST;
