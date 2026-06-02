@@ -164,11 +164,23 @@ async function enrichTradesBatched(trades: CongressTrade[]): Promise<CongressTra
   const maxDate = addDays(allDates[allDates.length - 1], 60);
 
   // OR filter: each candidate contributes two predicates (recipient_name
-  // contains company_name, recipient_parent_name contains company_name).
-  // Dedupe by company_name so popular tickers don't blow up the filter.
-  const companies = Array.from(new Set(candidates.map((c) => c.trade.company_name).filter(Boolean)));
+  // contains company name, recipient_parent_name contains company name).
+  // Use the first 2 words of company_name only — trade company_names often
+  // include "Inc. - Class A Common Stock" type suffixes that won't match
+  // the clean recipient_name in awards.
+  // Dedupe so popular tickers don't blow up the filter.
+  const companyWords = (name: string) =>
+    name
+      .replace(/[,.\-]/g, ' ')
+      .split(/\s+/)
+      .filter((w) => w.length > 2)
+      .slice(0, 2)
+      .join(' ');
+  const companies = Array.from(
+    new Set(candidates.map((c) => companyWords(c.trade.company_name)).filter(Boolean))
+  );
   const nameFilters = companies
-    .map((c) => `recipient_name.ilike.%${c}%,recipient_parent_name.ilike.%${c}%`)
+    .flatMap((c) => [`recipient_name.ilike.%${c}%`, `recipient_parent_name.ilike.%${c}%`])
     .join(',');
   const orFilter = `(${nameFilters})`;
 
