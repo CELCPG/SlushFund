@@ -335,6 +335,78 @@ export function HealthcareCallout({ name }: { name: string }) {
 
 // --- Generic fallback -------------------------------------------------------
 
+// --- Mega-donor / dark-money network -------------------------------------
+
+export function MegaDonorCallout({ name }: { name: string }) {
+  return (
+    <CalloutShell>
+      <CalloutHeader title="Mega-donor network — federal dollars flow through subsidiaries" sub="not this umbrella name" />
+      <div className="space-y-2 text-sm text-amber-100/80 leading-relaxed">
+        <p>
+          <strong className="text-amber-200">{name} and its network of LLCs are the largest single source of dark-money funding
+          in U.S. politics.</strong> USAspending.gov searches the parent name and major subsidiaries, but the real federal
+          dollars sit in operating companies, joint ventures, and pass-through LLCs that aren't tagged with the parent
+          brand in recipient records.
+        </p>
+        <p>
+          Federal contracts to <strong className="text-amber-200">Koch Filter, Georgia-Pacific, Guardian Industries, Invista,
+          Molex, John Zink, Koch Engineered Solutions</strong> and ~30 other Koch operating companies are reported under
+          those names — not "Koch Industries."
+        </p>
+        <p className="pt-1">
+          The donor-side picture is in the FEC database and OpenSecrets. Start with{' '}
+          <a href="https://www.opensecrets.org/orgs/summary?id=d000000067" target="_blank" rel="noopener noreferrer" className="text-amber-300 underline hover:text-amber-200">
+            OpenSecrets: Koch Industries
+          </a>{' '}
+          and{' '}
+          <a href="https://www.opensecrets.org/outsidespenders/summary?cycle=2026&id=kochfam" target="_blank" rel="noopener noreferrer" className="text-amber-300 underline hover:text-amber-200">
+            Americans for Prosperity (Koch network PAC)
+          </a>
+          .
+        </p>
+      </div>
+    </CalloutShell>
+  );
+}
+
+// --- Trump family pass-through LLCs / hotels -----------------------------
+
+export function TrumpFamilyCallout({ name }: { name: string }) {
+  return (
+    <CalloutShell>
+      <CalloutHeader title="Trump family — money flows in through property, not contracts" />
+      <div className="space-y-2 text-sm text-amber-100/80 leading-relaxed">
+        <p>
+          <strong className="text-amber-200">The Trump family's federal money isn't contracts — it's reimbursements.</strong>{' '}
+          When the President, Secret Service, White House staff, and Press Corps stay at Trump properties, the U.S.
+          government pays those bills. Those payments sit in DOJ/Secret Service and State Department accounting, not in
+          USAspending's contract awards feed.
+        </p>
+        <p>
+          What's tracked elsewhere: <strong className="text-amber-200">$hundreds of millions</strong> in Secret Service
+          detail costs at Trump properties since 2017, plus Mar-a-Lago, Bedminster, and Trump Hotel DC events billed to
+          the State Department, the GSA, and political committees.
+        </p>
+        <p className="pt-1">
+          Better sources:{' '}
+          <a href="https://www.citizensforethics.org/" target="_blank" rel="noopener noreferrer" className="text-amber-300 underline hover:text-amber-200">
+            Citizens for Responsibility and Ethics (CREW)
+          </a>
+          ,{' '}
+          <a href="https://www.propublica.org/article/trump-inc-podcast" target="_blank" rel="noopener noreferrer" className="text-amber-300 underline hover:text-amber-200">
+            ProPublica Trump, Inc.
+          </a>
+          , and{' '}
+          <a href="https://www.foreupdeal.org/" target="_blank" rel="noopener noreferrer" className="text-amber-300 underline hover:text-amber-200">
+            FORE! Up Deal
+          </a>{' '}
+          (golf-trip flight logs).
+        </p>
+      </div>
+    </CalloutShell>
+  );
+}
+
 export function GenericVendorCallout() {
   return (
     <CalloutShell color="slate">
@@ -425,6 +497,27 @@ export function pickVendorCallout({
     n.includes('puritan')
   ) {
     return <HealthcareCallout name={name} />;
+  }
+
+  // --- Mega-donor / dark-money network (Koch family) ---
+  if (
+    connectionCategory === 'gop_donor' ||
+    n.includes('koch')
+  ) {
+    return <MegaDonorCallout name={name} />;
+  }
+
+  // --- Trump family pass-throughs (umbrella orgs that don't have direct contracts) ---
+  if (
+    connectionCategory === 'trump_family' &&
+    (n.includes('trump organization') ||
+      n.includes('trump hotel') ||
+      n.includes('trump tower') ||
+      n.includes('mar-a-lago') ||
+      n.includes('bedminster') ||
+      n.includes('doral'))
+  ) {
+    return <TrumpFamilyCallout name={name} />;
   }
 
   // --- Generic fallback ---
