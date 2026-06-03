@@ -1,31 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { FY_DATE_RANGES } from '@/app/api/backfill/route';
+import { FY_DATE_RANGES } from '@/lib/era';
 import { ERA_FYS, type Era } from '@/lib/types';
+
+// Edge runtime: this route reads from a 4-row snapshot table and
+// calls one SQL RPC. Pure fetch — no Node deps. Edge gives us
+// sub-50ms cold starts and proper CDN caching.
+export const runtime = 'edge';
+
+// Cache headers: snapshot data is refreshed once daily by the Vercel cron at
+// 04:30 UTC. The CDNs can cache for 24h, browsers for 1h, and we allow
+// stale-while-revalidate for 12h to mask cron timing jitter.
+const CACHE_HEADERS = {
+  'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=43200',
+};
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const era = searchParams.get('era') as Era | null;
   const fy = searchParams.get('fy');
 
-  // Fast path: use era_snapshots if available
-  if (supabaseAdmin) {
+  if (!supabaseAdmin) {
+    return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 });
+  }
+
+  // Fast path 1: era_snapshots (populated by /api/snapshots/backfill cron)
+  if (!fy) {
     const { data: snapshots } = await supabaseAdmin
       .from('era_snapshots')
       .select('*')
       .order('era');
 
     if (snapshots && snapshots.length > 0) {
-      const filtered = era ? snapshots.filter(s => s.era === era) : snapshots;
-      return NextResponse.json({ source: 'snapshot', data: filtered });
+      const filtered = era ? snapshots.filter((s) => s.era === era) : snapshots;
+      return NextResponse.json({ source: 'snapshot', data: filtered }, { headers: CACHE_HEADERS });
     }
   }
 
-  // Fallback: compute from awards table
-  if (!supabaseAdmin) {
-    return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 });
-  }
-
+  // Fallback: compute via get_era_stats RPC (no row scan in Node, all in Postgres)
   try {
     let fys: number[];
 
@@ -37,7 +49,6 @@ export async function GET(request: NextRequest) {
       fys = [...ERA_FYS.trump_1, ...ERA_FYS.covid, ...ERA_FYS.biden, ...ERA_FYS.trump_2];
     }
 
-    // Build combined date range across selected FYs
     const startDates: string[] = [];
     const endDates: string[] = [];
     for (const y of fys) {
@@ -54,46 +65,21 @@ export async function GET(request: NextRequest) {
     const startDate = startDates[0];
     const endDate = endDates[endDates.length - 1];
 
-    const { data, error } = await supabaseAdmin
-      .from('awards')
-      .select('dollar_amount, connection_type, flags, competition_status, award_category, posted_date')
-      .gte('posted_date', startDate)
-      .lte('posted_date', endDate);
+    const { data: stats, error } = await supabaseAdmin.rpc('get_era_stats', {
+      start_date: startDate,
+      end_date: endDate,
+    });
 
     if (error) throw error;
-    if (!data) return NextResponse.json({ total_awards: 0, total_dollars: 0 });
 
-    const num = (v: unknown) => Number(v) || 0;
-    const totalDollars = data.reduce((s, a) => s + num(a.dollar_amount), 0);
-    const connectedDollars = data
-      .filter(a => a.connection_type && a.connection_type !== 'none')
-      .reduce((s, a) => s + num(a.dollar_amount), 0);
-    const noBidDollars = data
-      .filter(a => a.competition_status === 'no_bid' || a.competition_status === 'sole_source')
-      .reduce((s, a) => s + num(a.dollar_amount), 0);
-    const flaggedCount = data.filter(
-      a => Array.isArray(a.flags) && a.flags.length > 0
-    ).length;
-
-    const result = {
+    return NextResponse.json({
       source: 'computed',
       era: era ?? 'all',
       fy: fy ?? fys,
       start_date: startDate,
       end_date: endDate,
-      total_awards: data.length,
-      total_dollars: totalDollars,
-      connected_dollars: connectedDollars,
-      connected_pct: data.length > 0 ? (connectedDollars / totalDollars * 100).toFixed(1) : '0',
-      flagged_count: flaggedCount,
-      no_bid_dollars: noBidDollars,
-      breakdown: {
-        contracts: data.filter(a => a.award_category === 'contract').length,
-        grants: data.filter(a => a.award_category === 'grant').length,
-      },
-    };
-
-    return NextResponse.json(result);
+      ...((stats as Record<string, unknown>) ?? {}),
+    }, { headers: CACHE_HEADERS });
   } catch (err) {
     console.error('[era-stats] Error:', err);
     return NextResponse.json({ error: String(err) }, { status: 500 });

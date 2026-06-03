@@ -83,7 +83,7 @@ const MOCK_GRAPH: GraphData = {
     { id: 'grf', type: 'pac', label: 'Guam Republicans Fund', size: 14, x: 0, y: 0, vx: 0, vy: 0, fixed: false, totalSpending:  8e6, description: 'Territorial GOP PAC' },
   ],
   edges: [
-    // Stock ownership — politician → contractor
+    // Stock ownership politician → contractor
     { id: 'e1', source: 'mike-turner', target: 'pltr', type: 'stock', value: 250000, label: '$250K shares' },
     { id: 'e2', source: 'mike-turner', target: 'rtx', type: 'stock', value: 180000, label: '$180K shares' },
     { id: 'e3', source: 'cathy-mcmorris', target: 'coi', type: 'stock', value: 95000, label: '$95K COIN' },
@@ -95,7 +95,7 @@ const MOCK_GRAPH: GraphData = {
     { id: 'e9', source: 'cathy-mcmorris', target: 'nvda', type: 'stock', value: 65000, label: '$65K NVDA' },
     { id: 'e10', source: 'maxine-waters', target: 'ba', type: 'stock', value: 45000, label: '$45K BA' },
 
-    // Contract award — agency → contractor (thicker = more $)
+    // Contract award agency → contractor (thicker = more $)
     { id: 'e11', source: ' dod', target: 'ba', type: 'contract', value: 48e9, label: '$48B DoD' },
     { id: 'e12', source: ' dod', target: 'rtx', type: 'contract', value: 32e9, label: '$32B DoD' },
     { id: 'e13', source: ' dod', target: 'pltr', type: 'contract', value: 2.4e9, label: '$2.4B DoD' },
@@ -108,7 +108,7 @@ const MOCK_GRAPH: GraphData = {
     { id: 'e20', source: ' va', target: 'msft', type: 'contract', value: 1.8e9, label: '$1.8B VA' },
     { id: 'e21', source: 'hhs', target: 'pltr', type: 'contract', value: 600e6, label: '$600M HHS' },
 
-    // PAC donation — PAC → politician
+    // PAC donation. PAC → politician
     { id: 'e22', source: 'america-pac', target: 'mike-turner', type: 'pac_donation', value: 2.5e6, label: '$2.5M' },
     { id: 'e23', source: 'america-pac', target: 'darin-lahood', type: 'pac_donation', value: 1.8e6, label: '$1.8M' },
     { id: 'e24', source: 'america-pac', target: 'brian-mast', type: 'pac_donation', value: 1.5e6, label: '$1.5M' },
@@ -120,7 +120,7 @@ const MOCK_GRAPH: GraphData = {
     { id: 'e30', source: 'america-pac', target: 'al-franks', type: 'pac_donation', value: 1.1e6, label: '$1.1M' },
     { id: 'e31', source: 'grf', target: 'cathy-mcmorris', type: 'pac_donation', value: 250000, label: '$250K' },
 
-    // Committee oversight — politician → agency
+    // Committee oversight politician → agency
     { id: 'e32', source: 'mike-turner', target: ' dod', type: 'oversight', value: 0, label: 'House Intel' },
     { id: 'e33', source: 'cathy-mcmorris', target: 'hhs', type: 'oversight', value: 0, label: 'E&C Comm' },
     { id: 'e34', source: 'cynthia-lummis', target: 'treas', type: 'oversight', value: 0, label: 'Banking Comm' },
@@ -368,14 +368,17 @@ function GraphSVG({
     isDraggingRef.current = false;
     dragNodeIdRef.current = nodeId;
     lastMouseRef.current = { x: e.clientX, y: e.clientY };
-    const svgX = toSvgX(e.clientX);
-    const svgY = toSvgY(e.clientY);
-    onNodeDrag(nodeId, svgX, svgY);
+    // Don't call onNodeDrag here only start dragging if mouse actually moves
   }
 
   function nodeMouseMove(e: React.MouseEvent) {
     if (!dragNodeIdRef.current) return;
+    const dx = e.clientX - lastMouseRef.current.x;
+    const dy = e.clientY - lastMouseRef.current.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 4) return; // movement threshold ignore tiny jitters
     isDraggingRef.current = true;
+    lastMouseRef.current = { x: e.clientX, y: e.clientY };
     const svgX = toSvgX(e.clientX);
     const svgY = toSvgY(e.clientY);
     onNodeDrag(dragNodeIdRef.current, svgX, svgY);
@@ -732,7 +735,7 @@ export default function NetworkPage() {
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [viewBox, setViewBox] = useState({ x: -50, y: -50, w: 1400, h: 900 });
+  const [viewBox, setViewBox] = useState({ x: -200, y: -200, w: 2200, h: 1500 });
   const [isSimulating, setIsSimulating] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -817,7 +820,7 @@ export default function NetworkPage() {
   function resetView() {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
-    setViewBox({ x: -50, y: -50, w: rect.width + 100, h: rect.height + 100 });
+    setViewBox({ x: -200, y: -200, w: rect.width + 400, h: rect.height + 400 });
   }
 
   function fitAll() {
@@ -907,14 +910,14 @@ export default function NetworkPage() {
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-3 mb-1">
-                <Network size={24} className="text-[#E63946]" />
+                <Network size={24} className="text-slush-red" />
                 <h1 className="text-2xl font-black text-white">The Web</h1>
               </div>
               <p className="text-slate-400 text-sm ml-[36px]">Explore the connections between Congress, contracts, and dark money.</p>
             </div>
             {isSimulating && (
               <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span className="w-2 h-2 rounded-full bg-[#E63946] animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-slush-red animate-pulse" />
                 <span>Building graph…</span>
               </div>
             )}
@@ -931,7 +934,7 @@ export default function NetworkPage() {
               onClick={() => setFilter(f)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 filter === f
-                  ? 'bg-[#E63946]/20 text-[#E63946] border border-[#E63946]/40'
+                  ? 'bg-slush-red/20 text-slush-red border border-slush-red/40'
                   : 'bg-slate-800/60 text-slate-400 border border-transparent hover:text-white hover:bg-slate-800'
               }`}
             >
@@ -948,7 +951,7 @@ export default function NetworkPage() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search nodes…"
-              className="pl-8 pr-3 py-1.5 bg-slate-800/60 border border-slate-700/60 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#E63946]/60 w-44"
+              className="pl-8 pr-3 py-1.5 bg-slate-800/60 border border-slate-700/60 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:border-slush-red/60 w-44"
             />
             {search && (
               <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">

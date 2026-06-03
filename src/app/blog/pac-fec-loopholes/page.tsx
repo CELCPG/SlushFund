@@ -125,7 +125,7 @@ export default function PacFecLoopholesPage() {
                 legal: 'IRS Sections 501(c)(3) and 501(c)(4)',
                 disclosure: 'Donors to (c)(3) are never disclosed; (c)(3) can fund (c)(4) without disclosure',
                 example: 'Foundations funding dark money through parallel (c)(4) structures',
-                limit: '(c)(3)s are prohibited from spending more than 49% of activities on politics — but there is no prohibition on transferring funds to a (c)(4)',
+                limit: '(c)(3)s are prohibited from spending more than 49% of activities on politics but there is no prohibition on transferring funds to a (c)(4)',
                 mechanism: 'Donor contributes to (c)(3) foundation → foundation grants to (c)(4) → political spending occurs',
               },
             ].map((item, i) => (
@@ -140,10 +140,10 @@ export default function PacFecLoopholesPage() {
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">The DISCLOSE Act: What It Would Do</h2>
           <p className="text-slate-300 mb-4">
-            The DISCLOSE Act — passed by the House in 2022, died in the Senate — would have required organizations spending more than $10,000 on politics to disclose donors above that threshold. It would have closed most of the LLC loophole, required (c)(4) organizations to disclose donors above $10,000, and mandated that Super PACs disclose the original source of any contribution over $10,000.
+            The DISCLOSE Act passed by the House in 2022, died in the Senate would have required organizations spending more than $10,000 on politics to disclose donors above that threshold. It would have closed most of the LLC loophole, required (c)(4) organizations to disclose donors above $10,000, and mandated that Super PACs disclose the original source of any contribution over $10,000.
           </p>
           <p className="text-slate-300 mb-4">
-            Every major dark money organization — left and right — lobbied against it. The Koch network alone spent an estimated $12 million opposing the DISCLOSE Act in 2024. The bill has not been reintroduced in the 2025-2026 session.
+            Every major dark money organization left and right lobbied against it. The Koch network alone spent an estimated $12 million opposing the DISCLOSE Act in 2024. The bill has not been reintroduced in the 2025-2026 session.
           </p>
 
           <div className="bg-amber-900/20 border border-amber-700/40 rounded-xl p-6 my-8">
@@ -160,7 +160,7 @@ export default function PacFecLoopholesPage() {
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">Why This Persists</h2>
           <p className="text-slate-300 mb-4">
-            The FEC is designed to be evenly split between the two major parties. That split means any enforcement of existing dark money rules requires bipartisan agreement — which has not happened since 2012. The commission has had a deadlocked vacancy since 2023. It cannot enforce its own rules because it cannot achieve the required majority vote.
+            The FEC is designed to be evenly split between the two major parties. That split means any enforcement of existing dark money rules requires bipartisan agreement which has not happened since 2012. The commission has had a deadlocked vacancy since 2023. It cannot enforce its own rules because it cannot achieve the required majority vote.
           </p>
           <p className="text-slate-300 mb-4">
             The gap between what the law says and what the law does is where dark money lives.

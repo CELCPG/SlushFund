@@ -190,7 +190,7 @@ function SavingsTracker() {
           <div>
             <div className="text-amber-300 text-sm font-bold mb-1">Methodology matters</div>
             <p className="text-slate-300 text-xs leading-relaxed">
-              <span className="text-amber-200 font-semibold">DOGE counts:</span> projected future savings from planned reductions, hiring freezes, and attrition — regardless of cancellation fees or legal settlement costs.{' '}
+              <span className="text-amber-200 font-semibold">DOGE counts:</span> projected future savings from planned reductions, hiring freezes, and attrition regardless of cancellation fees or legal settlement costs.{' '}
               <span className="text-amber-200 font-semibold">GAO counts:</span> actual dollars saved after accounting for exit costs, replacement contract costs, and supplemental appropriations Congress voted to restore.
               The {fmtB(gap)} gap is mostly explained by those factors.
             </p>
@@ -206,10 +206,10 @@ function SavingsTracker() {
         </div>
       </div>
 
-      {/* Monthly claimed vs verified — visual chart */}
+      {/* Monthly claimed vs verified visual chart */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-white font-bold text-sm uppercase tracking-widest">Savings Timeline — Claimed vs Verified</h3>
+          <h3 className="text-white font-bold text-sm uppercase tracking-widest">Savings Timeline. Claimed vs Verified</h3>
           <div className="flex items-center gap-4 text-xs">
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded-full bg-red-500" />
@@ -352,7 +352,7 @@ function SavingsTracker() {
 
       {/* Category breakdown */}
       <div>
-        <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-3">Claimed by Category — Named Agencies</h3>
+        <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-3">Claimed by Category. Named Agencies</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Object.entries(byCategory).map(([cat, total]) => (
             <div key={cat} className="bg-slate-900 border border-slate-800 rounded-xl p-4">
@@ -388,7 +388,7 @@ function ConflictsOfInterest() {
 
       {/* § 208 applied to named staff */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-        <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-4">§ 208 Applied — Named DOGE Staff</h3>
+        <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-4">§ 208 Applied. Named DOGE Staff</h3>
         <div className="space-y-3">
           {Object.entries(LEGAL_NOTES.application).map(([who, analysis]) => (
             <div key={who} className="flex gap-3 text-sm">
@@ -445,16 +445,16 @@ function ConflictsOfInterest() {
 
       {/* Musk timeline */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-        <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-4">Musk Timeline — DOGE Entry to Contract Awards</h3>
+        <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-4">Musk Timeline. DOGE Entry to Contract Awards</h3>
         <div className="space-y-3">
           {[
-            { date: 'Jan 20, 2025', event: 'Trump inaugurated. Musk named Special Government Employee (SGE) — allows temporary federal service without full financial disclosure requirements.' },
+            { date: 'Jan 20, 2025', event: 'Trump inaugurated. Musk named Special Government Employee (SGE) allows temporary federal service without full financial disclosure requirements.' },
             { date: 'Jan 21–31, 2025', event: 'Musk enters federal buildings. DOGE team accesses OPM, Treasury, USAID payment systems. SpaceX files for additional national security launch contracts.' },
             { date: 'Feb 1, 2025', event: 'SpaceX receives $800M National Security Space Launch contract increase. First major DoD award post-DOGE.' },
-            { date: 'Feb 15, 2025', event: 'DOGE staff begin deep cuts to federal agencies. OPM awards $650M Accenture Federal contract to replace federal IT workers — workers DOGE is cutting.' },
-            { date: 'Mar 2025', event: 'xAI applies for federal AI contracts. Tesla stock begins rally. DOGE cancels USAID contracts worth $8B — competitors to Starlink in satellite comms.' },
+            { date: 'Feb 15, 2025', event: 'DOGE staff begin deep cuts to federal agencies. OPM awards $650M Accenture Federal contract to replace federal IT workers workers DOGE is cutting.' },
+            { date: 'Mar 2025', event: 'xAI applies for federal AI contracts. Tesla stock begins rally. DOGE cancels USAID contracts worth $8B competitors to Starlink in satellite comms.' },
             { date: 'Apr 2025', event: 'Palantir (DOGE tech lead Chris Young has ties) awarded $950M DHS contract. Anduril gets $890M DoD contract. Both competitors for work federal workers used to do.' },
-            { date: 'May 2025', event: 'GAO publishes first DOGE audit — verifies $23B actual savings vs. $83B claimed through May. GAO flags the gap as "methodology concerns."' },
+            { date: 'May 2025', event: 'GAO publishes first DOGE audit verifies $23B actual savings vs. $83B claimed through May. GAO flags the gap as "methodology concerns."' },
           ].map((item, i) => (
             <div key={i} className="flex gap-3 text-sm">
               <div className="text-red-400 font-mono text-xs w-24 shrink-0 pt-0.5">{item.date}</div>
@@ -489,7 +489,7 @@ function WhosWinning() {
           <div>
             <div className="text-blue-300 font-bold text-sm mb-1">The DOGE Pattern: Public to Private</div>
             <p className="text-slate-300 text-sm leading-relaxed">
-              DOGE cuts federal workers. The same work goes to private contractors — at higher cost. A federal IT worker costs ~$120K/year with benefits. Accenture or Booz Allen charges $200–$350K for the same contractor seat. The savings are real for the federal budget line — but taxpayers pay the difference through higher contract costs, and the workers are simply removed from the public payroll.
+              DOGE cuts federal workers. The same work goes to private contractors at higher cost. A federal IT worker costs ~$120K/year with benefits. Accenture or Booz Allen charges $200–$350K for the same contractor seat. The savings are real for the federal budget line but taxpayers pay the difference through higher contract costs, and the workers are simply removed from the public payroll.
             </p>
           </div>
         </div>
@@ -507,7 +507,7 @@ function WhosWinning() {
                     <span className="bg-slate-800 text-slate-300 text-xs font-mono px-1.5 py-0.5 rounded">{c.ticker}</span>
                   )}
                 </div>
-                <div className="text-slate-400 text-sm">{c.agency} — {c.date_awarded}</div>
+                <div className="text-slate-400 text-sm">{c.agency} | {c.date_awarded}</div>
               </div>
               <div className="text-right">
                 <div className="text-white font-black text-2xl font-mono">{fmtM(c.contract_amount)}</div>
@@ -539,15 +539,15 @@ function WhosWinning() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <div className="text-red-400 font-bold text-sm mb-2">Budget line savings ≠ real savings</div>
-            <p className="text-slate-400 text-xs leading-relaxed">When DOGE cuts a budget line, it looks like savings. But if the same work is contracted out at 2–3x the cost, the net cost to taxpayers increases — even though the federal budget shows a decrease.</p>
+            <p className="text-slate-400 text-xs leading-relaxed">When DOGE cuts a budget line, it looks like savings. But if the same work is contracted out at 2–3x the cost, the net cost to taxpayers increases even though the federal budget shows a decrease.</p>
           </div>
           <div>
             <div className="text-amber-400 font-bold text-sm mb-2">Federal workers gone, contractors in</div>
-            <p className="text-slate-400 text-xs leading-relaxed">80,000+ federal workers separated. Accenture, Booz Allen, GDIT, Deloitte, and Peraton picked up the work. Federal institutional knowledge is gone — replaced with for-profit contractors who answer to shareholders.</p>
+            <p className="text-slate-400 text-xs leading-relaxed">80,000+ federal workers separated. Accenture, Booz Allen, GDIT, Deloitte, and Peraton picked up the work. Federal institutional knowledge is gone replaced with for-profit contractors who answer to shareholders.</p>
           </div>
           <div>
             <div className="text-emerald-400 font-bold text-sm mb-2">Who's profiting</div>
-            <p className="text-slate-400 text-xs leading-relaxed">Booz Allen Hamilton (BAH stock up 18% since Jan 2025). Accenture (ACN up 12%). Palantir (PLTR up 200%+). These companies have the same federal contractor relationships — DOGE cuts were a business development opportunity.</p>
+            <p className="text-slate-400 text-xs leading-relaxed">Booz Allen Hamilton (BAH stock up 18% since Jan 2025). Accenture (ACN up 12%). Palantir (PLTR up 200%+). These companies have the same federal contractor relationships. DOGE cuts were a business development opportunity.</p>
           </div>
         </div>
       </div>
@@ -606,7 +606,7 @@ export default function DogePage() {
             DOGE: The Real Score
           </h1>
           <p className="text-slate-400 text-lg max-w-2xl">
-            DOGE claims $130B in savings. Independent auditors say $28B. Here is the full breakdown — by agency, by conflict of interest, and by who picked up the contracts.
+            DOGE claims $130B in savings. Independent auditors say $28B. Here is the full breakdown by agency, by conflict of interest, and by who picked up the contracts.
           </p>
         </div>
 
@@ -624,7 +624,7 @@ export default function DogePage() {
             >
               <t.icon size={14} />
               {t.label}
-              <span className="text-slate-600 text-xs font-normal">— {t.sub}</span>
+              <span className="text-slate-600 text-xs font-normal">· {t.sub}</span>
             </button>
           ))}
         </div>

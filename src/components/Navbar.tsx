@@ -1,11 +1,12 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  BarChart3, Landmark, DollarSign, PieChart, Bitcoin, Home,
+  BarChart3, Landmark, DollarSign, PieChart, Bitcoin,
   ChevronDown, Shield, TrendingUp, Database,
-  Activity, AlertTriangle, FileText, ArrowRight, Scale, Network, Menu, X, Search
+  Activity, AlertTriangle, FileText, ArrowRight, Scale, Network, Menu, X, MessageCircle, Building2, ExternalLink
 } from 'lucide-react';
 
 const NAV_SECTIONS = [
@@ -14,38 +15,27 @@ const NAV_SECTIONS = [
     icon: <BarChart3 size={14} />,
     color: 'text-emerald-400',
     links: [
-      { href: '/dashboard', label: 'All Spending', icon: <Database size={12} /> },
-      { href: '/compare', label: 'Era Comparison', icon: <BarChart3 size={12} /> },
-      { href: '/defense', label: 'Defense Contracts', icon: <Shield size={12} /> },
-      { href: '/covid', label: 'COVID Deep Dive', icon: <AlertTriangle size={12} /> },
+      { href: '/dashboard', label: 'Dashboard', icon: <Database size={12} /> },
+      { href: '/vendors', label: 'Vendor Directory', icon: <Building2 size={12} /> },
+      { href: 'https://corporatewarlords.com', label: 'Corporate Warlords', icon: <ExternalLink size={12} />, external: true },
+      { href: '/covid', label: 'COVID Spending', icon: <AlertTriangle size={12} /> },
       { href: '/tech', label: 'Tech & AI', icon: <Activity size={12} /> },
     ],
   },
   {
-    label: 'Congress Trading',
+    label: 'Political Trading',
     icon: <Landmark size={14} />,
     color: 'text-blue-400',
     links: [
       { href: '/congress/trades', label: 'All Trades', icon: <TrendingUp size={12} /> },
-      { href: '/congress/trades?chamber=senate', label: 'Senate', icon: null },
-      { href: '/congress/trades?chamber=house', label: 'House', icon: null },
+      { href: '/congress/trades?chamber=senate', label: 'Senate', icon: <TrendingUp size={12} /> },
+      { href: '/congress/trades?chamber=house', label: 'House', icon: <TrendingUp size={12} /> },
       { href: '/congress/trades/trump', label: 'Trump OGE 278-T', icon: <FileText size={12} /> },
       { href: '/congress/trades?has_contract=true', label: 'Contractor Overlap', icon: <AlertTriangle size={12} /> },
       { href: '/analysis/history', label: '10-Year History', icon: <BarChart3 size={12} /> },
       { href: '/analysis/conflicts', label: 'Conflict Engine', icon: <AlertTriangle size={12} /> },
       { href: '/analysis/companies', label: 'Company Deep Dives', icon: <Shield size={12} /> },
-      { href: '/blog', label: 'Blog & Investigations', icon: <FileText size={12} /> },
-    ],
-  },
-  {
-    label: 'Healthcare',
-    icon: <Activity size={14} />,
-    color: 'text-rose-400',
-    links: [
-      { href: '/healthcare', label: 'Pharma Lobbying', icon: <Activity size={12} /> },
-      { href: '/healthcare?tab=lobbying', label: 'Lobbying', icon: null },
-      { href: '/healthcare?tab=stocks', label: 'Pharma Stocks', icon: null },
-      { href: '/healthcare?tab=correlation', label: 'The Connection', icon: null },
+      { href: '/blog', label: 'Investigations', icon: <FileText size={12} /> },
     ],
   },
   {
@@ -56,6 +46,7 @@ const NAV_SECTIONS = [
       { href: '/influence', label: 'Influence Overview', icon: <PieChart size={12} /> },
       { href: '/influence?tab=crypto', label: 'Crypto & Government', icon: <Bitcoin size={12} /> },
       { href: '/influence?tab=pacs', label: 'Super PACs & Dark Money', icon: <DollarSign size={12} /> },
+      { href: '/lobbying', label: 'Federal Lobbying (LDA)', icon: <Building2 size={12} /> },
       { href: '/influence?tab=policy', label: 'Policy & Bills', icon: <Scale size={12} /> },
       { href: '/influence?tab=network', label: 'Influence Network', icon: <Network size={12} /> },
     ],
@@ -66,10 +57,10 @@ const NAV_SECTIONS = [
     color: 'text-purple-400',
     links: [
       { href: '/analysis', label: 'Deep Analytics', icon: <PieChart size={12} /> },
-      { href: '/analysis#cost-overruns', label: 'Cost Overruns', icon: null },
-      { href: '/analysis#insider-trading', label: 'Insider Signals', icon: null },
+      { href: '/analysis#cost-overruns', label: 'Cost Overruns', icon: <BarChart3 size={12} /> },
+      { href: '/analysis#insider-trading', label: 'Insider Signals', icon: <Activity size={12} /> },
+      { href: '/analysis/companies', label: 'Company Deep Dives', icon: <Shield size={12} /> },
       { href: '/explain', label: 'How It All Works', icon: <Network size={12} /> },
-      { href: '/explain/network', label: 'The Web', icon: <Network size={12} /> },
     ],
   },
   {
@@ -78,9 +69,9 @@ const NAV_SECTIONS = [
     color: 'text-red-400',
     links: [
       { href: '/doge', label: 'DOGE: The Real Score', icon: <AlertTriangle size={12} /> },
-      { href: '/doge#savings', label: 'Savings Tracker', icon: null },
-      { href: '/doge#conflicts', label: 'Conflicts of Interest', icon: null },
-      { href: '/doge#winners', label: "Who's Winning", icon: null },
+      { href: '/doge#savings', label: 'Savings Tracker', icon: <BarChart3 size={12} /> },
+      { href: '/doge#conflicts', label: 'Conflicts of Interest', icon: <AlertTriangle size={12} /> },
+      { href: '/doge#winners', label: "Who's Winning", icon: <Shield size={12} /> },
     ],
   },
 ];
@@ -116,7 +107,7 @@ export default function Navbar() {
     return pathname.startsWith(href.split('?')[0].split('#')[0]);
   }
 
-  // Hover handlers — open on hover, close after a short delay (desktop)
+  // Hover handlers open on hover, close after a short delay (desktop)
   function openOnHover(label: string) {
     if (closeTimer.current) clearTimeout(closeTimer.current);
     setOpenDropdown(label);
@@ -133,9 +124,12 @@ export default function Navbar() {
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 mr-4 shrink-0">
-            <img
+            <Image
               src="/slushfund-logo.png"
               alt="SlushFund"
+              width={180}
+              height={36}
+              priority
               className="h-9 w-auto object-contain"
               style={{ imageRendering: 'crisp-edges' }}
             />
@@ -143,16 +137,6 @@ export default function Navbar() {
 
           {/* Desktop nav */}
           <div className="hidden lg:flex items-center gap-0.5 flex-1">
-            <Link
-              href="/"
-              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                pathname === '/' ? 'text-white bg-slate-800' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-              }`}
-            >
-              <Home size={13} />
-              <span>Home</span>
-            </Link>
-
             {NAV_SECTIONS.map((section) => {
               const active = section.links.some(l => isActive(l.href));
               const open = openDropdown === section.label;
@@ -183,23 +167,40 @@ export default function Navbar() {
                           <span className={`text-xs font-bold uppercase tracking-widest ${section.color}`}>{section.label}</span>
                         </div>
                         <div className="py-1">
-                          {section.links.map((link) => (
-                            <Link
-                              key={link.href}
-                              href={link.href}
-                              className={`flex items-center gap-2.5 px-3 py-2 text-sm transition-colors ${
-                                isActive(link.href)
-                                  ? 'text-white bg-slate-800'
-                                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                              }`}
-                            >
-                              {link.icon && <span className="text-slate-500">{link.icon}</span>}
-                              <span>{link.label}</span>
-                              {isActive(link.href) && (
-                                <ArrowRight size={11} className="ml-auto text-slate-500" />
-                              )}
-                            </Link>
-                          ))}
+                          {section.links.map((link) => {
+                            const isExternal = (link as any).external === true;
+                            const linkClass = `flex items-center gap-2.5 px-3 py-2 text-sm transition-colors ${
+                              !isExternal && isActive(link.href)
+                                ? 'text-white bg-slate-800'
+                                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                            }`;
+                            const inner = (
+                              <>
+                                {link.icon && <span className="text-slate-500">{link.icon}</span>}
+                                <span>{link.label}</span>
+                                {isExternal ? (
+                                  <ExternalLink size={11} className="ml-auto text-slate-500" />
+                                ) : isActive(link.href) ? (
+                                  <ArrowRight size={11} className="ml-auto text-slate-500" />
+                                ) : null}
+                              </>
+                            );
+                            return isExternal ? (
+                              <a
+                                key={link.href}
+                                href={link.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={linkClass}
+                              >
+                                {inner}
+                              </a>
+                            ) : (
+                              <Link key={link.href} href={link.href} className={linkClass}>
+                                {inner}
+                              </Link>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
@@ -211,17 +212,17 @@ export default function Navbar() {
 
           {/* Right side */}
           <div className="ml-auto flex items-center gap-2">
-            <div className="hidden xl:flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-900 border border-slate-800">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-slate-400 text-xs">Live Data</span>
-            </div>
-
-            {/* Primary CTA */}
             <Link
-              href="/dashboard"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-sm font-bold bg-[var(--slush-red)] hover:bg-[var(--slush-red-dark)] text-white transition-colors"
+              href="/latest"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold text-emerald-400 hover:text-emerald-300 hover:bg-slate-800/60 transition-colors"
             >
-              <Search size={13} /> Explore Data
+              <Activity size={13} /> Latest
+            </Link>
+            <Link
+              href="/connect"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
+            >
+              <MessageCircle size={13} /> Connect
             </Link>
 
             {/* Mobile menu button */}
@@ -235,18 +236,9 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile menu — per-section accordion */}
+        {/* Mobile menu per-section accordion */}
         {mobileOpen && (
           <div className="lg:hidden border-t border-slate-800 py-3 space-y-1">
-            <Link
-              href="/"
-              className={`flex items-center gap-2 px-3 py-2.5 text-sm rounded-md ${
-                pathname === '/' ? 'text-white bg-slate-800' : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
-              }`}
-            >
-              <Home size={14} /> Home
-            </Link>
-
             {NAV_SECTIONS.map((section) => {
               const expanded = mobileSection === section.label;
               const active = section.links.some(l => isActive(l.href));
@@ -267,30 +259,44 @@ export default function Navbar() {
                   </button>
                   {expanded && (
                     <div className="py-1 bg-slate-900/60">
-                      {section.links.map((link) => (
-                        <Link
-                          key={link.href}
-                          href={link.href}
-                          className={`flex items-center gap-2 pl-9 pr-3 py-2 text-sm rounded-md ${
-                            isActive(link.href) ? 'text-white bg-slate-800' : 'text-slate-400 hover:text-white'
-                          }`}
-                        >
-                          {link.icon && <span className="text-slate-500">{link.icon}</span>}
-                          {link.label}
-                        </Link>
-                      ))}
+                      {section.links.map((link) => {
+                        const isExternal = (link as any).external === true;
+                        const cls = `flex items-center gap-2 pl-9 pr-3 py-2 text-sm rounded-md ${
+                          !isExternal && isActive(link.href) ? 'text-white bg-slate-800' : 'text-slate-400 hover:text-white'
+                        }`;
+                        return isExternal ? (
+                          <a
+                            key={link.href}
+                            href={link.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cls}
+                          >
+                            {link.icon && <span className="text-slate-500">{link.icon}</span>}
+                            {link.label}
+                            <ExternalLink size={11} className="ml-auto text-slate-500" />
+                          </a>
+                        ) : (
+                          <Link key={link.href} href={link.href} className={cls}>
+                            {link.icon && <span className="text-slate-500">{link.icon}</span>}
+                            {link.label}
+                          </Link>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
               );
             })}
 
-            <Link
-              href="/dashboard"
-              className="mt-2 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-md text-sm font-bold bg-[var(--slush-red)] hover:bg-[var(--slush-red-dark)] text-white transition-colors"
-            >
-              <Search size={14} /> Explore Data
-            </Link>
+            <div className="mt-2">
+              <Link
+                href="/connect"
+                className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-md text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-white transition-colors"
+              >
+                <MessageCircle size={14} /> Connect
+              </Link>
+            </div>
           </div>
         )}
       </div>

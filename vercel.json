@@ -5,6 +5,10 @@
       "schedule": "0 4 * * *"
     },
     {
+      "path": "/api/snapshots/backfill",
+      "schedule": "30 4 * * *"
+    },
+    {
       "path": "/api/sync/quiver",
       "schedule": "0 9 * * *"
     },

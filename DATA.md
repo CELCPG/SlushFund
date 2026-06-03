@@ -61,6 +61,14 @@ _Last reviewed: 2026-05-21_
 - **Refresh:** `python3 src/scripts/scrape_opensecrets.py`.
 - **Caveats:** Lobbying spend only — not PAC/campaign-finance data.
 
+### 4b. Senate LDA lobbying data
+- **Store:** `src/data/lobbying/lda_top_spenders.json`, `lda_by_issue.json`.
+- **Source:** Senate Office of Public Records LDA REST API (`https://lda.senate.gov/api/v1/filings/`) — official, free; `LDA_API_KEY` optional for higher rate limit.
+- **Loaded by:** `src/scripts/load_senate_lda.py` (stdlib urllib, no scraping).
+- **Feeds:** `/lobbying` page (top clients + spend-by-issue chart).
+- **Refresh:** `python3 src/scripts/load_senate_lda.py --year 2024` (`--dry` to preview).
+- **Caveats:** Ships with a seed dataset; run the loader to replace with live filings.
+
 ### 5. PAC / campaign-finance data
 - **Store:** `src/lib/pac-data.ts` — curated static TypeScript (PAC_DATABASE, nodes, edges, category totals).
 - **Source:** FEC.gov committee filings, OpenSecrets, investigative news. FEC committee IDs are recorded per PAC.

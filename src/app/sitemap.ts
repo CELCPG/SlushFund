@@ -1,4 +1,6 @@
 import { MetadataRoute } from 'next';
+import { POSTS } from '@/lib/blog';
+import { VENDORS } from '@/lib/vendors';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = 'https://slushfund.net';
@@ -60,12 +62,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
-      url: `${base}/defense`,
-      lastModified: now,
-      changeFrequency: 'weekly',
-      priority: 0.75,
-    },
-    {
       url: `${base}/tech`,
       lastModified: now,
       changeFrequency: 'weekly',
@@ -78,10 +74,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
-      url: `${base}/contact`,
+      url: `${base}/connect`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.5,
+    },
+    {
+      url: `${base}/support`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.6,
     },
     {
       url: `${base}/about`,
@@ -96,102 +98,40 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
-      url: `${base}/blog/doge-contract-pipeline`,
+      url: `${base}/vendors`,
       lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
+      changeFrequency: 'weekly',
+      priority: 0.8,
     },
     {
-      url: `${base}/blog/congress-bought-dip`,
+      url: `${base}/latest`,
       lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
+      changeFrequency: 'hourly',
+      priority: 0.9,
     },
     {
-      url: `${base}/blog/america-pac-money-pipeline`,
+      url: `${base}/lobbying`,
       lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${base}/blog/defense-contractors-own-congress`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${base}/blog/arabella-dark-money-machine`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${base}/blog/no-bid-contracts`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${base}/blog/congress-stock-act-exposed`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${base}/blog/koch-dark-money-machine`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${base}/blog/military-contractors-dod-budget`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${base}/blog/trump-govt-crypto-holdings`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${base}/blog/pac-fec-loopholes`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${base}/blog/ai-government-contracts`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${base}/blog/congress-members-ai-stocks`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${base}/blog/navy-seal-contractor-corruption`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${base}/blog/trump-world-liberties-magazine`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${base}/blog/federal-reserve-govt-trading`,
-      lastModified: now,
-      changeFrequency: 'monthly',
+      changeFrequency: 'weekly',
       priority: 0.7,
     },
   ];
 
-  return staticPages;
+  // Blog posts — generated from the shared source of truth (only real slugs).
+  const blogPages: MetadataRoute.Sitemap = POSTS.map((p) => ({
+    url: `${base}/blog/${p.slug}`,
+    lastModified: now,
+    changeFrequency: 'monthly',
+    priority: 0.7,
+  }));
+
+  // Programmatic vendor profiles.
+  const vendorPages: MetadataRoute.Sitemap = VENDORS.map((v) => ({
+    url: `${base}/vendor/${v.slug}`,
+    lastModified: now,
+    changeFrequency: 'weekly',
+    priority: 0.6,
+  }));
+
+  return [...staticPages, ...blogPages, ...vendorPages];
 }

@@ -1,0 +1,28 @@
+{
+  "source": "https://lda.senate.gov/api/v1/filings/ (Senate Office of Public Records, LDA)",
+  "cycle": "2024",
+  "generated": "2026-05-30",
+  "note": "Seed dataset. Regenerate with: python3 src/scripts/load_senate_lda.py",
+  "data": [
+    { "client": "US Chamber of Commerce", "registrant": "US Chamber of Commerce", "amount": 39920000, "filings": 4 },
+    { "client": "National Association of Realtors", "registrant": "National Association of Realtors", "amount": 25510000, "filings": 4 },
+    { "client": "Pharmaceutical Research & Manufacturers of America (PhRMA)", "registrant": "PhRMA", "amount": 12600000, "filings": 4 },
+    { "client": "American Hospital Association", "registrant": "American Hospital Association", "amount": 11200000, "filings": 4 },
+    { "client": "Meta Platforms", "registrant": "Meta Platforms Inc", "amount": 9870000, "filings": 4 },
+    { "client": "Amazon.com", "registrant": "Amazon.com Services LLC", "amount": 9420000, "filings": 4 },
+    { "client": "Boeing Company", "registrant": "Boeing Company", "amount": 9100000, "filings": 4 },
+    { "client": "Business Roundtable", "registrant": "Business Roundtable", "amount": 8990000, "filings": 4 },
+    { "client": "Blue Cross Blue Shield Association", "registrant": "Blue Cross Blue Shield Association", "amount": 8740000, "filings": 4 },
+    { "client": "Lockheed Martin", "registrant": "Lockheed Martin Corporation", "amount": 8120000, "filings": 4 },
+    { "client": "Comcast Corporation", "registrant": "Comcast Corporation", "amount": 7960000, "filings": 4 },
+    { "client": "Alphabet (Google)", "registrant": "Google LLC", "amount": 7810000, "filings": 4 },
+    { "client": "RTX (Raytheon)", "registrant": "RTX Corporation", "amount": 7430000, "filings": 4 },
+    { "client": "American Medical Association", "registrant": "American Medical Association", "amount": 7200000, "filings": 4 },
+    { "client": "Microsoft Corporation", "registrant": "Microsoft Corporation", "amount": 6920000, "filings": 4 },
+    { "client": "Pfizer Inc", "registrant": "Pfizer Inc", "amount": 6510000, "filings": 4 },
+    { "client": "CTIA - The Wireless Association", "registrant": "CTIA", "amount": 6240000, "filings": 4 },
+    { "client": "General Dynamics", "registrant": "General Dynamics Corporation", "amount": 5980000, "filings": 4 },
+    { "client": "Northrop Grumman", "registrant": "Northrop Grumman Corporation", "amount": 5760000, "filings": 4 },
+    { "client": "Apple Inc", "registrant": "Apple Inc", "amount": 5340000, "filings": 4 }
+  ]
+}

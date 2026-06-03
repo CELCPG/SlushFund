@@ -70,13 +70,13 @@ export default function FederalReserveGovtTradingPage() {
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">The FOMC Trading Window Problem</h2>
           <p className="text-slate-300 mb-4">
-            Federal Reserve Bank presidents — who are not subject to the same financial disclosure laws as Federal Reserve Board governors — are governed by the Fed&apos;s "Dodd-Frank Rule" ethics regulations. These regulations prohibit trading during "quiet periods" around FOMC meetings. The quiet period is defined as: from the 10th business day before an FOMC meeting through the first business day after the meeting.
+            Federal Reserve Bank presidents who are not subject to the same financial disclosure laws as Federal Reserve Board governors are governed by the Fed&apos;s "Dodd-Frank Rule" ethics regulations. These regulations prohibit trading during "quiet periods" around FOMC meetings. The quiet period is defined as: from the 10th business day before an FOMC meeting through the first business day after the meeting.
           </p>
           <p className="text-slate-300 mb-4">
-            That sounds like a meaningful restriction. It is not. Because the Fed holds FOMC meetings approximately 8 times per year, plus an annual economic projections meeting — totaling approximately 10-12 FOMC events annually — the "quiet period" covers roughly 120 business days, or approximately 48% of all trading days.
+            That sounds like a meaningful restriction. It is not. Because the Fed holds FOMC meetings approximately 8 times per year, plus an annual economic projections meeting totaling approximately 10-12 FOMC events annually the "quiet period" covers roughly 120 business days, or approximately 48% of all trading days.
           </p>
           <p className="text-slate-300 mb-4">
-            The remaining 52% of trading days are entirely unrestricted. Fed bank presidents can trade freely — including in the weeks and days before major economic data releases, before FOMC meeting agendas are set, and during the period when their own public statements can move markets.
+            The remaining 52% of trading days are entirely unrestricted. Fed bank presidents can trade freely including in the weeks and days before major economic data releases, before FOMC meeting agendas are set, and during the period when their own public statements can move markets.
           </p>
 
           <div className="bg-amber-900/20 border border-amber-700/40 rounded-xl p-6 my-8">
@@ -144,7 +144,7 @@ export default function FederalReserveGovtTradingPage() {
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">What Normal Fed Employees Face</h2>
           <p className="text-slate-300 mb-4">
-            The roughly 300 economists and staff analysts at the Federal Reserve Board who have access to FOMC meeting materials — the people who brief the governors before each meeting — face a significantly stricter trading prohibition. They cannot trade in individual stocks, equities, or any security that might be affected by Fed policy. Many cannot hold equities in the banking or financial sector at all. Their accounts are monitored by the Fed&apos;s ethics office.
+            The roughly 300 economists and staff analysts at the Federal Reserve Board who have access to FOMC meeting materials the people who brief the governors before each meeting face a significantly stricter trading prohibition. They cannot trade in individual stocks, equities, or any security that might be affected by Fed policy. Many cannot hold equities in the banking or financial sector at all. Their accounts are monitored by the Fed&apos;s ethics office.
           </p>
           <p className="text-slate-300 mb-4">
             The people with the most power over interest rate decisions are subject to the weakest restrictions. The people with the least access are subject to the strongest. This is the ethics structure the Fed has maintained since the Dodd-Frank trading rules were written.

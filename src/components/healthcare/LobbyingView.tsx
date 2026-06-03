@@ -93,7 +93,7 @@ export default function LobbyingView() {
           Pharma & Healthcare Lobbying
         </h1>
         <p className="mt-2 max-w-3xl text-slate-400 text-sm leading-relaxed">
-          How much the pharmaceutical and healthcare industry spends to influence federal policy — and who in Congress receives the most lobby cash from these industries.
+          How much the pharmaceutical and healthcare industry spends to influence federal policy and who in Congress receives the most lobby cash from these industries.
           Data sourced from OpenSecrets.org.
         </p>
       </header>
@@ -133,7 +133,7 @@ export default function LobbyingView() {
       {/* Sector comparison bar chart */}
       <section>
         <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-4">
-          Ranked Sectors — Federal Lobbying Spend
+          Ranked Sectors. Federal Lobbying Spend
         </h2>
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-6">
           <ResponsiveContainer width="100%" height={320}>
@@ -176,7 +176,7 @@ export default function LobbyingView() {
       {/* Top recipients */}
       <section>
         <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-4">
-          Top Congress Members — Lobby Cash Received
+          Top Congress Members. Lobby Cash Received
         </h2>
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 overflow-hidden">
           <table className="w-full text-sm">

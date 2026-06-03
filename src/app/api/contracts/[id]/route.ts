@@ -3,6 +3,11 @@ import { supabase } from '@/lib/supabase';
 import { MOCK_AWARDS } from '@/lib/mock-data-new';
 import type { Award } from '@/lib/types';
 
+// Edge runtime: PostgREST query + in-memory fallback. The MOCK_AWARDS
+// import is ~1MB but is tree-shaken when not used (the function only
+// falls through to it in demo mode).
+export const runtime = 'edge';
+
 // GET /api/contracts/[id] — single award by id or award_id
 export async function GET(
   request: NextRequest,

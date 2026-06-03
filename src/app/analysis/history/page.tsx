@@ -150,7 +150,7 @@ export default function HistoryPage() {
   const fetchTrades = useCallback(async () => {
     setLoading(true);
     try {
-      // The API caps each request at 1000 rows — page through all of them so
+      // The API caps each request at 1000 rows page through all of them so
       // the 10-year dashboard sees every year, not just the most recent.
       const first = await fetch('/api/congress/trades?limit=1000&page=1');
       const firstJson = await first.json();
@@ -355,7 +355,7 @@ export default function HistoryPage() {
         {/* Header */}
         <div>
           <h1 className="text-4xl font-black text-white mb-1">
-            Congress Trading History <span className="text-blue-400">— 10 Years of Data</span>
+            Congress Trading History <span className="text-blue-400">| 10 Years of Data</span>
           </h1>
           <p className="text-slate-400 text-sm">Democrat vs Republican stock trading activity, 2016–2026</p>
         </div>
@@ -412,7 +412,7 @@ export default function HistoryPage() {
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-white font-bold text-sm uppercase tracking-widest">
-              {isChamberMode ? 'Trades by Chamber' : 'Democrat vs Republican — Trade Count'}
+              {isChamberMode ? 'Trades by Chamber' : 'Democrat vs Republican. Trade Count'}
             </h3>
             <div className="flex items-center gap-1">
               {(['trades', 'volume', 'chamber'] as ChartMode[]).map(mode => (
@@ -493,9 +493,9 @@ export default function HistoryPage() {
         {/* ── Two-Column Section ───────────────────────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-          {/* Top Sectors — Most Active Year */}
+          {/* Top Sectors. Most Active Year */}
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-            <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-1">Top Sectors — {selectedYear}</h3>
+            <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-1">Top Sectors | {selectedYear}</h3>
             <p className="text-slate-500 text-xs mb-4">Trade volume by sector for the most active year</p>
             <div className="space-y-3">
               {topSectorsByYear.map(s => {
@@ -524,7 +524,7 @@ export default function HistoryPage() {
           <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
               <div>
-                <h3 className="text-white font-bold text-sm uppercase tracking-widest">Member Leaderboard — {selectedYear}</h3>
+                <h3 className="text-white font-bold text-sm uppercase tracking-widest">Member Leaderboard | {selectedYear}</h3>
                 <p className="text-slate-500 text-xs mt-0.5">Top traders by estimated volume</p>
               </div>
               <select
@@ -611,7 +611,7 @@ export default function HistoryPage() {
             <h4 className="text-white font-semibold text-sm mb-1">About This Data</h4>
             <p className="text-slate-400 text-xs leading-relaxed">
               Data sourced from House Clerk Financial Disclosure + Senate EFD systems under the STOCK Act (2012).
-              Amounts shown are range maximums (e.g., $1M-$5M → $5M). Currently showing ~926 recent trades — backfill in progress to reach 20,000+ historical records covering 2016–2026.
+              Amounts shown are range maximums (e.g., $1M-$5M → $5M). Currently showing ~926 recent trades backfill in progress to reach 20,000+ historical records covering 2016–2026.
               Party affiliation as of trade date. Independent and non-partisan members excluded from aggregate totals.
               Historical backfill will populate missing years as data becomes available.
             </p>

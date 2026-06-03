@@ -116,9 +116,9 @@ export default function TrumpTradesPage() {
 
           {/* ⚠️ CALLOUT */}
           <div className="mt-6 bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-4">
-            <div className="text-sm text-yellow-200 font-semibold mb-1">⚠️ Why this matters — the journalism angle</div>
+            <div className="text-sm text-yellow-200 font-semibold mb-1">⚠️ Why this matters the journalism angle</div>
             <div className="text-xs text-yellow-100/80 leading-relaxed">
-              Unlike every modern president since Lyndon Johnson, Trump's assets are <strong>not in a blind trust</strong>. They are managed through accounts controlled by his children. Every trade intersects with executive branch policy — AI chip exports, federal contracting, Treasury decisions. This is the first presidency where the border between personal portfolio and presidential decision-making is functionally absent.
+              Unlike every modern president since Lyndon Johnson, Trump's assets are <strong>not in a blind trust</strong>. They are managed through accounts controlled by his children. Every trade intersects with executive branch policy. AI chip exports, federal contracting, Treasury decisions. This is the first presidency where the border between personal portfolio and presidential decision-making is functionally absent.
             </div>
           </div>
         </div>
@@ -229,7 +229,7 @@ export default function TrumpTradesPage() {
                 {[
                   { month: 'January', txns: 380, buys: 242, sells: 138, note: '380 transactions' },
                   { month: 'February', txns: 479, buys: 237, sells: 242, note: '479 transactions' },
-                  { month: 'March', txns: 1319, buys: 983, sells: 336, note: '1,319 transactions — 35% of entire quarter' },
+                  { month: 'March', txns: 1319, buys: 983, sells: 336, note: '1,319 transactions, 35% of entire quarter' },
                 ].map(m => (
                   <div key={m.month} className="bg-slate-800/50 rounded p-3">
                     <div className="flex justify-between items-center mb-1">
@@ -251,7 +251,7 @@ export default function TrumpTradesPage() {
                 ))}
                 <div className="bg-yellow-900/30 border border-yellow-800/50 rounded p-3">
                   <div className="text-xs text-yellow-200 font-semibold">March 23 alone</div>
-                  <div className="text-xs text-yellow-100/80">188 purchases vs 11 sales — most aggressive single-day buying session of the quarter</div>
+                  <div className="text-xs text-yellow-100/80">188 purchases vs 11 sales most aggressive single-day buying session of the quarter</div>
                 </div>
               </div>
             </div>
@@ -292,7 +292,7 @@ export default function TrumpTradesPage() {
                   { ticker: 'ORCL', note: '11 purchases, $2.2M–$10.6M each', flag: 'Larry Ellison donated $250K+ to Trump inauguration' },
                   { ticker: 'MSFT', note: '9 purchases, $2.4M–$8.1M each', flag: 'Microsoft Azure Government holds major DoD contracts' },
                   { ticker: 'AMD', note: '10 purchases', flag: 'AMD AI chips subject to export controls set by admin' },
-                  { ticker: 'PLTR', note: '8 buys + 4 large sales', flag: 'DHS awarded PLTR contract March 2026 — concurrent with buying' },
+                  { ticker: 'PLTR', note: '8 buys + 4 large sales', flag: 'DHS awarded PLTR contract March 2026 concurrent with buying' },
                   { ticker: 'AMZN', note: '4 large sales, $5M–$25M each', flag: 'AMZN = $17.5B largest fed contractor in SlushFund' },
                   { ticker: 'COIN', note: '6 purchases', flag: 'Coinbase won US Marshals crypto custody under this admin' },
                 ].map(item => (
@@ -311,7 +311,7 @@ export default function TrumpTradesPage() {
             <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
               <div className="text-xs text-slate-400 leading-relaxed">
                 <strong className="text-slate-300">Data source:</strong> OGE Form 278-T · Trump, Donald J. · Certified May 8, 2026 · Received May 12, 2026<br/>
-                Filed late — "Filer paid late fees" notation on cover page<br/>
+                Filed late: "Filer paid late fees" notation on cover page<br/>
                 Note: Trump Organization states trades are executed via "fully discretionary accounts independently managed by third-party financial institutions with no family involvement in decision-making"
               </div>
             </div>

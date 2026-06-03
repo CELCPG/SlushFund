@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Edge runtime: Yahoo Finance fetch. No Node deps.
+export const runtime = 'edge';
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ ticker: string }> }

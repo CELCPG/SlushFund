@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
+// Edge runtime: PostgREST query. No Node deps.
+export const runtime = 'edge';
+
 export async function GET() {
   if (!supabase) {
     return NextResponse.json({ error: 'DB not configured' }, { status: 503 });

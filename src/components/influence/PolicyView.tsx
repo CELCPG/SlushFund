@@ -44,7 +44,7 @@ const VOTE_TONE: Record<string, string> = {
   'Not Voting': 'text-slate-500',
 };
 
-/** Policy & Bills tab — the connective tissue between money and outcomes. */
+/** Policy & Bills tab the connective tissue between money and outcomes. */
 export default function PolicyView() {
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-6 py-8 space-y-10">

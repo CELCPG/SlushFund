@@ -70,7 +70,7 @@ export default function CongressMembersAiStocksPage() {
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">The CHIPS Act Timeline</h2>
           <p className="text-slate-300 mb-4">
-            The Creating Helpful Incentives to Produce Semiconductors (CHIPS) Act was signed into law in August 2022. It authorized $52 billion for domestic semiconductor manufacturing, chip fabrication facilities, and research and development. The semiconductor companies that would directly benefit from this legislation — Intel, NVIDIA, TSMC, Samsung, and GlobalFoundries — saw their stock prices move significantly in the months surrounding the vote.
+            The Creating Helpful Incentives to Produce Semiconductors (CHIPS) Act was signed into law in August 2022. It authorized $52 billion for domestic semiconductor manufacturing, chip fabrication facilities, and research and development. The semiconductor companies that would directly benefit from this legislation. Intel, NVIDIA, TSMC, Samsung, and GlobalFoundries saw their stock prices move significantly in the months surrounding the vote.
           </p>
           <p className="text-slate-300 mb-4">
             SlushFund analyzed OGE Form 278 disclosures for all members of the Senate and House Semiconductor Working Groups (informal caucuses with direct interest in the legislation) from January 2022 through December 2022. We identified 12 members who purchased or added to positions in semiconductor companies within 60 days before a major legislative milestone in the CHIPS Act.
@@ -111,10 +111,10 @@ export default function CongressMembersAiStocksPage() {
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">Why This Is Legal</h2>
           <p className="text-slate-300 mb-4">
-            None of these trades are illegal. That is the point. Congressional insider trading law does not prohibit trading on non-public legislative information. The STOCK Act requires disclosure within 30 days — but there is no prohibition on the trade itself based on material non-public information. The 30-day disclosure window means these trades were disclosed after the fact, in filings voters rarely read.
+            None of these trades are illegal. That is the point. Congressional insider trading law does not prohibit trading on non-public legislative information. The STOCK Act requires disclosure within 30 days but there is no prohibition on the trade itself based on material non-public information. The 30-day disclosure window means these trades were disclosed after the fact, in filings voters rarely read.
           </p>
           <p className="text-slate-300 mb-4">
-            A 2024 study by the National Bureau of Economic Research found that congressional stock trades outperform the market by an average of 6% annually. The authors noted that the performance premium is concentrated in industries where the member has committee jurisdiction — defense, healthcare, finance, and technology. This is consistent with information-based trading, even if it cannot be proven in individual cases.
+            A 2024 study by the National Bureau of Economic Research found that congressional stock trades outperform the market by an average of 6% annually. The authors noted that the performance premium is concentrated in industries where the member has committee jurisdiction defense, healthcare, finance, and technology. This is consistent with information-based trading, even if it cannot be proven in individual cases.
           </p>
 
           <div className="bg-amber-900/20 border border-amber-700/40 rounded-xl p-6 my-8">
@@ -123,7 +123,7 @@ export default function CongressMembersAiStocksPage() {
               <div>
                 <p className="text-amber-200 font-semibold mb-1">The Pattern, Not the Individual Case</p>
                 <p className="text-amber-100/80 text-sm">
-                  Proving that any single trade was based on material non-public information is nearly impossible. Proving that 12 members of a legislative working group bought the same stocks in the same sector before a major bill vote is not. The aggregate pattern is the story. The individual trades may all be innocent — but the probability of this being pure chance is less than 0.003%.
+                  Proving that any single trade was based on material non-public information is nearly impossible. Proving that 12 members of a legislative working group bought the same stocks in the same sector before a major bill vote is not. The aggregate pattern is the story. The individual trades may all be innocent but the probability of this being pure chance is less than 0.003%.
                 </p>
               </div>
             </div>

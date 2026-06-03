@@ -1,6 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
+/* ─── Design tokens (Tailwind v4 @theme) ───
+   Registering the brand red here auto-generates utilities: bg-slush-red,
+   text-slush-red, border-slush-red, ring-slush-red, etc. — replacing the
+   scattered border-[#E63946] / var(--slush-red) usages.
+   NOTE: surfaces stay on stock Tailwind `slate-*` (what the whole site
+   already uses — the chart hex #0f172a/#1e293b are slate-900/800). We do NOT
+   register a custom `slate` ramp: overriding the stock slate namespace in v4
+   would drop the shades used across the existing pages. */
+@theme {
+  --color-slush-red: #E63946;
+  --color-slush-red-dark: #c1303b;
+  --color-slush-red-light: #ff6b75;
+}
+
 :root {
   /* Brand - Slush Red */
   --slush-red: #E63946;
@@ -70,13 +84,6 @@ body {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--slate-950); }
 ::-webkit-scrollbar-thumb { background: var(--slate-700); border-radius: 3px; }
-
-/* Flag badges */
-.flag-no_bid { background: #7f1d1d; color: #fca5a5; border: 1px solid #b91c1c; }
-.flag-sole_source { background: #78350f; color: #fcd34d; border: 1px solid #d97706; }
-.flag-related_party { background: #4a1d96; color: #c4b5fd; border: 1px solid #7c3aed; }
-.flag-inflated { background: #9f1239; color: #fda4af; border: 1px solid #be123c; }
-.flag-emergency { background: #1e3a5f; color: #93c5fd; border: 1px solid #2563eb; }
 
 /* Glow effects */
 .glow-green { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }

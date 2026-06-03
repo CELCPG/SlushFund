@@ -34,7 +34,7 @@ export default function OverviewView() {
         </h1>
         <p className="mt-2 max-w-3xl text-slate-400 text-sm leading-relaxed">
           Follow the chain: industry money flows into PACs, PACs back candidates, candidates
-          move legislation, regulators stand down — and a known set of companies profit.
+          move legislation, regulators stand down and a known set of companies profit.
           Every node below links to the underlying data and its sources.
         </p>
       </header>

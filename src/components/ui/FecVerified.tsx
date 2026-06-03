@@ -27,7 +27,7 @@ function fmt(n: number): string {
 /**
  * Live "FEC verified" panel for a PAC. Fetches official FEC committee totals
  * for the given committee_id. Renders nothing if no committee_id is provided
- * or the FEC API is unconfigured/unavailable — curated data stands on its own.
+ * or the FEC API is unconfigured/unavailable curated data stands on its own.
  */
 export function FecVerified({ committeeId, cycle = 2024 }: { committeeId?: string; cycle?: number }) {
   const [data, setData] = useState<FecData | null>(null);

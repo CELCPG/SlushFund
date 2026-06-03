@@ -29,7 +29,7 @@ export function Tabs({
                 onClick={() => onChange(t.id)}
                 className={`flex items-center gap-1.5 whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                   isActive
-                    ? 'border-[#E63946] text-white'
+                    ? 'border-slush-red text-white'
                     : 'border-transparent text-slate-400 hover:text-white'
                 }`}
               >

@@ -65,7 +65,7 @@ export default function ArabellaDarkMoneyMachinePage() {
       <div className="max-w-3xl mx-auto px-6 py-12">
         <div className="prose prose-invert prose-lg max-w-none">
           <p className="text-xl text-slate-300 leading-relaxed font-medium border-l-4 border-purple-600 pl-6 mb-8">
-            Arabella Advisors is not a political action committee. It is a consulting firm that manages six interconnected 501(c)(4) dark money organizations that have collectively moved $1.47 billion since 2010 — including $280 million in 2024 alone — through a layering structure specifically designed to ensure that no donor is ever publicly named.
+            Arabella Advisors is not a political action committee. It is a consulting firm that manages six interconnected 501(c)(4) dark money organizations that have collectively moved $1.47 billion since 2010 including $280 million in 2024 alone through a layering structure specifically designed to ensure that no donor is ever publicly named.
           </p>
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">The Six Organizations</h2>
@@ -100,36 +100,36 @@ export default function ArabellaDarkMoneyMachinePage() {
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0"></span>
-                <span className="text-slate-300">Donor gives $10M to New Progress (c4) — <span className="text-purple-400">NO DISCLOSURE REQUIRED</span></span>
+                <span className="text-slate-300">Donor gives $10M to New Progress (c4). <span className="text-purple-400">NO DISCLOSURE REQUIRED</span></span>
               </div>
               <div className="text-slate-600 pl-5">↓</div>
               <div className="flex items-center gap-3">
                 <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
-                <span className="text-slate-300">New Progress gives to Sixteen Thirty Fund (c4) — <span className="text-blue-400">NO DISCLOSURE REQUIRED</span></span>
+                <span className="text-slate-300">New Progress gives to Sixteen Thirty Fund (c4). <span className="text-blue-400">NO DISCLOSURE REQUIRED</span></span>
               </div>
               <div className="text-slate-600 pl-5">↓</div>
               <div className="flex items-center gap-3">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
-                <span className="text-slate-300">Sixteen Thirty Fund makes "independent expenditures" supporting candidate — <span className="text-emerald-400">DONOR STILL HIDDEN</span></span>
+                <span className="text-slate-300">Sixteen Thirty Fund makes "independent expenditures" supporting candidate. <span className="text-emerald-400">DONOR STILL HIDDEN</span></span>
               </div>
               <div className="text-slate-600 pl-5">↓</div>
               <div className="flex items-center gap-3">
                 <span className="w-2 h-2 rounded-full bg-white shrink-0"></span>
-                <span className="text-slate-300">Candidate receives support — <span className="text-slate-400">never has to disclose where it came from</span></span>
+                <span className="text-slate-300">Candidate receives support. <span className="text-slate-400">never has to disclose where it came from</span></span>
               </div>
             </div>
           </div>
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">The Irony: Members Who Say They Don&apos;t Take PAC Money</h2>
           <p className="text-slate-300 mb-4">
-            This is where it gets interesting. We identified 47 current members of Congress who have publicly stated they do not accept PAC money — a position they promote on their campaign websites and in interviews. These same members have received direct or indirect support from Arabella-managed dark money groups totaling over $38 million since 2020.
+            This is where it gets interesting. We identified 47 current members of Congress who have publicly stated they do not accept PAC money a position they promote on their campaign websites and in interviews. These same members have received direct or indirect support from Arabella-managed dark money groups totaling over $38 million since 2020.
           </p>
 
           {[
             { member: 'Rep. Katie Porter (D-CA)', state: 'CA', received: '$1.4M', stated: 'Does not accept PAC contributions', arabellaTie: 'Received $800K in independent expenditure support from Sixteen Thirty Fund in 2022 primary; $600K from Future Majority in 2024.' },
             { member: 'Rep. Ro Khanna (D-CA)', state: 'CA', received: '$1.1M', stated: 'No corporate PAC money', arabellaTie: 'Backed by $700K from New Progress digital ads in 2022; $400K from State Democracy Partners in state legislative races.' },
             { member: 'Rep. Cori Bush (D-MO)', state: 'MO', received: '$2.3M', stated: 'No corporate PAC', arabellaTie: 'Sixteen Thirty Fund spent $1.8M on independent expenditures supporting her 2022 primary win; $500K in 2024.' },
-            { member: 'Sen. Elizabeth Warren (D-MA)', state: 'MA', received: '$3.8M', stated: 'No PAC money — ever', arabellaTie: '$2.1M in independent expenditure support from Sixteen Thirty Fund across 2022 cycle; $1.7M from New Progress.' },
+            { member: 'Sen. Elizabeth Warren (D-MA)', state: 'MA', received: '$3.8M', stated: 'No PAC money ever', arabellaTie: '$2.1M in independent expenditure support from Sixteen Thirty Fund across 2022 cycle; $1.7M from New Progress.' },
             { member: 'Rep. Ilhan Omar (D-MN)', state: 'MN', received: '$1.9M', stated: 'Campaign finance reform advocate', arabellaTie: 'Future Majority spent $1.1M on digital voter outreach supporting her 2022 campaign; $800K from State Democracy.' },
           ].map((item, i) => (
             <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-5 mb-4">
@@ -155,7 +155,7 @@ export default function ArabellaDarkMoneyMachinePage() {
               <div>
                 <p className="text-amber-200 font-semibold mb-1">The Conflict Problem</p>
                 <p className="text-amber-100/80 text-sm">
-                  These same members vote on legislation that directly affects Arabella&apos;s clients — including Medicare expansion (affects hospitals Arabella advises), pharmaceutical pricing reform (affects biotech clients), and nonprofit tax status (directly affects Arabella&apos;s own tax treatment). They are simultaneously legislators and beneficiaries.
+                  These same members vote on legislation that directly affects Arabella&apos;s clients including Medicare expansion (affects hospitals Arabella advises), pharmaceutical pricing reform (affects biotech clients), and nonprofit tax status (directly affects Arabella&apos;s own tax treatment). They are simultaneously legislators and beneficiaries.
                 </p>
               </div>
             </div>
@@ -166,7 +166,7 @@ export default function ArabellaDarkMoneyMachinePage() {
             Arabella Advisors was founded by Jonathan Strong, a veteran Democratic operative who has never held public office but has shaped policy through money for three decades. Strong has deep ties to the party&apos;s donor class and has been described by associates as the &quot;architect of the modern progressive dark money infrastructure.&quot;
           </p>
           <p className="text-slate-300 mb-4">
-            Strong&apos;s firm manages the six c4s with a small staff and a large legal budget. The legal structure ensures that even in the event of an IRS audit, donors are protected. The organizations file their 990s — but 990s only show total receipts, not the identity of the donors.
+            Strong&apos;s firm manages the six c4s with a small staff and a large legal budget. The legal structure ensures that even in the event of an IRS audit, donors are protected. The organizations file their 990s but 990s only show total receipts, not the identity of the donors.
           </p>
 
           <div className="border-t border-slate-800 pt-8 mt-10">

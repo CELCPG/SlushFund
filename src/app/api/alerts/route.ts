@@ -1,9 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { FY_DATE_RANGES } from '@/app/api/backfill/route';
+import { FY_DATE_RANGES } from '@/lib/era';
 import { ERA_FYS, type Era } from '@/lib/types';
 
+// Edge runtime: SQL RPC only, no Node deps.
+export const runtime = 'edge';
+
+// Cache headers: summary stats only change when the awards table or
+// era_snapshots is refreshed. CDN cache 5min, browser 1min, plus SWR.
+const CACHE_HEADERS = {
+  'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=600',
+};
+
 // GET /api/alerts — aggregate stats for the dashboard
+//
+// Performance: as of sprint 5, this route no longer pulls raw rows from
+// the awards table for the summary block. It calls two SQL RPCs:
+//   1. get_alert_summary(start_date, end_date) — returns the 10 scalar
+//      summary fields (total_awards, total_dollars, connected_dollars,
+//      flagged_count, no_bid_count, etc.) in a single round-trip.
+//   2. get_top_agencies(start_date, end_date, min_risk, limit) — returns
+//      the top-N agency rows aggregated in Postgres.
+// The connection breakdown is read from the existing connection_group_summary
+// view (no date filter — already global). The only row scan that remains is
+// the "top high-risk awards" query which already has a hard limit.
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const minRisk = searchParams.get('min_risk') ?? '50';
@@ -38,90 +58,85 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Main stats — apply date filter if set
-  let query = supabase
-    .from('awards')
-    .select('dollar_amount, connection_type, flags, risk_score, award_category, competition_status');
-  if (startDate) query = query.gte('posted_date', startDate);
-  if (endDate) query = query.lte('posted_date', endDate);
-  const { data: allAwards } = await query;
+  // Fire the summary RPC + connection breakdown view + top-agencies RPC
+  // + high-risk list + competition-coverage RPC in parallel.
+  const [summaryResult, breakdownResult, agenciesResult, highRiskResult, competitionResult] = await Promise.all([
+    supabase.rpc('get_alert_summary', {
+      start_date: startDate ?? undefined,
+      end_date: endDate ?? undefined,
+    }),
+    supabase
+      .from('connection_group_summary')
+      .select('connection_type, award_count, total_dollars, non_competitive_count'),
+    supabase.rpc('get_top_agencies', {
+      start_date: startDate ?? undefined,
+      end_date: endDate ?? undefined,
+      min_risk: parseInt(minRisk),
+      result_limit: 10,
+    }),
+    (() => {
+      let hrQuery = supabase
+        .from('awards')
+        .select('award_id, recipient_name, dollar_amount, connection_type, risk_score, flags, awarding_agency, competition_status')
+        .gte('risk_score', parseInt(minRisk))
+        .order('risk_score', { ascending: false })
+        .limit(limit);
+      if (startDate) hrQuery = hrQuery.gte('posted_date', startDate);
+      if (endDate) hrQuery = hrQuery.lte('posted_date', endDate);
+      return hrQuery;
+    })(),
+    supabase.rpc('get_competition_coverage'),
+  ]);
 
-  if (!allAwards) {
-    return NextResponse.json({ error: 'Database query failed' }, { status: 500 });
+  if (summaryResult.error) {
+    console.error('[alerts] get_alert_summary RPC error:', summaryResult.error);
+    return NextResponse.json({ error: 'Summary query failed' }, { status: 500 });
+  }
+  if (agenciesResult.error) {
+    console.error('[alerts] get_top_agencies RPC error:', agenciesResult.error);
+    return NextResponse.json({ error: 'Agency query failed' }, { status: 500 });
+  }
+  if (competitionResult.error) {
+    console.error('[alerts] get_competition_coverage RPC error:', competitionResult.error);
   }
 
-  const totalAwards = allAwards.length;
-  const totalDollars = allAwards.reduce((s, a) => s + Number(a.dollar_amount), 0);
-  const connectedAwards = allAwards.filter(a => a.connection_type && a.connection_type !== 'none');
-  const connectedDollars = connectedAwards.reduce((s, a) => s + Number(a.dollar_amount), 0);
-  const flaggedAwards = allAwards.filter(a => a.flags && (a.flags as string[]).length > 0);
-  const flaggedDollars = flaggedAwards.reduce((s, a) => s + Number(a.dollar_amount), 0);
-  const noBidAwards = allAwards.filter(a => a.competition_status === 'no_bid' || a.competition_status === 'sole_source');
-  const noBidDollars = noBidAwards.reduce((s, a) => s + Number(a.dollar_amount), 0);
-
-  // Connection breakdown
-  const breakdown: Record<string, { count: number; total: number; risk_avg: number }> = {};
-  for (const award of allAwards) {
-    const cat = (award.connection_type as string) ?? 'none';
-    if (!breakdown[cat]) breakdown[cat] = { count: 0, total: 0, risk_avg: 0 };
-    breakdown[cat].count++;
-    breakdown[cat].total += Number(award.dollar_amount);
-  }
-
-  // Top high-risk awards
-  let hrQuery = supabase
-    .from('awards')
-    .select('award_id, recipient_name, dollar_amount, connection_type, risk_score, flags, awarding_agency, competition_status')
-    .gte('risk_score', parseInt(minRisk))
-    .order('risk_score', { ascending: false })
-    .limit(limit);
-  if (startDate) hrQuery = hrQuery.gte('posted_date', startDate);
-  if (endDate) hrQuery = hrQuery.lte('posted_date', endDate);
-  const { data: highRisk } = await hrQuery;
-
-  // Agency breakdown
-  let agQuery = supabase
-    .from('awards')
-    .select('awarding_agency, awarding_agency_code, award_category, dollar_amount, connection_type')
-    .gte('risk_score', parseInt(minRisk));
-  if (startDate) agQuery = agQuery.gte('posted_date', startDate);
-  if (endDate) agQuery = agQuery.lte('posted_date', endDate);
-  const { data: agencyData } = await agQuery;
-
-  const agencyMap: Record<string, { agency: string; code: string; total: number; connected: number; flagged: number }> = {};
-  for (const row of agencyData ?? []) {
-    const key = row.awarding_agency;
-    if (!agencyMap[key]) {
-      agencyMap[key] = { agency: row.awarding_agency, code: row.awarding_agency_code ?? '', total: 0, connected: 0, flagged: 0 };
-    }
-    agencyMap[key].total += Number(row.dollar_amount);
-    if (row.connection_type && row.connection_type !== 'none') agencyMap[key].connected += Number(row.dollar_amount);
-  }
-
-  const topAgencies = Object.values(agencyMap)
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 10);
+  const summary = (summaryResult.data as Record<string, number>) ?? {};
+  const breakdown = (breakdownResult.data ?? []).map((r) => ({
+    connection_type: r.connection_type,
+    count: r.award_count,
+    total: r.total_dollars,
+  }));
+  const topAgencies = ((agenciesResult.data ?? []) as Array<{
+    agency: string;
+    agency_code: string | null;
+    total: number;
+    connected: number;
+    flagged: number;
+  }>).map((r) => ({
+    agency: r.agency,
+    code: r.agency_code ?? '',
+    total: r.total,
+    connected: r.connected,
+    flagged: r.flagged,
+  }));
 
   return NextResponse.json({
     summary: {
-      total_awards: totalAwards,
-      total_dollars: totalDollars,
-      contract_count: allAwards.filter(a => a.award_category === 'contract').length,
-      grant_count: allAwards.filter(a => a.award_category === 'grant').length,
-      connected_count: connectedAwards.length,
-      connected_dollars: connectedDollars,
-      flagged_count: flaggedAwards.length,
-      flagged_dollars: flaggedDollars,
-      no_bid_count: noBidAwards.length,
-      no_bid_dollars: noBidDollars,
+      total_awards: Number(summary.total_awards ?? 0),
+      total_dollars: Number(summary.total_dollars ?? 0),
+      contract_count: Number(summary.contract_count ?? 0),
+      grant_count: Number(summary.grant_count ?? 0),
+      connected_count: Number(summary.connected_count ?? 0),
+      connected_dollars: Number(summary.connected_dollars ?? 0),
+      flagged_count: Number(summary.flagged_count ?? 0),
+      flagged_dollars: Number(summary.flagged_dollars ?? 0),
+      no_bid_count: Number(summary.no_bid_count ?? 0),
+      no_bid_dollars: Number(summary.no_bid_dollars ?? 0),
     },
-    breakdown: Object.entries(breakdown).map(([type, v]) => ({
-      connection_type: type,
-      count: v.count,
-      total: v.total,
-    })),
-    high_risk_awards: highRisk ?? [],
+    breakdown,
+    high_risk_awards: highRiskResult.data ?? [],
     top_agencies: topAgencies,
+    competition_coverage: (competitionResult.data as Record<string, unknown>) ?? null,
     generated_at: new Date().toISOString(),
-  });
+  }, { headers: CACHE_HEADERS });
 }

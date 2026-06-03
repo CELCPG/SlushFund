@@ -65,7 +65,7 @@ export default function TrumpWorldLibertiesMagazinePage() {
       <div className="max-w-3xl mx-auto px-6 py-12">
         <div className="prose prose-invert prose-lg max-w-none">
           <p className="text-xl text-slate-300 leading-relaxed font-medium border-l-4 border-red-600 pl-6 mb-8">
-            America PAC is just the visible top of a much deeper network. Here is the full structure of Trump&apos;s political financing apparatus — and who actually funds it.
+            America PAC is just the visible top of a much deeper network. Here is the full structure of Trump&apos;s political financing apparatus and who actually funds it.
           </p>
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">The Network in Numbers</h2>
@@ -112,12 +112,12 @@ export default function TrumpWorldLibertiesMagazinePage() {
             The 11 disclosed major donors to Trump World entities in the 2024 cycle represent a narrower but deeper slice of the conservative donor class than previous cycles. They include:
           </p>
           <ul className="text-slate-300 space-y-2 mb-6">
-            <li>Elon Musk — $250M to America PAC (the largest single donor contribution in the 2024 cycle)</li>
-            <li>Miriam Adelson — $100M+ (casino magnate, widow of Sheldon Adelson)</li>
-            <li>Timothy Franklin — $50M (oil, private equity)</li>
-            <li>Bryan Dingman — $45M (construction, Iowa mega-donor)</li>
-            <li>Robert Bigelow — $30M (real estate, space)</li>
-            <li>Michele and Doug Berg — $25M combined (hedge fund, Texas)</li>
+            <li>Elon Musk, $250M to America PAC (the largest single donor contribution in the 2024 cycle)</li>
+            <li>Miriam Adelson, $100M+ (casino magnate, widow of Sheldon Adelson)</li>
+            <li>Timothy Franklin, $50M (oil, private equity)</li>
+            <li>Bryan Dingman, $45M (construction, Iowa mega-donor)</li>
+            <li>Robert Bigelow, $30M (real estate, space)</li>
+            <li>Michele and Doug Berg, $25M combined (hedge fund, Texas)</li>
             <li>Donor class also includes approximately $200M in LLC and 501(c)(4) contributions where the original donor is not disclosed</li>
           </ul>
 
@@ -127,7 +127,7 @@ export default function TrumpWorldLibertiesMagazinePage() {
               <div>
                 <p className="text-amber-200 font-semibold mb-1">The Musk Disclosures Problem</p>
                 <p className="text-amber-100/80 text-sm">
-                  Elon Musk contributed $250M to America PAC in 2024. America PAC was required to file with the FEC within 48 hours of receiving contributions over $1M. The filings did not disclose Musk as the source of those funds — instead showing the money flowing through a Delaware LLC called "Project Liberty LLC," incorporated one week before the contribution. Musk was only identified as the donor after investigative reporting.
+                  Elon Musk contributed $250M to America PAC in 2024. America PAC was required to file with the FEC within 48 hours of receiving contributions over $1M. The filings did not disclose Musk as the source of those funds instead showing the money flowing through a Delaware LLC called "Project Liberty LLC," incorporated one week before the contribution. Musk was only identified as the donor after investigative reporting.
                 </p>
               </div>
             </div>
@@ -147,7 +147,7 @@ export default function TrumpWorldLibertiesMagazinePage() {
 
           <h2 className="text-white font-bold text-2xl mt-10 mb-4">The Difference From 2016</h2>
           <p className="text-slate-300 mb-4">
-            In 2016, Trump ran as an outsider who would drain the swamp. His 2024 operation is financed by the same donor class he ran against — but with one key structural difference: a significantly more sophisticated dark money infrastructure. The seven vehicles above were not available to Trump in 2016. They were built between 2017 and 2024, partly as a response to the lessons of his first term.
+            In 2016, Trump ran as an outsider who would drain the swamp. His 2024 operation is financed by the same donor class he ran against but with one key structural difference: a significantly more sophisticated dark money infrastructure. The seven vehicles above were not available to Trump in 2016. They were built between 2017 and 2024, partly as a response to the lessons of his first term.
           </p>
 
           <div className="border-t border-slate-800 pt-8 mt-10">

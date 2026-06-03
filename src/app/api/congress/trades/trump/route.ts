@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 
+// Edge runtime: static OGE 278-T data, no Node deps.
+export const runtime = 'edge';
+
 interface TrumpTrade {
   ticker: string;
   company_name: string;
@@ -20,7 +23,7 @@ interface TrumpTrade {
 // Source: Office of Government Ethics — Trump, Donald J. 05.08.2026-278T
 // Jan 6 – Mar 30, 2026 | ~3,642 equity trades | ~$220M–$750M total
 const TRUMP_Q1_2026_TRADES: TrumpTrade[] = [
-  // NVIDIA — 9 purchases, $1.8M–$6.6M each | $16.2M–$59.4M total
+  // NVIDIA: 9 purchases, $1.8M-$6.6M each | $16.2M-$59.4M total
   // Preceded Jensen Huang Beijing trip where NVDA export policy was negotiated
   { ticker: 'NVDA', company_name: 'NVIDIA', transaction_type: 'PURCHASE', amount_range: '$1,000,001 - $5,000,000', amount_min: 1000001, amount_max: 5000000, transaction_date: '2026-01-22', filed_date: '2026-05-12', disclosure_year: 2026, source_system: 'OGE Form 278-T', has_federal_contract: false, notes: 'Jensen Huang joined Trump delegation to Beijing during AI chip export negotiations — NVDA position directly intersects executive trade policy' },
   { ticker: 'NVDA', company_name: 'NVIDIA', transaction_type: 'PURCHASE', amount_range: '$1,000,001 - $5,000,000', amount_min: 1000001, amount_max: 5000000, transaction_date: '2026-01-28', filed_date: '2026-05-12', disclosure_year: 2026, source_system: 'OGE Form 278-T', has_federal_contract: false },

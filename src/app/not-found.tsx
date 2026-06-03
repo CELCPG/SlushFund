@@ -53,7 +53,7 @@ export default function NotFound() {
       <div className="border-t border-slate-800 py-6 text-center">
         <p className="text-slate-600 text-xs">
           If you arrived here from a link,{' '}
-          <a href="/contact" className="text-emerald-500 hover:underline">
+          <a href="/connect" className="text-emerald-500 hover:underline">
             let us know
           </a>{' '}
           and we will look into it.

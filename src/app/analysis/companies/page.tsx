@@ -53,9 +53,79 @@ interface Company {
   related_contracts: { recipient_name: string; total: number; count: number; agencies: string }[];
 }
 
+// Map deprecated/alias tickers to their current public ticker
+const TICKER_ALIASES: Record<string, string> = {
+  'FB': 'META',      // Facebook → Meta Platforms
+  'FB2A': 'META',    // Facebook Class A (some data sources use this variant)
+};
+
+// ETF tickers tracked by the system (publicly traded iShares ETFs)
+const ETF_TICKERS = new Set([
+  'EFA',   // iShares MSCI EAFE ETF
+  'VEA',   // Vanguard FTSE Developed Markets ETF
+  'IWN',   // iShares Russell 2000 Value ETF
+  'AMZA',  // InfraCap MLP ETF
+  'VT',    // Vanguard Total World Stock ETF
+  'VTI',   // Vanguard Total Stock Market ETF
+  'QQQ',   // Invesco QQQ Trust
+  'IVE',   // iShares S&P 500 Value ETF
+  'IVW',   // iShares S&P 500 Growth ETF
+  'EEM',   // iShares MSCI Emerging Markets ETF
+  'AGG',   // iShares Core US Aggregate Bond ETF
+  'TLT',   // iShares 20+ Year Treasury Bond ETF
+  'HYG',   // iShares iBoxx $ High Yield Corporate Bond ETF
+  'LQD',   // iShares iBoxx $ Investment Grade Corporate Bond ETF
+  'XLE',   // Energy Select Sector SPDR Fund
+  'XLF',   // Financial Select Sector SPDR Fund
+  'XLK',   // Technology Select Sector SPDR Fund
+  'XLV',   // Health Care Select Sector SPDR Fund
+  'XLY',   // Consumer Discretionary Select Sector SPDR Fund
+  'XLP',   // Consumer Staples Select Sector SPDR Fund
+  'XLI',   // Industrial Select Sector SPDR Fund
+  'XLB',   // Materials Select Sector SPDR Fund
+  'XLRE',  // Real Estate Select Sector SPDR Fund
+  'XLU',   // Utilities Select Sector SPDR Fund
+  'VNQ',   // Vanguard Real Estate ETF
+  'SCHD',  // Schwab US Dividend Equity ETF
+  'JEPI',  // JPMorgan Equity Premium Income ETF
+  'JEPQ',  // JPMorgan Nasdaq Equity Premium Income ETF
+  'SPY',   // SPDR S&P 500 ETF Trust
+  'VOO',   // Vanguard S&P 500 ETF
+  'VEA',   // Vanguard FTSE Developed Markets ETF (non-US developed)
+  'VWO',   // Vanguard FTSE Emerging Markets ETF
+  'BND',   // Vanguard Total Bond Market ETF
+  'TIP',   // iShares TIPS Bond ETF
+  'GLD',   // SPDR Gold Shares
+  'SLV',   // iShares Silver Trust
+  'USO',   // United States Oil Fund
+  'UNG',   // United States Natural Gas Fund
+]);
+
+// MLP/LP tickers (publicly traded master limited partnerships)
+const MLP_TICKERS = new Set([
+  'NS',    // NuStar Energy L.P.
+  'ET',    // Energy Transfer LP
+  'MPLX',  // MPLX LP
+  'WMB',   // Williams Companies
+  'KMI',   // Kinder Morgan
+  'OKE',   // ONEOK
+  'TRGP',  // Targa Resources
+  'ENB',   // Enbridge
+  'EPD',   // Enterprise Products Partners
+  'CMRE',  // Costamare (but wait. CMRE is Costamare, a shipping company)
+  'PSX',   // Phillips 66
+  'HES',   // Hess Midstream
+  'AM',    // Antero Midstream (wait. AM is Antero Midstream which is listed)
+]);
+
 function isPublicTicker(ticker: string): boolean {
+  const upper = ticker.toUpperCase();
+  // Check aliases first
+  if (TICKER_ALIASES[upper]) return true;
+  
   const publicTickers = new Set([
-    'NVDA', 'TSLA', 'MSFT', 'GOOGL', 'AMZN', 'PLTR', 'META', 'AAPL',
+    // Core tech / megacap
+    'NVDA', 'TSLA', 'MSFT', 'GOOGL', 'GOOG', 'AMZN', 'PLTR', 'META', 'AAPL',
     'NFLX', 'AMD', 'INTC', 'CRM', 'ORCL', 'IBM', 'BA', 'LMT', 'RTX',
     'NOC', 'GS', 'JPM', 'BAC', 'WFC', 'XOM', 'CVX', 'PFE', 'JNJ', 'UNH',
     'LLY', 'MRK', 'ABBV', 'TMO', 'COST', 'WMT', 'HD', 'MCD', 'NKE',
@@ -65,62 +135,161 @@ function isPublicTicker(ticker: string): boolean {
     'U', 'FVRR', 'TWLO', 'SPLK', 'DBX', 'BOX', 'ZEN', 'CONST',
     'RBLX', 'EPAM', 'CDNS', 'SNPS', 'ARM', 'COIN', 'MSTR', 'RIOT',
     'HOOD', 'APP', 'DUOL', 'GPRO', 'FIS', 'FISV', 'GLOB', 'IT',
-    'ACN', 'CTSH', 'IBM', 'INFY', 'QCOM', 'TXN', 'AVGO', 'ADI',
+    // Consulting / IT services
+    'ACN', 'CTSH', 'INFY', 'QCOM', 'TXN', 'AVGO', 'ADI',
     'MCHP', 'MU', 'WDC', 'STX', 'NTAP', 'ANET', 'FSLR', 'SEDG',
-    'ENPH', 'SPWR', 'RUN', 'NEE', 'FSLR', 'BE', 'PLD', 'AMT',
+    'ENPH', 'SPWR', 'RUN', 'NEE', 'BE', 'PLD', 'AMT',
     'EQIX', 'CCI', 'DLR', 'SBAC', 'O', 'SPG', 'AM', 'AVB', 'EQR',
     'VTR', 'DOC', 'OHI', 'MPW', 'HST', 'RHP', 'SBRA', 'UHS',
     'THC', 'CYH', 'HCA', 'CNC', 'HUM', 'CI', 'ELV', 'MOH',
-    'ALGN', 'EW', 'DXCM', 'TMO', 'LH', 'DGX', 'IQV', 'REGN',
-    'VRTX', 'BIIB', 'MRNA', 'NVAX', 'INO', 'REGN', 'MRK', 'AZN',
+    'ALGN', 'EW', 'DXCM', 'LH', 'DGX', 'IQV', 'REGN',
+    'VRTX', 'BIIB', 'MRNA', 'NVAX', 'INO', 'AZN',
     'PFE', 'JNJ', 'ABT', 'TGT', 'ROST', 'TJX', 'DLTR', 'DG',
-    'BBY', 'W', 'YUM', 'CMG', 'DPZ', 'MCD', 'SBUX', 'CSCO',
+    'BBY', 'W', 'YUM', 'CMG', 'DPZ', 'SBUX',
+    // ETFs (iShares, Vanguard, SPDR)
+    'EFA', 'VEA', 'IWN', 'AMZA', 'VT', 'VTI', 'QQQ', 'IVE', 'IVW',
+    'EEM', 'AGG', 'TLT', 'HYG', 'LQD', 'XLE', 'XLF', 'XLK', 'XLV',
+    'XLY', 'XLP', 'XLI', 'XLB', 'XLRE', 'XLU', 'VNQ',
+    'SCHD', 'JEPI', 'JEPQ', 'SPY', 'VOO', 'VWO', 'BND', 'TIP',
+    'GLD', 'SLV', 'USO', 'UNG',
+    // MLPs / LPs
+    'NS', 'ET', 'MPLX', 'WMB', 'KMI', 'OKE', 'TRGP', 'ENB', 'EPD',
+    'HES',
+    // REITs & real estate
+    'AMT', 'PLD', 'EQIX', 'CCI', 'DLR', 'SBAC',
+    // Energy
+    'PXD', 'MPC', 'VLO', 'PSX', 'HES',
+    // Other notable public companies
+    'BRP',  // BRP Group (public insurance broker)
+    'AAL',  // American Airlines
+    'DAL',  // Delta Air Lines
+    'UAL',  // United Airlines
+    'LUV',  // Southwest Airlines
+    'ALK',  // Alaska Air Group
+    'SAVE', // Spirit Airlines
+    'SKYW', // SkyWest
+    'FDX',  // FedEx
+    'UPS',  // United Parcel Service
+    'XPO',  // XPO Logistics
+    'SAIA', // Saia Inc
+    'CHRW', // C.H. Robinson
+    'JBHT', // J.B. Hunt
   ]);
-  return publicTickers.has(ticker.toUpperCase());
+  return publicTickers.has(upper) || ETF_TICKERS.has(upper) || MLP_TICKERS.has(upper);
+}
+
+// Get display info for a ticker
+function getTickerDisplayInfo(ticker: string): { isETF: boolean; isMLP: boolean; displayTicker: string } {
+  const upper = ticker.toUpperCase();
+  return {
+    isETF: ETF_TICKERS.has(upper),
+    isMLP: MLP_TICKERS.has(upper),
+    displayTicker: TICKER_ALIASES[upper] ?? upper,
+  };
+}
+
+// ─── Data panel for non-public companies (true private companies only) ──────────
+function PrivateDataPanel({ company }: { company: Company }) {
+  const hasContracts = company.related_contracts.length > 0;
+
+  if (hasContracts) {
+    return (
+      <div className="bg-slate-800/60 rounded-lg p-3 min-h-[130px] flex flex-col justify-between">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Building2 size={11} className="text-emerald-400" />
+            <span className="text-emerald-400 text-xs font-bold uppercase tracking-widest">Federal Contract Data</span>
+          </div>
+          <div className="space-y-1.5">
+            {company.related_contracts.slice(0, 2).map(rc => (
+              <div key={rc.recipient_name} className="flex items-center justify-between">
+                <span className="text-slate-300 text-xs">{rc.recipient_name}</span>
+                <span className="text-amber-400 font-mono font-bold text-xs">{formatMoney(rc.total)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="text-slate-500 text-xs mt-2">{company.related_contracts[0].agencies}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-slate-800/30 rounded-lg p-3 min-h-[130px] flex items-center justify-center">
+      <div className="text-center">
+        <div className="text-slate-600 text-2xl mb-1">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-slate-600">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <div className="text-slate-500 text-xs font-semibold">No Public Market Data</div>
+        <div className="text-slate-600 text-xs mt-0.5">Private company not publicly traded</div>
+      </div>
+    </div>
+  );
+}
+
+// ─── ETF/MLP label badge ───────────────────────────────────────────────────────
+function SecurityTypeBadge({ ticker }: { ticker: string }) {
+  const { isETF, isMLP } = getTickerDisplayInfo(ticker);
+  if (!isETF && !isMLP) return null;
+  if (isETF) {
+    return <span className="text-xs bg-indigo-900/40 border border-indigo-600 text-indigo-300 px-2 py-0.5 rounded-full">ETF</span>;
+  }
+  if (isMLP) {
+    return <span className="text-xs bg-amber-900/40 border border-amber-600 text-amber-300 px-2 py-0.5 rounded-full">MLP / LP</span>;
+  }
+  return null;
 }
 
 // ─── Company Card ──────────────────────────────────────────────────────────────
 function CompanyCard({ company, onSelect }: { company: Company; onSelect: () => void }) {
   const partyColors: Record<string, string> = { Republican: 'text-red-400', Democrat: 'text-blue-400', Independent: 'text-purple-400' };
   const partyBg: Record<string, string> = { Republican: 'bg-red-900/30', Democrat: 'bg-blue-900/30', Independent: 'bg-purple-900/30' };
+  const isPublic = isPublicTicker(company.ticker);
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-blue-600/50 transition-all">
+    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-blue-600/50 transition-all flex flex-col">
+      {/* Header */}
       <div className="flex items-start justify-between mb-3">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-white font-black text-lg">{company.ticker}</span>
-            <span className="text-slate-400 text-sm">{company.company_name}</span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <span className="text-white font-black text-lg">{getTickerDisplayInfo(company.ticker).displayTicker}</span>
+            <span className="text-slate-400 text-sm truncate">{company.company_name}</span>
+            <SecurityTypeBadge ticker={company.ticker} />
             {company.has_contract && (
-              <span className="inline-flex items-center gap-1 bg-emerald-900/40 border border-emerald-700 text-emerald-400 text-xs px-2 py-0.5 rounded-full">
+              <span className="inline-flex items-center gap-1 bg-emerald-900/40 border border-emerald-700 text-emerald-400 text-xs px-2 py-0.5 rounded-full shrink-0">
                 <Building2 size={10} /> Federal Contract
               </span>
             )}
           </div>
-          <div className="flex items-center gap-3 text-xs text-slate-400 mb-2">
+          <div className="flex items-center gap-3 text-xs text-slate-400">
             <span className="font-mono">{company.trade_count} trades</span>
             <span>·</span>
             <span className="font-mono">{company.purchases} buys / {company.sales} sells</span>
           </div>
-          {isPublicTicker(company.ticker) ? (
-            <div className="mb-3">
-              <StockChart ticker={company.ticker} />
-            </div>
-          ) : (
-            <div className="text-xs text-slate-600 mb-2 italic">Private company — no public stock data</div>
-          )}
         </div>
-        <div className="text-right">
+        <div className="text-right shrink-0 ml-3">
           <div className="text-white font-black font-mono text-lg">{formatMoney(company.total_volume)}</div>
           <div className="text-slate-500 text-xs">total volume</div>
         </div>
       </div>
 
-      {/* Top traders */}
+      {/* Chart / Data panel uniform height for all cards */}
+      <div className="mb-3">
+        {isPublic ? (
+          <StockChart ticker={company.ticker} />
+        ) : (
+          <PrivateDataPanel company={company} />
+        )}
+      </div>
+
+      {/* Top trader */}
       {company.top_members.length > 0 && (
         <div className="mb-3">
           <div className="text-slate-500 text-xs uppercase tracking-widest mb-2">Top Trader</div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-white text-sm font-semibold">{company.top_members[0].name}</span>
             <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${partyColors[company.top_members[0].party] ?? 'text-slate-400'} ${partyBg[company.top_members[0].party] ?? 'bg-slate-800'}`}>
               {company.top_members[0].party} · {company.top_members[0].chamber}
@@ -130,7 +299,7 @@ function CompanyCard({ company, onSelect }: { company: Company; onSelect: () => 
         </div>
       )}
 
-      {/* Parties */}
+      {/* Parties & chambers */}
       <div className="flex items-center gap-2 flex-wrap mb-3">
         {company.parties.map(p => (
           <span key={p} className={`text-xs font-bold px-2 py-0.5 rounded ${partyColors[p] ?? 'text-slate-400'} ${partyBg[p] ?? 'bg-slate-800'}`}>{p}</span>
@@ -140,8 +309,8 @@ function CompanyCard({ company, onSelect }: { company: Company; onSelect: () => 
         ))}
       </div>
 
-      {/* Related contract highlight */}
-      {company.related_contracts.length > 0 && (
+      {/* Related contracts strip only show if not already in PrivateDataPanel */}
+      {company.related_contracts.length > 0 && isPublic && (
         <div className="bg-slate-800/60 rounded-lg px-3 py-2 mb-3">
           <div className="text-slate-500 text-xs mb-1">Related federal contracts</div>
           {company.related_contracts.slice(0, 2).map(rc => (
@@ -153,8 +322,9 @@ function CompanyCard({ company, onSelect }: { company: Company; onSelect: () => 
         </div>
       )}
 
+      {/* CTA */}
       <button onClick={onSelect}
-        className="w-full mt-2 py-2 rounded-lg bg-blue-900/30 border border-blue-700 text-blue-400 text-sm font-bold hover:bg-blue-900/50 hover:text-blue-300 transition-all flex items-center justify-center gap-2">
+        className="w-full mt-auto pt-2 py-2 rounded-lg bg-blue-900/30 border border-blue-700 text-blue-400 text-sm font-bold hover:bg-blue-900/50 hover:text-blue-300 transition-all flex items-center justify-center gap-2">
         <TrendingUp size={14} /> Deep Dive Analysis
       </button>
     </div>
@@ -183,7 +353,7 @@ function ConflictAlert({ company, trades }: { company: Company; trades: Trade[] 
         </div>
         <div className="bg-red-900/20 border border-red-800/50 rounded-lg px-4 py-3">
           <div className="text-red-400 text-xs uppercase tracking-widest mb-1">Federal Contractor Status</div>
-          <div className="text-white font-black text-2xl">{company.has_contract ? 'YES — Active Contract' : 'Not flagged'}</div>
+          <div className="text-white font-black text-2xl">{company.has_contract ? 'YES. Active Contract' : 'Not flagged'}</div>
           <div className="text-slate-400 text-xs mt-1">{contractStr}</div>
         </div>
         <div className="bg-red-900/20 border border-red-800/50 rounded-lg px-4 py-3">
@@ -218,7 +388,7 @@ function JournalistFindings({ company, trades, contracts }: { company: Company; 
           <span className="text-white font-semibold"> {company.trade_count} transactions</span> totaling
           <span className="text-emerald-400 font-semibold"> {formatMoney(company.total_volume)}</span>.
           {company.has_contract && (
-            <span className="text-red-400"> The company holds <span className="font-black">{contracts.length > 0 ? formatMoney(contracts[0].total) : 'active'} federal contracts</span> — creating a direct conflict when legislators trade its stock while overseeing the agencies awarding those contracts.</span>
+            <span className="text-red-400"> The company holds <span className="font-black">{contracts.length > 0 ? formatMoney(contracts[0].total) : 'active'} federal contracts</span> creating a direct conflict when legislators trade its stock while overseeing the agencies awarding those contracts.</span>
           )}
         </p>
       </div>
@@ -266,7 +436,7 @@ function JournalistFindings({ company, trades, contracts }: { company: Company; 
         <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-800">
             <h3 className="text-white font-bold text-sm uppercase tracking-widest">
-              High-Value Trades (≥$50K) — {highValueTrades.length} transactions
+              High-Value Trades (≥$50K) | {highValueTrades.length} transactions
             </h3>
           </div>
           <div className="divide-y divide-slate-800">
@@ -297,7 +467,7 @@ function JournalistFindings({ company, trades, contracts }: { company: Company; 
             <div className="flex items-center gap-2">
               <AlertTriangle size={14} className="text-amber-400" />
               <h3 className="text-amber-400 font-bold text-sm uppercase tracking-widest">
-                Suspicious / High-Value Signals — {suspiciousTrades.length} flagged
+                Suspicious / High-Value Signals | {suspiciousTrades.length} flagged
               </h3>
             </div>
           </div>
@@ -316,7 +486,7 @@ function JournalistFindings({ company, trades, contracts }: { company: Company; 
                     <div className="text-slate-400 text-xs mt-1">{t.transaction_date} · {t.member_party} · {t.member_chamber}</div>
                     {t.signal_type && t.signal_type !== 'routine' && (
                       <div className="mt-1.5 bg-amber-900/30 border border-amber-700/50 rounded px-2 py-1 text-amber-300 text-xs">
-                        Signal: {t.signal_type} — trade occurred near federal contract activity period
+                        Signal: {t.signal_type} trade occurred near federal contract activity period
                       </div>
                     )}
                   </div>
@@ -334,7 +504,7 @@ function JournalistFindings({ company, trades, contracts }: { company: Company; 
             <div className="flex items-center gap-2">
               <Building2 size={14} className="text-emerald-400" />
               <h3 className="text-white font-bold text-sm uppercase tracking-widest">
-                Federal Contracts — {contracts.length} awards totaling {formatMoney(contracts.reduce((s, c) => s + c.total, 0))}
+                Federal Contracts | {contracts.length} awards totaling {formatMoney(contracts.reduce((s, c) => s + c.total, 0))}
               </h3>
             </div>
           </div>
@@ -559,24 +729,30 @@ export default function CompaniesPage() {
             <div className="flex items-center gap-4 mb-6">
               <div className="bg-slate-900 border border-slate-800 rounded-xl px-6 py-4">
                 <div className="text-slate-400 text-xs uppercase tracking-widest mb-1">Ticker</div>
-                <div className="text-white font-black text-3xl">{selected.ticker}</div>
+                <div className="flex items-center gap-2">
+                  <div className="text-white font-black text-3xl">{getTickerDisplayInfo(selected.ticker).displayTicker}</div>
+                  <SecurityTypeBadge ticker={selected.ticker} />
+                </div>
               </div>
               <div className="flex-1">
                 <div className="text-white font-black text-2xl">{selected.company_name}</div>
-                <div className="flex items-center gap-3 mt-1">
+                <div className="flex items-center gap-3 mt-1 flex-wrap">
                   <span className="text-slate-400 text-sm">{selected.trade_count} trades · {formatMoney(selected.total_volume)} volume</span>
                   {selected.has_contract && (
                     <span className="inline-flex items-center gap-1 bg-emerald-900/40 border border-emerald-700 text-emerald-400 text-xs px-2 py-0.5 rounded-full">
                       <Building2 size={10} /> Federal Contractor
                     </span>
                   )}
+                  {!isPublicTicker(selected.ticker) && (
+                    <span className="text-xs text-slate-600 italic">Private company</span>
+                  )}
                 </div>
                 {isPublicTicker(selected.ticker) ? (
                   <div className="mt-3 max-w-xs">
-                    <StockChart ticker={selected.ticker} />
+                    <StockChart ticker={getTickerDisplayInfo(selected.ticker).displayTicker} />
                   </div>
                 ) : (
-                  <div className="mt-2 text-xs text-slate-600 italic">Private company — no public stock data</div>
+                  <div className="mt-2 text-xs text-slate-600 italic">Private company no public stock data</div>
                 )}
               </div>
             </div>
@@ -607,7 +783,7 @@ export default function CompaniesPage() {
                 <>
                   <div className="flex items-center gap-2 mb-4">
                     <Shield size={14} className="text-emerald-400" />
-                    <h2 className="text-emerald-400 font-bold text-sm uppercase tracking-widest">Federal Contractors — Priority Review</h2>
+                    <h2 className="text-emerald-400 font-bold text-sm uppercase tracking-widest">Federal Contractors. Priority Review</h2>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                     {contractHolders.map(c => (

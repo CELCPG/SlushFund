@@ -49,6 +49,20 @@ from capitolgains.utils.senator_scraper import SenateDisclosureScraper
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+def normalize_tx_type(raw: str) -> str:
+    """Map any disclosure label to the canonical BUY/SELL/EXCHANGE used by the
+    (member, ticker, date, type) dedup key. Prevents 'Purchase'/'Sale (Full)'
+    etc. from creating duplicate rows."""
+    t = (raw or '').strip().upper()
+    if 'BUY' in t or 'PURCHASE' in t:
+        return 'BUY'
+    if 'SELL' in t or 'SALE' in t:
+        return 'SELL'
+    if 'EXCHANGE' in t:
+        return 'EXCHANGE'
+    return 'BUY'
+
+
 def parse_amount_range(raw: str) -> tuple[Optional[int], Optional[int], str]:
     """Parse amount strings like '$1M - $5M', '$100K - $500K', '>$1M', '≤$15M'."""
     if not raw:
@@ -163,7 +177,7 @@ def extract_transactions_from_ptr(ptr_url: str, ptr_info: Dict[str, Any], scrape
         final_ticker = ticker if ticker else slugify_asset(asset_name)
         
         # Transaction type
-        tx_type = row.get('type', 'BUY').upper()
+        tx_type = normalize_tx_type(row.get('type', 'BUY'))
         
         trade = {
             'member_name': member_name,
