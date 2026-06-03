@@ -44,9 +44,15 @@ export function VendorContracts({
         // The /api/contracts route accepts a `search` param. It splits on
         // commas and ORs each term against recipient_name and description,
         // so we can pass the primary name + every alias as one query.
+        //
+        // PostgREST's `or` filter has a URL-length limit (~8KB). For entities
+        // with 30+ aliases (Google, Amazon, Koch family) the joined query can
+        // exceed that and silently returns 0. Cap at 12 terms — we always
+        // include the primary name first, then up to 11 highest-signal aliases.
         const allTerms = [searchTerm, ...aliases].filter(Boolean);
+        const terms = allTerms.slice(0, 12);
         const q = new URLSearchParams({
-          search: allTerms.join(','),
+          search: terms.join(','),
           limit: '100',
           sort: 'dollar_amount',
           dir: 'desc',
@@ -116,7 +122,11 @@ export function VendorContracts({
   ];
 
   // Build the alias list shown in the callout (deduped, capped at 4)
-  const knownAliases = Array.from(new Set([searchTerm, ...aliases])).slice(0, 4);
+  // We still display all aliases in the transparency strip below — the slice
+  // is just for the headline (PostgREST URL limit is enforced in the fetch).
+  const knownAliases = Array.from(new Set([searchTerm, ...aliases]));
+  const displayAliases = knownAliases.slice(0, 4);
+  const hiddenCount = knownAliases.length - displayAliases.length;
 
   return (
     <div className="space-y-6">
@@ -129,13 +139,15 @@ export function VendorContracts({
 
       {/* Searched-aliases transparency strip. Shows the user exactly which
           names we tried to match against, so they know why a profile might
-          show zero. */}
+          show zero. Capped at 4 for visual sanity; "+N more" indicates
+          additional aliases were searched. */}
       {knownAliases.length > 1 && (
         <div className="flex items-start gap-2 rounded-md border border-slate-800 bg-slate-900/50 px-4 py-2.5 text-xs text-slate-400">
           <Search className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
           <div>
             <span className="font-semibold text-slate-300">Searched:</span>{' '}
-            <code className="font-mono text-amber-300/80">{knownAliases.join(' · ')}</code>
+            <code className="font-mono text-amber-300/80">{displayAliases.join(' · ')}</code>
+            {hiddenCount > 0 && <span className="text-slate-500"> +{hiddenCount} more</span>}
           </div>
         </div>
       )}

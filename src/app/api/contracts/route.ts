@@ -68,7 +68,11 @@ export async function GET(request: NextRequest): Promise<NextResponse<AwardsResp
     // (used by vendor profile pages that want to OR across all aliases).
     // Build a single PostgREST `.or()` filter that matches any term against
     // either recipient_name or description.
-    const terms = search.split(',').map((s) => s.trim()).filter(Boolean);
+    //
+    // Cap terms at 12 to stay safely under PostgREST's URL filter limit.
+    // Entities with 30+ aliases (Google, Amazon, Koch family) silently
+    // returned 0 results when the full alias list overflowed.
+    const terms = search.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 12);
     const orParts = terms.flatMap((t) => {
       // Escape PostgREST/ilike pattern metachars so a term like "10%"
       // doesn't get interpreted as a wildcard.
