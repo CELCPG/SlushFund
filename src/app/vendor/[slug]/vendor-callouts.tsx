@@ -369,6 +369,54 @@ export function MegaDonorCallout({ name }: { name: string }) {
   );
 }
 
+// --- Big Tech / cloud provider: federal spend through subsidiaries -------
+
+export function BigTechCallout({ name }: { name: string }) {
+  // Build a name-specific hint based on what we know about this vendor
+  const n = name.toLowerCase();
+  const hint = n.includes('google') || n.includes('alphabet')
+    ? 'GCP, Google Workspace, Mandiant, Wing Aviation, Verily'
+    : n.includes('microsoft')
+    ? 'Azure, GitHub, Nuance, Activision federal contracts, OpenAI partnership (Azure hosting)'
+    : n.includes('amazon')
+    ? 'AWS, Ring federal, Blue Origin launch services, MGM/IMDb media contracts'
+    : n.includes('meta') || n.includes('facebook')
+    ? 'Meta Workplace (DoD), Reality Labs (research), WhatsApp (international aid)'
+    : n.includes('oracle')
+    ? 'Oracle Cloud (GSA), Cerner federal health IT, NetSuite gov editions'
+    : 'their federal cloud, AI, or media subsidiaries';
+
+  return (
+    <CalloutShell>
+      <CalloutHeader title="Big Tech — federal dollars flow through cloud/AI subsidiaries" sub="not the consumer brand" />
+      <div className="space-y-2 text-sm text-amber-100/80 leading-relaxed">
+        <p>
+          <strong className="text-amber-200">{name}'s federal footprint is in their B2B subsidiaries</strong> — the
+          cloud platforms, defense contracts, and federal health IT lines, not the consumer brand. USAspending.gov
+          searches the parent name and major subsidiaries, but smaller federal awards flow through the operating
+          entities, not the umbrella.
+        </p>
+        <p>
+          Where the federal money actually sits: <strong className="text-amber-200">{hint}</strong>. Each of these has
+          its own vendor profile and a distinct contract footprint.
+        </p>
+        <p className="pt-1">
+          The political-money side is on OpenSecrets:{' '}
+          <a
+            href={`https://www.opensecrets.org/orgs/summary?text=${encodeURIComponent(name)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-amber-300 underline hover:text-amber-200"
+          >
+            OpenSecrets search
+          </a>{' '}
+          (lobbying, PACs, executive donations).
+        </p>
+      </div>
+    </CalloutShell>
+  );
+}
+
 // --- Trump family pass-through LLCs / hotels -----------------------------
 
 export function TrumpFamilyCallout({ name }: { name: string }) {
@@ -505,6 +553,23 @@ export function pickVendorCallout({
     n.includes('koch')
   ) {
     return <MegaDonorCallout name={name} />;
+  }
+
+  // --- Big Tech: federal money flows through cloud/AI subsidiaries ---
+  if (
+    connectionCategory === 'trump_ally' &&
+    (n.includes('google') ||
+      n.includes('alphabet') ||
+      n.includes('microsoft') ||
+      n.includes('amazon') ||
+      n.includes('meta') ||
+      n.includes('facebook') ||
+      n.includes('oracle') ||
+      n.includes('apple') ||
+      n.includes('ibm') ||
+      n.includes('salesforce'))
+  ) {
+    return <BigTechCallout name={name} />;
   }
 
   // --- Trump family pass-throughs (umbrella orgs that don't have direct contracts) ---

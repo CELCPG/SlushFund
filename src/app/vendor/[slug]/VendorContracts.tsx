@@ -53,6 +53,7 @@ export function VendorContracts({
         const terms = allTerms.slice(0, 12);
         const q = new URLSearchParams({
           search: terms.join(','),
+          recipient_only: '1',
           limit: '100',
           sort: 'dollar_amount',
           dir: 'desc',

@@ -429,7 +429,7 @@ export const POLITICAL_ENTITIES: PoliticalEntity[] = [
       'Amazon Robotics', 'Amazon Fresh', 'Prime Air', 'Annapurna Labs',
       'Amazon Studios', 'IMDb', 'Woot', 'Comixology',
     ],
-    description: 'AWS + Ring (223 federal contracts alone) + Blue Origin — major federal cloud, security, and launch contracts. Donated $1M to Trump inaugural.',
+    description: 'AWS + Ring + Blue Origin — major federal cloud, security, and launch services. Donated $1M to Trump inaugural.',
     sources: ['https://en.wikipedia.org/wiki/Amazon_(company)'],
   },
   {
@@ -462,7 +462,7 @@ export const POLITICAL_ENTITIES: PoliticalEntity[] = [
       'Access Holdings', 'CapitalG', 'GV', 'Google Ventures',
       'Pixel', 'Pixel Telemetry', 'Android', 'Chrome', 'Chromecast',
     ],
-    description: 'Federal AI/cloud/workspace contracts. Wing Aviation has 8 federal awards; GV (Google Ventures) has 6. Donated to Trump inaugural.',
+    description: 'Federal AI/cloud/workspace contracts via Google Cloud Public Sector, Mandiant (federal cybersecurity), and Wing Aviation. Donated to Trump inaugural.',
     sources: ['https://en.wikipedia.org/wiki/Google'],
   },
   {
@@ -476,7 +476,7 @@ export const POLITICAL_ENTITIES: PoliticalEntity[] = [
       'WhatsApp Inc', 'Oculus', 'Oculus VR', 'Reality Labs',
       'Meta Federal', 'Threads', 'Behemoth Entertainment', 'Meta AI',
     ],
-    description: 'Mark Zuckerberg Trump donor. Federal advertising/AI/VR contracts. Workplace by Facebook has $3.7M federal award.',
+    description: 'Mark Zuckerberg Trump donor. Federal advertising/AI/VR contracts via Meta Workplace (DoD), Reality Labs, and other B2B subsidiaries.',
     sources: ['https://en.wikipedia.org/wiki/Meta_Platforms'],
   },
   {
