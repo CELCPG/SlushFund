@@ -19,5 +19,5 @@ export const MEMBERS_TILE_LEAD: MembersTileLead = 'total';
 export const MEMBERS_TILE_COPY: Record<MembersTileLead, { label: string; caption: string }> = {
   total: { label: 'Members tracked', caption: 'members of Congress who served from 2016 to today' },
   inOffice: { label: 'Members in office', caption: 'members of Congress in office now' },
-  withTrades: { label: 'Members with trades', caption: 'members of Congress with stock trades on file' },
+  withTrades: { label: 'Members with trades', caption: 'members of Congress with disclosed trades on file' },
 };

@@ -1,19 +1,21 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
 import { FlagChip, MoneyChip } from '@/components/v2/MoneyChip';
 import { Card } from '@/components/v2/PageBand';
 import SimplePage from '@/components/v2/SimplePage';
 import { DATASETS, type DatasetKey } from '@/lib/v2/datasets';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/about/methodology',
   title: 'Methodology',
   description: 'Where each SlushFund dataset comes from, what it covers, how rows trace to filings, and its known limits.',
-};
+});
 
 // Anchors match the older SourceBar "Methodology →" links (#trades, #contracts, …); the
 // datasets that have a full write-up link to it.
 const SECTIONS: { id: string; title: string; keys: DatasetKey[]; full?: { href: string; label: string } }[] = [
-  { id: 'trades', title: 'Stock trades', keys: ['house_trades', 'senate_trades'], full: { href: '/about/methodology/trades', label: 'Read the full method for stock trades' } },
+  { id: 'trades', title: 'Trades', keys: ['house_trades', 'senate_trades'], full: { href: '/about/methodology/trades', label: 'Read the full method for trades' } },
   { id: 'contracts', title: 'Contracts', keys: ['contracts', 'contract_totals'], full: { href: '/about/methodology/contracts', label: 'Read the full method for contracts' } },
   { id: 'members', title: 'Members of Congress', keys: ['members'] },
   { id: 'campaign', title: 'Campaign money', keys: ['campaign'] },
@@ -21,7 +23,7 @@ const SECTIONS: { id: string; title: string; keys: DatasetKey[]; full?: { href: 
 ];
 
 const RULES = [
-  { title: 'Official records only', text: 'Every figure comes from a government source: the House Clerk, the Senate, USAspending.gov, the FEC, congress.gov. No third-party aggregators, and nothing typed in by hand.' },
+  { title: 'Official records first', text: 'Trades and contracts are loaded by code from the House Clerk, the Senate and USAspending.gov. Members and committee seats come from the public congress-legislators dataset, which volunteers keep up to date. Two parts are ours and labelled as ours: the map from committees to company sectors, and ticker links a person confirmed. No third-party aggregators.' },
   { title: 'Every row traces to its filing', text: 'Each row keeps its source ID and a link to the original document. If a row has no filing link, it says so.' },
   { title: 'Ranges stay ranges', text: 'Stock trades are reported in dollar bands. We show the band as filed and never a midpoint or an invented total.' },
   { title: 'Late or missing data is shown, not hidden', text: 'A late feed turns amber and says since when. A feed that fails shows “unavailable” and no numbers, never a zero.' },

@@ -71,7 +71,7 @@ const METHODS = '/about/methodology';
 export const DATASETS: Record<DatasetKey, DatasetDef> = {
   house_trades: {
     key: 'house_trades',
-    label: 'House stock trades',
+    label: 'House trades',
     moneyType: 'trades',
     source: { name: 'House Clerk PTRs', url: 'https://disclosures-clerk.house.gov/FinancialDisclosure' },
     scope: 'Periodic transaction reports filed by House members under the STOCK Act',
@@ -84,7 +84,7 @@ export const DATASETS: Record<DatasetKey, DatasetDef> = {
   },
   senate_trades: {
     key: 'senate_trades',
-    label: 'Senate stock trades',
+    label: 'Senate trades',
     moneyType: 'trades',
     source: { name: 'Senate eFD', url: 'https://efdsearch.senate.gov/search/' },
     scope: 'Periodic transaction reports filed by senators under the STOCK Act',
@@ -121,7 +121,7 @@ export const DATASETS: Record<DatasetKey, DatasetDef> = {
     cadence: 'Weekly once automations run',
     staleAfterDays: 10,
     methodologyHref: `${METHODS}/contracts`,
-    latestRecordLabel: 'Period ends',
+    latestRecordLabel: 'Latest period ends',
     caveat: 'DoD reports contract actions 90 days late, so the latest quarter is incomplete.',
   },
   members: {
@@ -234,6 +234,9 @@ function yearSpan(a: string | null, b: string | null): string | null {
 
 const nf = (n: number) => n.toLocaleString('en-US');
 
+/** When D2 counted the filings in src/data/unread-filings.json. The count is not redone on each load (A8 N11). */
+const UNREAD_AS_OF = 'Oct 3, 2026';
+
 /** Sum of a field over D2's snapshot of the filings R3 and R4 could not read (scanned House PDFs, paper Senate reports). */
 function unreadTotal(field: 'house_scanned' | 'senate_paper'): number {
   return Object.values(unreadData as Record<string, { house_scanned: number; senate_paper: number }>).reduce((n, m) => n + (m[field] ?? 0), 0);
@@ -257,8 +260,8 @@ async function readTrades(system: 'House_Clerk' | 'Senate_EFD'): Promise<Raw> {
   const unread = unreadTotal(system === 'House_Clerk' ? 'house_scanned' : 'senate_paper');
   if (unread > 0) {
     gaps.push(system === 'House_Clerk'
-      ? `${nf(unread)} scanned House filings were not read (images, not text); their trades are missing, and nothing is said about their timing.`
-      : `${nf(unread)} paper Senate filings were not read; their trades are missing, and nothing is said about their timing.`);
+      ? `In our count of ${UNREAD_AS_OF}, ${nf(unread)} scanned House filings were not read (images, not text); their trades are missing, and nothing is said about their timing. The count is not redone on each load.`
+      : `In our count of ${UNREAD_AS_OF}, ${nf(unread)} paper Senate filings were not read; their trades are missing, and nothing is said about their timing. The count is not redone on each load.`);
   }
   if (!flagged.error && flagged.count) gaps.push(`${nf(flagged.count)} trades carry a date note (the trade is dated more than two years before the report, or the dates as filed look inconsistent).`);
   if (!noFirst.error && noFirst.count) gaps.push(`${nf(noFirst.count)} trades have no first-report date in our records, so lateness is not computed for them.`);
@@ -403,13 +406,15 @@ async function readContracts(): Promise<Raw> {
 async function readContractTotals(): Promise<Raw> {
   if (!supabase) return { ...EMPTY, failed: true };
   const s = () => supabase!.from('contract_spending_summary');
-  const [count, fetched, fyMin, fyMax] = await Promise.all([
+  const [count, fetched, fyMin, fyMax, periodMax] = await Promise.all([
     s().select('fiscal_year', { count: 'exact', head: true }),
     s().select('fetched_at, period_end').order('fetched_at', { ascending: false }).limit(1),
     s().select('fiscal_year').order('fiscal_year', { ascending: true }).limit(1),
     s().select('fiscal_year').order('fiscal_year', { ascending: false }).limit(1),
+    // N4: the newest period end across every row; fetched_at only says which row was written last.
+    s().select('period_end').not('period_end', 'is', null).order('period_end', { ascending: false }).limit(1),
   ]);
-  if (count.error || fetched.error || fyMin.error || fyMax.error) return { ...EMPTY, failed: true };
+  if (count.error || fetched.error || fyMin.error || fyMax.error || periodMax.error) return { ...EMPTY, failed: true };
   const lo = first(fyMin, 'fiscal_year');
   const hi = first(fyMax, 'fiscal_year');
   return {
@@ -417,7 +422,7 @@ async function readContractTotals(): Promise<Raw> {
     lastUpdated: first(fetched, 'fetched_at'),
     updatedBasis: 'row_timestamps',
     updatedColumn: 'fetched_at',
-    latestRecord: first(fetched, 'period_end'),
+    latestRecord: first(periodMax, 'period_end'),
     coverage: lo && hi ? (lo === hi ? `FY${lo}` : `FY${lo}–FY${hi}`) : null,
     failed: false,
   };

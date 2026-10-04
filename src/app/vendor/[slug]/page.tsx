@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const title = `${vendor.name}. Federal Contracts & Political Connections`;
   const description = `${vendor.description} Track ${vendor.name}'s federal contracts, no-bid awards, and risk flags on SlushFund.`;
-  const og = `/api/og?title=${encodeURIComponent(vendor.name)}&eyebrow=${encodeURIComponent(vendor.connectionLabel)}&stat=${encodeURIComponent('Federal')}&statLabel=${encodeURIComponent('contracts & connections')}`;
+  const og = '/opengraph-image'; // D8d (A8 L1): /api/og is gone; /vendor/* 301s, fixed site card
 
   return {
     title,

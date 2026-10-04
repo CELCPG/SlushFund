@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
 import EmptyState from '@/components/v2/EmptyState';
 import ExplorerForm from '@/components/v2/ExplorerForm';
@@ -12,15 +13,14 @@ import { LATEST_MAX_PAGES, LATEST_PAGE_SIZE, LATEST_PARAMS, getLatestPage, parse
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<SP> }): Promise<Metadata> {
   const sp = await searchParams;
-  return {
+  return pageMetadata({
+    path: '/latest',
+    card: 'own',
     title: 'Latest: new congressional trade reports and contract awards',
     description: 'The newest stock-trade reports filed by members of Congress and the newest federal contract awards, newest first, each with a link to the official record.',
-    alternates: {
-      canonical: '/latest',
-      types: { 'application/rss+xml': [{ url: '/latest.xml', title: 'SlushFund: latest filings and awards' }] },
-    },
+    feeds: [{ url: '/latest.xml', title: 'SlushFund: latest filings and awards' }],
     robots: hasAny(sp, LATEST_PARAMS) ? { index: false, follow: true } : undefined,
-  };
+  });
 }
 
 // Read from the database on request, cached for 5 minutes.
@@ -108,7 +108,7 @@ export default async function LatestPage({ searchParams }: { searchParams: Promi
         <p className="mt-6 max-w-[860px] text-[13px] text-muted">
           A trade is dated by the first report that disclosed it; an amended report does not move it. Trades whose first report is not in our records are left out, and scanned or paper filings have not been read,
           so a missing trade is not a trade that was never made. Awards are dated by the day they were signed, and DoD publishes about 90 days late. What each dataset covers and when it last loaded is on the{' '}
-          <Link href="/data/status" className="font-semibold text-trades-ink hover:underline">data status page</Link>. Everything here is unaudited.
+          <Link href="/data/status" className="font-semibold text-trades-ink hover:underline">data status page</Link>. New filings are loaded by code and are not checked one by one before they appear here; how we check a sample is on the <Link href="/about/methodology" className="font-semibold text-trades-ink hover:underline">method pages</Link>.
         </p>
       </Wrap>
     </div>

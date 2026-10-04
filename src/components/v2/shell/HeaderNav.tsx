@@ -4,11 +4,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useId, useRef, useState } from 'react';
 import { cn } from '@/lib/cn';
-import { NAV_ITEMS, isActive } from '@/components/v2/shell/nav';
+import { NAV_ITEMS, isActive, shellPath } from '@/components/v2/shell/nav';
 
 /** Desktop section links with the current section highlighted. */
 export function NavLinks() {
-  const pathname = usePathname() ?? '/';
+  const pathname = shellPath(usePathname());
   return (
     <nav aria-label="Main" className="flex gap-1 max-md:hidden">
       {NAV_ITEMS.map((item) => {
@@ -50,14 +50,14 @@ export function HeaderSearch({ className, autoFocus = false }: { className?: str
 
 /** Hides the header search on the homepage, where the hero has the big one. */
 export function HeaderSearchSlot() {
-  const pathname = usePathname() ?? '/';
+  const pathname = shellPath(usePathname());
   if (pathname === '/') return <div className="flex-1 max-md:hidden" />;
   return <HeaderSearch className="max-w-[420px] flex-1 max-md:hidden" />;
 }
 
 /** Phone menu: burger button and a panel with search and the five sections. */
 export function MobileMenu() {
-  const pathname = usePathname() ?? '/';
+  const pathname = shellPath(usePathname());
   // The menu is open for the path it was opened on, so navigating closes it.
   const [openOn, setOpenOn] = useState<string | null>(null);
   const open = openOn === pathname;

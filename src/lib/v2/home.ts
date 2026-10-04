@@ -2,6 +2,7 @@ import 'server-only';
 import { cache } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getDatasetStatuses, type DatasetStatus } from '@/lib/v2/datasets';
+import { filingLinks } from '@/lib/v2/filing-links';
 import { getTradeStats } from '@/lib/v2/people';
 import { getContractTotals, getMembersInOffice, TRADE_COLS, type TradeRow } from '@/lib/v2/queries';
 
@@ -127,6 +128,8 @@ export const getLatestFilings = cache(async (reports = 6, perReport = 3): Promis
       const t = rows.data[0] as TradeRow;
       return {
         ...p,
+        // N9: the group's link is its first report, not the amendment the rows are stored under.
+        url: filingLinks(t).first ?? p.url,
         bioguide: t.bio_guide_id,
         member: t.member_name,
         chamber: t.member_chamber,

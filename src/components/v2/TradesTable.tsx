@@ -5,6 +5,7 @@ import FilingLink from '@/components/v2/FilingLink';
 import type { TradeRow } from '@/lib/v2/queries';
 import { fmtDate, fmtDateShort, fmtRange } from '@/lib/v2/format';
 import { dateFlagNote } from '@/lib/v2/date-flags';
+import { filingLinks } from '@/lib/v2/filing-links';
 import { instrumentKind, optionDetail, ownerLabel, typeLabel } from '@/lib/v2/instruments';
 
 /** Party is text, never a color (design rule 1). */
@@ -31,6 +32,7 @@ const COLUMNS: DataTableColumn[] = [
   { key: 'traded', header: 'Traded', csvOnly: true },
   { key: 'filed', header: 'Filed (first report)', csvOnly: true },
   { key: 'amended', header: 'Amended report filed', csvOnly: true },
+  { key: 'amendment_url', header: 'Amended report (link)', csvOnly: true },
   { key: 'date_note', header: 'Date note', csvOnly: true },
   { key: 'filing', header: 'Filing', sortable: false, mobile: 'action' },
 ];
@@ -80,7 +82,7 @@ export default function TradesTable({
   const rows: DataTableRow[] = trades.map((t) => {
     const range = fmtRange(t.amount_min, t.amount_max, t.amount_range);
     const who = `${partyLetter(t.member_party)} · ${t.member_state} · ${t.member_chamber}`;
-    const owner = ownerLabel(t.owner);
+    const owner = ownerLabel(t.owner, t.member_chamber);
     const kind = instrumentKind(t);
     const detail = kind === 'option' ? optionDetail(t) : null;
     const flagged = !!t.date_flag;
@@ -88,6 +90,8 @@ export default function TradesTable({
     // original_filed_date the first report's. Show the first report; note the amendment.
     const filed = t.original_filed_date ?? t.filed_date;
     const amended = t.original_filed_date && t.filed_date && t.filed_date !== t.original_filed_date ? t.filed_date : null;
+    // N9: the main link is the first report; a later amendment is a second link.
+    const links = filingLinks(t);
     return {
       id: t.id,
       values: {
@@ -108,7 +112,8 @@ export default function TradesTable({
         // Flagged dates never drive sorting: they sort last.
         filed_sort: flagged ? null : filed,
         date_note: dateFlagNote(t.date_flag),
-        filing: t.disclosure_url,
+        filing: links.first,
+        amendment_url: links.amendment,
       },
       cells: {
         member: (
@@ -158,7 +163,12 @@ export default function TradesTable({
             )}
           </span>
         ),
-        filing: <FilingLink href={t.disclosure_url} source={sourceName(t.source_system)} />,
+        filing: (
+          <span className="flex flex-col items-start gap-0.5">
+            <FilingLink href={links.first} source={`${sourceName(t.source_system)}${links.amendment ? ', first report' : ''}`} />
+            {links.amendment && <FilingLink href={links.amendment} label="Amended report" source={`${sourceName(t.source_system)}, amended report`} className="text-[12px] font-medium" />}
+          </span>
+        ),
       },
     };
   });
@@ -174,7 +184,7 @@ export default function TradesTable({
       csv={csvName && !ordered ? { filename: csvName } : undefined}
       footer={footer ?? (
         <span>
-          Source: House Clerk PTRs and Senate eFD. Amounts are disclosed ranges; “2 ×” means two same-day lots, each in that range. “Filed” is the first report; a later amendment is noted under it. Owner “Self” includes
+          Source: House Clerk PTRs and Senate eFD. Amounts are disclosed ranges; “2 ×” means two same-day lots, each in that range. “Filed” is the first report; a later amendment is noted under it and linked beside the filing. In House filings, owner “Self” includes
           trusts and accounts filed without an owner. Options are labelled as options, never as a purchase or sale of the stock.
         </span>
       )}

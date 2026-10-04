@@ -1,6 +1,7 @@
 import 'server-only';
 import { supabase } from '@/lib/supabase';
-import { memo, one, pick, readAll, type SP } from '@/lib/v2/explorer';
+import { one, pick, type SP } from '@/lib/v2/explorer';
+import { memo, readAll } from '@/lib/v2/reads';
 import { TRADE_COLS, type TradeRow } from '@/lib/v2/queries';
 
 /**
@@ -68,7 +69,7 @@ export function parseLateFilters(sp: SP): LateFilters {
   };
 }
 
-const COLS = `${TRADE_COLS}, days_to_file, source_doc_id, original_source_doc_id, original_disclosure_url`;
+const COLS = `${TRADE_COLS}, days_to_file, source_doc_id, original_source_doc_id`;
 
 // ---------------------------------------------------------------- reports
 

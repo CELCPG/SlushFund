@@ -6,13 +6,15 @@ import { partyLetter } from '@/components/v2/TradesTable';
 import { companySlug } from '@/lib/v2/companies';
 import { dateFlagNote } from '@/lib/v2/date-flags';
 import { fmtDate, fmtRange, fmtUsd } from '@/lib/v2/format';
+import { filingLinks } from '@/lib/v2/filing-links';
 import { instrumentKind, optionDetail, ownerLabel, tradeSentence } from '@/lib/v2/instruments';
 import type { LatestItem } from '@/lib/v2/latest';
 
 function TradeItem({ item }: { item: Extract<LatestItem, { kind: 'trade' }> }) {
   const t = item.trade;
   const range = fmtRange(t.amount_min, t.amount_max, t.amount_range);
-  const owner = ownerLabel(t.owner);
+  const owner = ownerLabel(t.owner, t.member_chamber);
+  const links = filingLinks(t);
   const kind = instrumentKind(t);
   const detail = kind === 'option' ? optionDetail(t) : null;
   const amended = t.filed_date && t.filed_date !== item.date ? t.filed_date : null;
@@ -43,8 +45,8 @@ function TradeItem({ item }: { item: Extract<LatestItem, { kind: 'trade' }> }) {
           </p>
           {flag && <p className="mt-1.5 text-[12.5px]"><span className="rounded-md bg-stale-tint px-1.5 py-0.5 text-stale-ink">{flag}</span></p>}
           <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
-            <FilingLink href={t.disclosure_url} source={t.source_system === 'House_Clerk' ? 'House Clerk PTR' : t.source_system === 'Senate_EFD' ? 'Senate eFD report' : t.source_system} />
-            {amended && <span className="text-[12px] text-muted">opens the amended report</span>}
+            <FilingLink href={links.first} source={t.source_system === 'House_Clerk' ? 'House Clerk PTR' : t.source_system === 'Senate_EFD' ? 'Senate eFD report' : t.source_system} />
+            {links.amendment && <FilingLink href={links.amendment} label="Amended report" source="the amended report" className="text-[12.5px] font-medium" />}
           </p>
         </div>
       </div>

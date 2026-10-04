@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
 import DataSubNav from '@/components/v2/DataSubNav';
 import EmptyState from '@/components/v2/EmptyState';
@@ -17,13 +18,13 @@ import {
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<SP> }): Promise<Metadata> {
   const sp = await searchParams;
-  return {
-    title: 'Congressional stock trades explorer',
-    description: 'Every stock trade members of Congress disclosed, filterable by member, party, state, ticker, owner and date, with a link to the official filing on every row and a CSV export.',
-    alternates: { canonical: '/data/trades' },
+  return pageMetadata({
+    path: '/data/trades',
+    title: 'Congressional trades explorer',
+    description: 'Every trade members of Congress disclosed (stocks, options and other assets), filterable by member, party, state, ticker, owner and date, with a link to the official filing on every row and a CSV export.',
     // Filtered and paged views are permalinks for people; the search index gets the unfiltered page.
     robots: hasAny(sp, TRADE_PARAMS) ? { index: false, follow: true } : undefined,
-  };
+  });
 }
 
 const field = 'h-11 w-full min-w-0 rounded-xl border border-line bg-page px-3 text-[15px] text-ink placeholder:text-muted focus:border-trades focus:outline-none';
@@ -42,9 +43,9 @@ export default async function TradesExplorerPage({ searchParams }: { searchParam
     <div data-v2>
       <PageBand>
         <p className="mt-8 text-[13px] font-bold uppercase tracking-[0.06em] text-on-deep max-md:mt-5">Data</p>
-        <h1 className="mt-1 font-display text-[44px] font-extrabold leading-[1.06] tracking-[-1px] max-md:text-[30px]">Stock trades by members of Congress</h1>
+        <h1 className="mt-1 font-display text-[44px] font-extrabold leading-[1.06] tracking-[-1px] max-md:text-[30px]">Trades by members of Congress</h1>
         <p className="mt-3 max-w-[760px] text-[16px] text-on-deep max-md:text-[15px]">
-          Every transaction members disclosed in their periodic reports, each with a link to the official filing. Filter it, share the address, or download the rows.
+          Every transaction members disclosed in their periodic reports (stocks, options and other assets), each with a link to the official filing. Filter it, share the address, or download the rows.
           Amounts are the ranges members disclose and are never added up.
         </p>
         <DataSubNav current="/data/trades" />
@@ -170,7 +171,7 @@ export default async function TradesExplorerPage({ searchParams }: { searchParam
               ) : (
                 <TradesTable
                   trades={result.rows}
-                  caption="Stock trades members of Congress disclosed, in the chosen order"
+                  caption="Trades members of Congress disclosed, in the chosen order"
                   ordered
                   fullDates
                   captionHidden

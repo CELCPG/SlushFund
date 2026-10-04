@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AwardsTable from '@/components/v2/AwardsTable';
@@ -17,10 +18,12 @@ export async function generateMetadata({ params }: { params: Promise<{ code: str
   const data = await getAgencies();
   const a = data?.agencies.find((x) => x.code === code);
   if (!a) return { title: 'Agency' };
-  return {
+  return pageMetadata({
+    path: `/agencies/${a.code}`,
+    card: 'own',
     title: `${a.name}: share of contract dollars not competed`,
     description: `Share of ${a.name} contract obligations coded not competed, FY2024–26, from USAspending agency totals.`,
-  };
+  });
 }
 
 export default async function AgencyPage({

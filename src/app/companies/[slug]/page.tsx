@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
 import { notFound, permanentRedirect } from 'next/navigation';
 import AwardsTable from '@/components/v2/AwardsTable';
@@ -35,10 +36,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const awards = key ? await getCompanyAwards(key) : null;
   if (!awards?.length) return { title: 'Company' };
   const name = groupName(awards);
-  return {
+  return pageMetadata({
+    path: `/companies/${companySlug(key!, name)}`,
+    card: 'own',
     title: `${name}: federal contracts and member trades`,
     description: `Federal contract awards to ${name} (USAspending, FY2024–26) and the stock trades members of Congress reported in its ticker.`,
-  };
+  });
 }
 
 const METHOD_TEXT: Record<string, string> = {
@@ -127,15 +130,16 @@ export default async function CompanyPage({
 
   // --- trades
   const tradeList = trades ?? [];
-  const members = new Map<string, { name: string; party: string; state: string; chamber: string; trades: number; buys: number; sells: number; other: number; latest: string | null }>();
+  const members = new Map<string, { name: string; party: string; state: string; chamber: string; trades: number; buys: number; sells: number; exchanges: number; other: number; latest: string | null }>();
   for (const t of tradeList) {
     const k = t.bio_guide_id ?? t.member_name;
-    const m = members.get(k) ?? { name: t.member_name, party: partyLetter(t.member_party), state: t.member_state, chamber: t.member_chamber, trades: 0, buys: 0, sells: 0, other: 0, latest: null };
+    const m = members.get(k) ?? { name: t.member_name, party: partyLetter(t.member_party), state: t.member_state, chamber: t.member_chamber, trades: 0, buys: 0, sells: 0, exchanges: 0, other: 0, latest: null };
     m.trades += 1;
     // Options and non-stock assets are never counted as a purchase or sale of the stock (A7 S1).
     if (instrumentKind(t) !== 'stock') m.other += 1;
     else if (t.transaction_type === 'BUY') m.buys += 1;
     else if (t.transaction_type.startsWith('SELL')) m.sells += 1;
+    else m.exchanges += 1;
     if (t.filed_date && (!m.latest || t.filed_date > m.latest)) m.latest = t.filed_date;
     members.set(k, m);
   }
@@ -151,7 +155,7 @@ export default async function CompanyPage({
     .slice(0, showAll ? undefined : MEMBERS_SHOWN)
     .map(([k, m]) => ({
       id: k,
-      values: { member: m.name, who: `${m.party} · ${m.state} · ${m.chamber}`, trades: m.trades, buys: m.buys, sells: m.sells, other: m.other, latest: m.latest },
+      values: { member: m.name, who: `${m.party} · ${m.state} · ${m.chamber}`, trades: m.trades, buys: m.buys, sells: m.sells, exchanges: m.exchanges, other: m.other, latest: m.latest },
       cells: {
         member: k.length === 7 && /^[A-Z]\d{6}$/.test(k) ? <Link href={`/people/${k}`} className="font-semibold hover:underline">{m.name}</Link> : <b className="font-semibold">{m.name}</b>,
         who: <span>{m.party} · {m.state} · {m.chamber}</span>,
@@ -164,6 +168,7 @@ export default async function CompanyPage({
     { key: 'trades', header: 'Reported trades', numeric: true },
     { key: 'buys', header: 'Purchases', numeric: true },
     { key: 'sells', header: 'Sales', numeric: true },
+    { key: 'exchanges', header: 'Exchanges', numeric: true },
     { key: 'other', header: 'Options and other', numeric: true },
     { key: 'latest', header: 'Latest filing', numeric: true, sortKey: 'latest' },
   ];

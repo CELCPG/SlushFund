@@ -106,7 +106,7 @@ export async function agencyCard(code: string): Promise<OgCardOptions> {
 // ---------------------------------------------------------------- /data/*
 
 export async function dataCard(): Promise<OgCardOptions> {
-  const title = 'Data: stock trades and federal contracts, with sources';
+  const title = 'Data: congressional trades and federal contracts, with sources';
   const t = await tradesFigure();
   if (!t) return { title, eyebrow: 'Open data' };
   return {
@@ -114,7 +114,7 @@ export async function dataCard(): Promise<OgCardOptions> {
     eyebrow: 'Open data',
     type: 'trades',
     stat: fmtCount(t.count) ?? undefined,
-    statLabel: 'stock trades disclosed by members of Congress',
+    statLabel: 'trades disclosed by members of Congress',
     source: 'House Clerk + Senate eFD',
     asOf: t.asOf,
   };
@@ -127,7 +127,8 @@ export async function latestCard(): Promise<OgCardOptions> {
   const base: OgCardOptions = { title, eyebrow: 'Newest filings first' };
   if (!supabase) return base;
   const newest = await getLatestTrades(1);
-  const newestFiled = newest?.[0]?.filed_date;
+  // N10: a trade is dated by its first report, as /latest dates it; filed_date is an amendment's date.
+  const newestFiled = newest?.[0]?.original_filed_date;
   const asOf = fmtDate(newestFiled);
   if (!newestFiled || !asOf) return base;
   const since = new Date(new Date(`${newestFiled}T00:00:00Z`).getTime() - 30 * 86_400_000).toISOString().slice(0, 10);
@@ -135,13 +136,13 @@ export async function latestCard(): Promise<OgCardOptions> {
     .from('congress_trades')
     .select('id', { count: 'exact', head: true })
     .is('date_flag', null)
-    .gte('filed_date', since);
+    .gte('original_filed_date', since);
   if (error || count == null) return base;
   return {
     ...base,
     type: 'trades',
     stat: fmtCount(count) ?? undefined,
-    statLabel: 'trades filed in the 30 days before the newest report',
+    statLabel: 'trades first reported in the 30 days before the newest report',
     source: 'House Clerk + Senate eFD',
     asOf,
   };

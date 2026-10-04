@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
 import DataTable, { type DataTableColumn, type DataTableRow } from '@/components/v2/DataTable';
 import EmptyState from '@/components/v2/EmptyState';
@@ -10,10 +11,11 @@ import { FISCAL_YEARS, getEntityIndex, ncTotals, otherCount, type EntitySummary 
 import { fmtCount, fmtDate, fmtUsd, fmtUsdCompact } from '@/lib/v2/format';
 import { cleanQuery } from '@/lib/v2/queries';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/companies',
   title: 'Companies that received federal contracts',
   description: 'Federal contract recipients ranked by non-competed awards (FY2024–26), with the stocks members of Congress reported trading.',
-};
+});
 
 const PAGE_SIZE = 50;
 
@@ -142,7 +144,7 @@ export default async function CompaniesPage({ searchParams }: { searchParams: Pr
           company&rsquo;s “share” of not-competed work can be read from it. “Obligated to date” is the total the government has committed on awards signed in the
           period, including later modifications (USAspending, as of {asOf}); it is not spending in that fiscal year. Agency-level shares are on the{' '}
           <Link href="/agencies" className="font-semibold text-contracts-ink hover:underline">agencies page</Link>. Companies are grouped by USAspending&rsquo;s parent-company
-          field, which has errors: the same company can appear under more than one parent record.
+          field, which has errors: the same company can appear under more than one parent record. “Company” here means any recipient USAspending groups under a parent record, so the list also holds foreign governments, funds and other organisations.
         </p>
       </Card>
 

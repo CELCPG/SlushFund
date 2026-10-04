@@ -21,3 +21,12 @@ export const FOOTER_LINKS = [
 export function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
+
+/**
+ * The path the shell renders for. Vercel regenerates the homepage under ISR as '/index', so usePathname() returned
+ * '/index' on the server and '/' in the browser: the header rendered its search form in HTML and an empty slot on
+ * the client, and React threw hydration error #418 on / (A8 N8; the preview's RSC payload carried "c":["","index"]).
+ */
+export function shellPath(pathname: string | null | undefined): string {
+  return !pathname || pathname === '/index' ? '/' : pathname;
+}

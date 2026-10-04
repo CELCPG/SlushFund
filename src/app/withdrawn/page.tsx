@@ -1,14 +1,16 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
 import SimplePage from '@/components/v2/SimplePage';
 
 // Served by src/proxy.ts at the address of each withdrawn story, with HTTP 410. The copy is
 // deliberately neutral: it repeats no claim from the story and names no one. Needs Colin's OK and
 // a lawyer read together with the corrections-log entry (src/data/corrections.ts).
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: null, // served under many addresses (rewrite): no canonical
   title: 'Story withdrawn pending re-verification',
   robots: { index: false, follow: false },
-};
+});
 
 export default function WithdrawnPage() {
   return (

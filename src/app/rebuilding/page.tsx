@@ -1,14 +1,16 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
 import SimplePage from '@/components/v2/SimplePage';
 import { matchGatedPage } from '@/lib/v2/redirect-map';
 
 // Served by src/proxy.ts in place of every legacy page that still carried unaudited figures
 // (GATED_PAGES in src/lib/v2/redirect-map.ts). HTTP 200, noindex. The old page code never runs.
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: null, // served under many addresses (rewrite): no canonical
   title: 'This page is being rebuilt',
   robots: { index: false, follow: false },
-};
+});
 
 const ELSEWHERE = [
   { href: '/', label: 'Home' },

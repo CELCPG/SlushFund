@@ -7,7 +7,7 @@ import { buttonClasses } from '@/components/ui/Button';
 import NewsletterSignup from '@/components/NewsletterSignup';
 import { ONE_TIME_TIERS, MONTHLY_TIERS, tierHref, type DonationTier } from '@/lib/support';
 
-const SUPPORT_OG = `/api/og?title=${encodeURIComponent('Keep the money trackable.')}&eyebrow=${encodeURIComponent('Reader-funded accountability')}`;
+const SUPPORT_OG = '/opengraph-image'; // D8d (A8 L1): /api/og is gone; gated page, fixed site card
 
 export const metadata: Metadata = {
   title: 'Support',

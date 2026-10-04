@@ -47,9 +47,9 @@ export const MONEY_TYPES: Record<MoneyType, MoneyTypeStyle> = {
   },
   trades: {
     type: 'trades',
-    label: 'Stock trades',
+    label: 'Disclosed trades',
     letter: 'T',
-    description: "Members' stock trades, as ranges",
+    description: "Members' disclosed trades (stocks, options and other assets), as ranges",
     source: 'STOCK Act filings',
     tile: 'bg-trades text-white',
     chip: 'bg-trades-tint text-trades-ink',

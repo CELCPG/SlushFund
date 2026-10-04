@@ -82,7 +82,7 @@ export function WorthALookNote() {
   return (
     <div className="rounded-xl bg-highlight/30 p-3.5 text-[15px] leading-relaxed">
       <FlagChip /> <span className="ml-1">is a pattern, never an accusation.</span>{' '}
-      It marks something a reader may want to look at, such as a trade in a company whose business sits under a committee the member serves on. A sequence of events is not proof of wrongdoing, and we do not say it is.
+      It marks something a reader may want to look at, such as a trade in a company whose sector our hand-built map links to a committee the member sat on. A sequence of events is not proof of wrongdoing, and we do not say it is.
     </div>
   );
 }

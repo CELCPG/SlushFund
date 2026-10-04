@@ -20,7 +20,7 @@ export const DIRECTIONS = [
   { value: 'EXCHANGE', label: 'Exchanges' },
 ] as const;
 export const OWNERS = [
-  { value: 'Self', label: 'Self (incl. trusts/accounts)' },
+  { value: 'Self', label: 'Self (House: incl. trusts/accounts)' },
   { value: 'Spouse', label: 'Spouse' },
   { value: 'Joint', label: 'Joint' },
   { value: 'Child', label: 'Dependent child' },

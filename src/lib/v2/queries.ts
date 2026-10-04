@@ -60,12 +60,14 @@ export interface TradeRow {
   /** R6a: set when the transaction date looks wrong in the filing; the dates stay as filed. */
   date_flag?: string | null;
   original_filed_date?: string | null;
+  /** R6f: the first report's address. disclosure_url is the amendment's when one replaced the row. */
+  original_disclosure_url?: string | null;
 }
 
 // days_to_file and stock_act_late are not read: hidden site-wide until R6a's values are audited
 // (A7 S2). D4 wires lateness.
 export const TRADE_COLS =
-  'id, member_name, member_chamber, member_party, member_state, bio_guide_id, ticker, company_name, transaction_type, asset_type, amount_min, amount_max, amount_range, transaction_date, filed_date, disclosure_url, source_system, owner, option_type, strike, expiry, lot_count, date_flag, original_filed_date';
+  'id, member_name, member_chamber, member_party, member_state, bio_guide_id, ticker, company_name, transaction_type, asset_type, amount_min, amount_max, amount_range, transaction_date, filed_date, disclosure_url, source_system, owner, option_type, strike, expiry, lot_count, date_flag, original_filed_date, original_disclosure_url';
 
 /** Most recently reported trades, newest first report first (original_filed_date, as /latest and the homepage order them). */
 export const getLatestTrades = cache(async (limit = 10): Promise<TradeRow[] | null> => {

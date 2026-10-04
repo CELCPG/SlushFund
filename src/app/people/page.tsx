@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
 import DataTable, { type DataTableColumn, type DataTableRow } from '@/components/v2/DataTable';
 import EmptyState from '@/components/v2/EmptyState';
@@ -11,10 +12,11 @@ import { getRoster, getTradeStats, partyName, seatLabel, type Member, type Trade
 import { cleanQuery } from '@/lib/v2/queries';
 import { lookupZip, ZCTA_SOURCE, type DistrictCandidate } from '@/lib/v2/zip';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/people',
   title: 'People: members of Congress and their stock trades',
   description: 'Every member of Congress in office, and every former member with disclosed stock trades: trades from the official filings, committee seats, and a ZIP lookup for your members.',
-};
+});
 export const revalidate = 600;
 
 const PER_PAGE = 50;
@@ -93,6 +95,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
     { key: 'trades', header: 'Disclosed trades', numeric: true, sortable: false },
     { key: 'buys', header: 'Stock purchases', numeric: true, sortable: false },
     { key: 'sells', header: 'Stock sales', numeric: true, sortable: false },
+    { key: 'exchanges', header: 'Exchanges', numeric: true, sortable: false },
     { key: 'other', header: 'Options and other', numeric: true, sortable: false },
     { key: 'latest', header: 'Latest filing', numeric: true, sortable: false },
   ];
@@ -105,6 +108,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
       trades: s?.total ?? 0,
       buys: s?.buys ?? 0,
       sells: s?.sells ?? 0,
+      exchanges: s?.exchanges ?? 0,
       other: s?.other ?? 0,
       latest: s?.latestFiled ?? null,
     },
@@ -115,6 +119,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
       trades: stats ? <span>{fmtCount(s?.total ?? 0)}</span> : <span className="font-sans text-muted">Unavailable</span>,
       buys: stats ? <span>{fmtCount(s?.buys ?? 0)}</span> : <span className="font-sans text-muted">—</span>,
       sells: stats ? <span>{fmtCount(s?.sells ?? 0)}</span> : <span className="font-sans text-muted">—</span>,
+      exchanges: stats ? <span>{fmtCount(s?.exchanges ?? 0)}</span> : <span className="font-sans text-muted">—</span>,
       other: stats ? <span>{fmtCount(s?.other ?? 0)}</span> : <span className="font-sans text-muted">—</span>,
       latest: <span>{fmtDate(s?.latestFiled) ?? '—'}</span>,
     },

@@ -1,7 +1,8 @@
+import { SHARE_CARDS } from '@/lib/v2/seo';
 import { dataCard } from '@/lib/v2/og-figures';
 import { OG_SIZE, renderOgCard } from '@/lib/v2/og';
 
-export const alt = 'SlushFund data: stock trades and federal contracts, each with its source and date.';
+export const alt = SHARE_CARDS.data.alt;
 export const size = OG_SIZE;
 export const contentType = 'image/png';
 export const revalidate = 3600;

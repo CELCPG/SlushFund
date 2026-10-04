@@ -1,3 +1,5 @@
+import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
 import BigSearch from '@/components/v2/BigSearch';
 import { DataStatusPanelView } from '@/components/v2/DataStatus';
@@ -17,6 +19,7 @@ import { MONEY_TYPE_ORDER } from '@/lib/v2/money';
 // load shows "Unavailable", never a stand-in number. No late-filers module and no verdict words:
 // that board stays preview-only until the Auditor's GO.
 export const revalidate = 600;
+export const metadata: Metadata = pageMetadata({ path: '/', card: 'own' });
 
 const ENTRY_CARDS = [
   {
@@ -64,7 +67,7 @@ export default async function Home() {
     ? [
         MEMBERS_TILE_LEAD !== 'total' ? `${fmtCount(fig.members.total)} served from 2016 to today.` : null,
         MEMBERS_TILE_LEAD !== 'inOffice' && fig.members.inOffice != null ? `${fmtCount(fig.members.inOffice)} in office now.` : null,
-        MEMBERS_TILE_LEAD !== 'withTrades' && fig.members.withTrades != null ? `${fmtCount(fig.members.withTrades)} have stock trades on file.` : null,
+        MEMBERS_TILE_LEAD !== 'withTrades' && fig.members.withTrades != null ? `${fmtCount(fig.members.withTrades)} have disclosed trades on file.` : null,
       ].filter(Boolean).join(' ') || undefined
     : undefined;
 
@@ -103,7 +106,7 @@ export default async function Home() {
           <KpiTile
             type="trades"
             value={fmtCount(fig.trades?.total)}
-            caption="stock trades disclosed by members of Congress, on file"
+            caption="trades disclosed by members of Congress, on file: stocks, options and other assets"
             source="House Clerk + Senate eFD"
             sourceHref="/about/methodology/trades"
             asOf={tradesAsOf}

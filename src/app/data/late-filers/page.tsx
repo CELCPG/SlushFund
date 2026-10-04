@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import DataSubNav from '@/components/v2/DataSubNav';
@@ -21,11 +22,12 @@ import {
 } from '@/lib/v2/late-filers';
 
 // Behind lateFilersEnabled(): on in dev and preview, off on the production deployment until an Auditor GO.
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/data/late-filers',
   title: 'Late filers: the longest gaps between a trade and its report',
   description: 'The stock trades members of Congress reported the longest after the trade date, measured to the first report, grouped by report, each with a link to the filing.',
   robots: { index: false, follow: false },
-};
+});
 
 const MEMBERS_SHOWN = 20;
 

@@ -13,14 +13,16 @@ export default function QuarterChart({ buckets, label }: { buckets: QuarterBucke
   return (
     <>
     {/* Text alternative: the same counts as a table for screen readers (the bars are drawn, not read). */}
-    <table className="sr-only">
+    {/* The wrapper clips the table: a bare sr-only table keeps its nowrap content width and widened the page at 390 px. */}
+    <div className="sr-only">
+    <table>
       <caption>Disclosed transactions per quarter</caption>
       <thead>
         <tr>
           <th scope="col">Quarter</th>
           <th scope="col">Stock purchases</th>
           <th scope="col">Stock sales</th>
-          {anyOther && <th scope="col">Other</th>}
+          {anyOther && <th scope="col">Exchanges, options and other</th>}
         </tr>
       </thead>
       <tbody>
@@ -34,6 +36,7 @@ export default function QuarterChart({ buckets, label }: { buckets: QuarterBucke
         ))}
       </tbody>
     </table>
+    </div>
     <div className="overflow-x-auto pb-1">
       <div role="img" aria-label={label} className="inline-flex min-w-full items-stretch gap-1.5">
         <div aria-hidden className="flex w-[54px] shrink-0 flex-col text-[11.5px] font-semibold text-muted">

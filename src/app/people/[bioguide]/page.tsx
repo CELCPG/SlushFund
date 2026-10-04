@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/v2/seo';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound, permanentRedirect } from 'next/navigation';
@@ -53,11 +54,12 @@ export async function generateMetadata({ params }: { params: Promise<{ bioguide:
   const id = (await params).bioguide.toUpperCase();
   const m = BIOGUIDE_RE.test(id) ? await getMember(id) : undefined;
   if (!m) return { title: 'Member of Congress' };
-  return {
+  return pageMetadata({
+    path: `/people/${m.bioguide_id}`,
+    card: 'own',
     title: `${m.name}: stock trades and committee seats`,
     description: `Stock trades ${m.name} (${partyName(m.party)}, ${seatLabel(m)}) disclosed under the STOCK Act, each linked to the official filing, and current committee seats.`,
-    alternates: { canonical: `/people/${m.bioguide_id}` },
-  };
+  });
 }
 
 export default async function PersonPage({ params, searchParams }: { params: Promise<{ bioguide: string }>; searchParams: Promise<SP> }) {
@@ -105,6 +107,9 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
   const apart = all.filter((t) => isListedApart(t));
   const buys = stock.filter((t) => t.transaction_type === 'BUY').length;
   const sells = stock.filter((t) => t.transaction_type.startsWith('SELL')).length;
+  // N5: a stock row that is neither a purchase nor a sale is an exchange, so purchases + sales + exchanges + options and other = every row.
+  const isExchange = (t: { transaction_type: string }) => t.transaction_type !== 'BUY' && !t.transaction_type.startsWith('SELL');
+  const exchanges = stock.filter(isExchange).length;
   const options = apart.filter((t) => instrumentKind(t) === 'option').length;
   const latest = all.filter((t) => !t.date_flag && t.filed_date).map((t) => t.filed_date as string).sort().pop() ?? null;
   const unread = getUnreadFilings(id);
@@ -114,9 +119,10 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
   // One report holding most of a member's rows reads like heavy trading when it is a single filing.
   const byReport = new Map<string, { n: number; filed: string | null }>();
   for (const t of all) {
-    const k = t.disclosure_url ?? '';
+    // Grouped by the first report (A8 N9/N10): an amendment that restates rows does not make a second report.
+    const k = t.original_disclosure_url ?? t.disclosure_url ?? '';
     if (!k) continue;
-    const r = byReport.get(k) ?? { n: 0, filed: t.filed_date };
+    const r = byReport.get(k) ?? { n: 0, filed: t.original_filed_date ?? t.filed_date };
     r.n += 1;
     byReport.set(k, r);
   }
@@ -131,7 +137,7 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
   // Trade list filter (?trades=buy|sell) and cap (?show=all).
   const filter = one(sp.trades);
   const showAll = one(sp.show) === 'all';
-  const listed = filter === 'buy' ? stock.filter((t) => t.transaction_type === 'BUY') : filter === 'sell' ? stock.filter((t) => t.transaction_type.startsWith('SELL')) : stock;
+  const listed = filter === 'buy' ? stock.filter((t) => t.transaction_type === 'BUY') : filter === 'sell' ? stock.filter((t) => t.transaction_type.startsWith('SELL')) : filter === 'exchange' ? stock.filter(isExchange) : stock;
   const shown = showAll ? listed : listed.slice(0, TRADES_SHOWN);
   const href = (extra: Record<string, string | null>) => {
     const p = new URLSearchParams();
@@ -195,10 +201,10 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
         <div className="-mt-20 grid grid-cols-4 gap-4 max-lg:grid-cols-2 max-md:mt-4 max-md:gap-2.5">
           <KpiTile
             type="trades"
-            label="Stock trades"
+            label="Disclosed trades"
             value={trades ? fmtCount(all.length) : null}
             caption={all.length
-              ? `disclosed transactions: ${fmtCount(buys)} stock purchase${buys === 1 ? '' : 's'}, ${fmtCount(sells)} sale${sells === 1 ? '' : 's'}${apart.length ? `, ${fmtCount(apart.length)} options and other` : ''}`
+              ? `disclosed transactions: ${fmtCount(buys)} stock purchase${buys === 1 ? '' : 's'}, ${fmtCount(sells)} sale${sells === 1 ? '' : 's'}${exchanges ? `, ${fmtCount(exchanges)} exchange${exchanges === 1 ? '' : 's'}` : ''}${apart.length ? `, ${fmtCount(apart.length)} options and other` : ''}`
               : unread
                 ? `no disclosed transactions in the filings we have read; ${fmtCount(unread.house_scanned + unread.senate_paper)} scanned or paper reports not read yet`
                 : 'no disclosed transactions in the filings we hold'}
@@ -210,9 +216,10 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
           />
           <KpiTile
             type="contracts"
-            label="Related contracts"
+            label={contractsOn ? 'Related contracts' : 'Trades and awards'}
             value={contractsOn && contractors ? fmtCount(contractors.length) : null}
-            caption="companies with federal contracts whose stock this member traded"
+            // A8 L3: while the join is off the tile names the feature, not a claim about this member.
+            caption={contractsOn ? 'companies with federal contracts whose stock this member traded' : 'trades paired with contractors’ awards: coming later'}
             source="USAspending + SEC"
             asOf={null}
             state={contractsOn && contractors ? 'fresh' : 'not_loaded'}
@@ -244,8 +251,8 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
         {(unread || oneReportNote) && (
           <div className="mt-5 rounded-2xl bg-stale-tint px-4 py-3 text-[14px] text-stale-ink shadow-[0_0_0_1px_#F0D48A]">
             <b>Read this before the numbers.</b>{' '}
-            {unread?.house_scanned ? <>{fmtCount(unread.house_scanned)} of this member&rsquo;s House reports (2021–2026) are scanned images with no text, and we have not read them, so this page undercounts their trades. </> : null}
-            {unread?.senate_paper ? <>{fmtCount(unread.senate_paper)} of this senator&rsquo;s Senate reports (2024–2026) were filed on paper and we have not read them, so this page undercounts their trades. </> : null}
+            {unread?.house_scanned ? <>{fmtCount(unread.house_scanned)} of this member&rsquo;s House reports (2021–2026) {unread.house_scanned === 1 ? 'is a scanned image' : 'are scanned images'} with no text, and we have not read {unread.house_scanned === 1 ? 'it' : 'them'}, so this page undercounts their trades. </> : null}
+            {unread?.senate_paper ? <>{fmtCount(unread.senate_paper)} of this senator&rsquo;s Senate reports (2024–2026) {unread.senate_paper === 1 ? 'was' : 'were'} filed on paper and we have not read {unread.senate_paper === 1 ? 'it' : 'them'}, so this page undercounts their trades. </> : null}
             {oneReportNote ? <>{fmtCount(oneReportNote.n)} of the {fmtCount(all.length)} transactions come from a single report{oneReportNote.filed ? ` filed ${fmtDate(oneReportNote.filed)}` : ''}; read it before comparing this member with others. </> : null}
           </div>
         )}
@@ -268,7 +275,7 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
               <>
                 <QuarterChart
                   buckets={buckets}
-                  label={`Disclosed transactions by quarter, ${buckets[0].key} to ${buckets[buckets.length - 1].key}: ${fmtCount(buckets.reduce((n, b) => n + b.buys, 0))} stock purchases, ${fmtCount(buckets.reduce((n, b) => n + b.sells, 0))} stock sales, ${fmtCount(buckets.reduce((n, b) => n + b.other, 0))} other.`}
+                  label={`Disclosed transactions by quarter, ${buckets[0].key} to ${buckets[buckets.length - 1].key}: ${fmtCount(buckets.reduce((n, b) => n + b.buys, 0))} stock purchases, ${fmtCount(buckets.reduce((n, b) => n + b.sells, 0))} stock sales, ${fmtCount(buckets.reduce((n, b) => n + b.other, 0))} exchanges, options and other.`}
                 />
                 <p className="mt-3 text-[12.5px] text-muted">
                   Source: {member.chamber === 'Senate' ? 'Senate eFD' : 'House Clerk'} periodic transaction reports, as of {fmtDate(tradesAsOf) ?? 'an unknown date'}. Counts of transactions, not money: the amounts are ranges and are never added up.
@@ -302,6 +309,7 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
                     { k: null, label: `All ${fmtCount(stock.length)}` },
                     { k: 'buy', label: `Purchases ${fmtCount(buys)}` },
                     { k: 'sell', label: `Sales ${fmtCount(sells)}` },
+                    ...(exchanges ? [{ k: 'exchange', label: `Exchanges ${fmtCount(exchanges)}` }] : []),
                   ].map((c) => {
                     const active = (filter ?? null) === c.k;
                     return (
@@ -343,7 +351,7 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
                 sub={`${fmtCount(options)} option transaction${options === 1 ? '' : 's'} and ${fmtCount(apart.length - options)} other (bonds, funds and similar), with the asset as filed.`}
               />
               <p className="mb-4 max-w-[860px] rounded-2xl bg-neutral-tint px-4 py-3 text-[13.5px] text-muted">
-                An option is a bet on a stock&rsquo;s price, not a purchase or sale of the stock: buying put options gains when the price falls. We list these apart and never count
+                An option is a contract tied to a stock&rsquo;s price, not a purchase or sale of the stock: a put option gains value when the price falls, a call option when it rises. We list these apart and never count
                 them as stock purchases or sales. Where the filing&rsquo;s call or put, strike and expiry have not been read into our records yet, the row says so; the filing has them.
               </p>
               <TradesTable trades={apart} caption={`${member.name}: options and other instruments, newest filing first`} csvName={`options-other-${id}`} hideMember linkMembers={false} />
@@ -360,7 +368,7 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
               sub="Seats held today, from the congress-legislators project. They are not the seats held at the time of past trades."
             />
             {!inOffice ? (
-              <p className="rounded-2xl bg-neutral-tint px-4 py-3 text-[14.5px] text-muted">{member.name} is not in office, so there are no current committee seats. Past seats are not in our records yet.</p>
+              <p className="rounded-2xl bg-neutral-tint px-4 py-3 text-[14.5px] text-muted">{member.name} is not in office, so there are no current committee seats. Past seats are not shown yet.</p>
             ) : committees.length === 0 ? (
               <p className="rounded-2xl bg-neutral-tint px-4 py-3 text-[14.5px] text-muted">No committee seats listed in the source for this member today (the Speaker, for example, sits on none).</p>
             ) : (
@@ -376,28 +384,34 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
           </Card>
         </section>
 
-        {/* ---------------------------------------------------------------- contracts (R6b, flag) */}
-        <section className="pt-8" aria-labelledby="p-contracts">
-          <Card>
-            <SectionHead
-              as="h2"
-              title={<span id="p-contracts" className="text-[24px] max-md:text-[22px]">Companies with federal contracts this member traded</span>}
-              sub="Two public records side by side: a stock trade and a contractor's awards. A pattern worth a look, not an accusation."
-            />
-            {!contractsOn ? (
-              <p className="rounded-2xl bg-neutral-tint px-4 py-3 text-[14.5px] text-muted">
-                Coming soon. Before we pair a member&rsquo;s trades with a company&rsquo;s contracts, every stock-to-company link needs its share class (common, ADR or preferred, never bonds or
-                index notes) and the dates the company owned the contractor. Those checks are running now; this section opens when they are done and audited.
-              </p>
-            ) : contractors === null ? (
-              <EmptyState title="This section is unavailable right now" tone="warning">The contracts join did not load, so nothing is shown.</EmptyState>
-            ) : contractors.length === 0 ? (
-              <p className="rounded-2xl bg-neutral-tint px-4 py-3 text-[14.5px] text-muted">None of this member&rsquo;s stock trades is in a company with a checked link to federal contracts in our records.</p>
-            ) : (
-              <ContractorsList rows={contractors} />
-            )}
-          </Card>
-        </section>
+        {/* ---------------------------------------------------------------- contracts (R6b, flag)
+            A8 L3: while the join is off, one neutral line and no heading. No claim about this member. */}
+        {!contractsOn ? (
+          <p className="pt-8 text-[14.5px] text-muted" data-section="trades-and-awards">
+            Coming later: trades paired with contractors&rsquo; awards.{' '}
+            <Link href="/about/methodology/tickers" className="underline">
+              See the method
+            </Link>
+            .
+          </p>
+        ) : (
+          <section className="pt-8" aria-labelledby="p-contracts">
+            <Card>
+              <SectionHead
+                as="h2"
+                title={<span id="p-contracts" className="text-[24px] max-md:text-[22px]">Trades paired with contractors&rsquo; awards</span>}
+                sub="Two public records side by side: this member's stock trades in a company and the federal awards to that company's contractor group."
+              />
+              {contractors === null ? (
+                <EmptyState title="This section is unavailable right now" tone="warning">The contracts join did not load, so nothing is shown.</EmptyState>
+              ) : contractors.length === 0 ? (
+                <p className="rounded-2xl bg-neutral-tint px-4 py-3 text-[14.5px] text-muted">None of this member&rsquo;s stock trades is in a company with a checked link to federal contracts in our records.</p>
+              ) : (
+                <ContractorsList rows={contractors} />
+              )}
+            </Card>
+          </section>
+        )}
       </Wrap>
     </div>
   );

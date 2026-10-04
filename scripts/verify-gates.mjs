@@ -21,9 +21,12 @@ import {
   matchRetiredApi,
 } from '../src/lib/v2/redirect-map.ts';
 import { LEGACY_AGENCIES, LEGACY_PEOPLE, LEGACY_VENDORS } from '../src/lib/v2/legacy-map.generated.ts';
-import { lateFilersEnabled } from '../src/lib/v2/flags.ts';
+import { designPagesEnabled, lateFilersEnabled, readFailureInjected } from '../src/lib/v2/flags.ts';
 import { DATE_FLAG_FALLBACK, DATE_FLAG_WORDING, LATENESS_BASIS_WORDING, dateFlagNote, latenessNote } from '../src/lib/v2/date-flags.ts';
 import { ALLOWED_VERBATIM, FORBIDDEN_PHRASES } from '../src/lib/v2/forbidden-words.ts';
+import { shellPath } from '../src/components/v2/shell/nav.ts';
+import { instrumentKind } from '../src/lib/v2/instruments.ts';
+import { MONEY_TYPES } from '../src/lib/v2/money.ts';
 
 const ROOT = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
 const APP = join(ROOT, 'src', 'app');
@@ -53,7 +56,6 @@ const KEEP_ROUTES = new Map([
   ['/api/fec', 'live FEC lookup, no stored figures'],
   ['/api/stock/:ticker', 'price history from a public quote feed, no figures of ours'],
   ['/api/newsletter/subscribe', 'signup write; fails visibly until Buttondown is wired (D7)'],
-  ['/api/og', 'share-card image; draws a figure only when its source comes with it'],
   ['/feed.xml', 'valid RSS with no items'],
   ['/latest.xml', 'RSS of new trade reports and awards, data items only, each linking to the official record (D6b)'],
   ['/sitemap.xml', 'live URLs only'],
@@ -258,7 +260,7 @@ await hit('/people?chamber=Senate&sort=name', 200, { group: 'people (D2)' });
 
 // 5d. Data explorers (D4). Filters live in the URL; junk values are ignored, never an error.
 const JUNK = 'chamber=Mars&party=Green&state=ZZ&page=-4&from=garbage&to=2026-13-45&sort=bad&band=zz&instrument=x&direction=y&owner=z&by=q';
-await hit('/data/trades', 200, { bodyAll: ['Stock trades by members of Congress', 'Download CSV', 'View filing'], notBody: ['days to file', 'noindex'], group: 'explorers (D4)' });
+await hit('/data/trades', 200, { bodyAll: ['Trades by members of Congress', 'Download CSV', 'View filing'], notBody: ['days to file', 'noindex'], group: 'explorers (D4)' });
 await hit('/data/trades?member=G000583', 200, { bodyAll: ['Gottheimer', 'match'], noindex: true, group: 'explorers (D4)' });
 await hit('/data/trades?chamber=Senate&direction=SELL&instrument=option&band=b1&sort=traded&from=2025-01-01&to=2025-12-31&by=filed', 200, { body: 'Senate', noindex: true, group: 'explorers (D4)' });
 await hit('/data/trades?' + JUNK, 200, { notBody: ['No trades match', 'unavailable right now'], group: 'explorers (D4) junk input' });
@@ -302,13 +304,67 @@ await hit('/congress/trades/trump', 200, { body: 'being rebuilt', noindex: true,
 // and the filing; three ways in; the rebuilding note. No late-filers module, no verdict words, and no
 // failed-load state (a dataset that didn't load fails this check instead of passing quietly).
 await hit('/', 200, {
-  bodyAll: ['Members tracked', 'stock trades disclosed by members of Congress', 'Non-competed contracts', 'not competed, $1 million or more', 'Source:', 'Coverage:', 'as of ',
+  bodyAll: ['Members tracked', 'trades disclosed by members of Congress, on file', 'Non-competed contracts', 'not competed, $1 million or more', 'Source:', 'Coverage:', 'as of ',
     'Latest filings', 'First report filed', 'View filing', 'href="/people/', 'Three ways in', 'Find your members', 'Rebuilding: stories return after audit'],
   notBody: ['/data/late-filers', 'late filer', 'filed late', 'violation', 'illegal', 'broke the law', 'guilty', 'crime', 'corrupt', 'insider trading', 'stock_act_late',
     'The source did not load', 'Data temporarily unavailable', 'unavailable right now', 'campaign money and lobbying, linked'],
   group: 'homepage (D6a)',
 });
 await hit('/opengraph-image', 200, { ctype: 'image/png', group: 'homepage (D6a)' });
+
+// 5f. A8 launch blockers (D8d).
+// L1: no open card generator. /api/og is gone; a title in the query string must not come back as an image.
+{
+  const r = await fetch(base + '/api/og?title=TEST&stat=47&statLabel=STOCK%20ACT%20VIOLATIONS&source=House%20Clerk', { redirect: 'manual' });
+  const ctype = r.headers.get('content-type') || '';
+  const b = await r.text();
+  const ok = r.status === 404 && !ctype.startsWith('image/') && !b.includes('STOCK ACT VIOLATIONS');
+  if (!ok) failed++;
+  rows.push({ path: '/api/og?title=TEST…', status: `${r.status} ${ctype.split(';')[0]}`, expect: '404, no image', ok, note: ok ? '' : 'the route renders query text', group: 'launch blockers (D8d) L1' });
+}
+for (const p of ['/opengraph-image?title=TEST', '/data/opengraph-image?title=TEST']) await hit(p, 200, { ctype: 'image/png', group: 'launch blockers (D8d) L1' });
+// L2: the design gallery and story template are 404 on the production deployment (flag), noindex elsewhere.
+for (const [env, want] of [[{}, true], [{ VERCEL_ENV: 'preview' }, true], [{ VERCEL_ENV: 'development' }, true], [{ VERCEL_ENV: 'production' }, false]]) {
+  const got = designPagesEnabled(env);
+  if (got !== want) failed++;
+  rows.push({ path: `designPagesEnabled(${JSON.stringify(env)})`, status: String(got), expect: String(want), ok: got === want, note: '', group: 'launch blockers (D8d) L2' });
+}
+for (const p of ['/design', '/design/story']) {
+  if (designPagesEnabled()) await hit(p, 200, { noindex: true, group: 'launch blockers (D8d) L2' });
+  else await hit(p, 404, { group: 'launch blockers (D8d) L2' });
+}
+await hit('/sitemap.xml', 200, { notBody: '/design', group: 'launch blockers (D8d) L2' });
+// L3: member pages carry no "companies with federal contracts this member traded" claim while the join is off.
+if (process.env.SHOW_MEMBER_CONTRACTS !== '1') {
+  for (const id of ['G000583', 'M001186', 'T000278']) {
+    await hit(`/people/${id}`, 200, {
+      bodyAll: ['Coming later: trades paired with contractors’ awards.', 'See the method', 'Trades and awards'],
+      notBody: ['Companies with federal contracts this member traded', 'worth a look, not an accusation', 'companies with federal contracts whose stock this member traded', 'unavailable right now'],
+      group: 'launch blockers (D8d) L3',
+    });
+  }
+}
+// L4: the failure-injection hook is off unless its variable is set, never on production, and only until its time.
+{
+  const soon = String(Date.now() + 60_000);
+  const past = String(Date.now() - 1000);
+  for (const [env, want] of [[{}, false], [{ SLUSHFUND_TEST_FAIL_READS_UNTIL: soon }, true], [{ SLUSHFUND_TEST_FAIL_READS_UNTIL: past }, false],
+    [{ SLUSHFUND_TEST_FAIL_READS_UNTIL: soon, VERCEL_ENV: 'production' }, false], [{ SLUSHFUND_TEST_FAIL_READS_UNTIL: 'garbage' }, false]]) {
+    const got = readFailureInjected(env);
+    if (got !== want) failed++;
+    rows.push({ path: `readFailureInjected(${JSON.stringify(env).replace(/\d{13}/, (m) => (m === soon ? 'now+60s' : 'now-1s'))})`, status: String(got), expect: String(want), ok: got === want, note: '', group: 'launch blockers (D8d) L4' });
+  }
+  // N8: the shell renders the homepage for '/index' too (Vercel's ISR path for /), so server and browser agree.
+  for (const [p, want] of [['/index', '/'], ['/', '/'], [null, '/'], ['/people', '/people'], ['/indexes', '/indexes']]) {
+    const got = shellPath(p);
+    if (got !== want) failed++;
+    rows.push({ path: `shellPath(${JSON.stringify(p)})`, status: got, expect: want, ok: got === want, note: '', group: 'launch blockers (D8d) N8' });
+  }
+  // This run itself must not be injecting failures.
+  const ok = !readFailureInjected();
+  if (!ok) failed++;
+  rows.push({ path: 'readFailureInjected(process.env)', status: String(!ok), expect: 'false', ok, note: '', group: 'launch blockers (D8d) L4' });
+}
 
 // D6b: /data/status, /latest, latest.xml and the reader wording for date flags.
 // Visible text (scripts and tags stripped) must never read "NaN", "undefined" or "[object Object]".
@@ -321,7 +377,7 @@ async function visibleClean(path) {
 }
 for (const p of ['/data/status', '/latest', '/latest?type=awards', '/data/late-filers']) await visibleClean(p);
 await hit('/data/status', 200, {
-  bodyAll: ['House stock trades', 'Senate stock trades', 'Contract awards', 'Ticker links', 'Committee history', 'Signal scores', 'Score bands:', 'a prompt to look closer, not a finding', 'below the $1,000 reporting threshold', 'Known gaps', 'Last loaded', 'scanned House filings were not read', 'from the newest'],
+  bodyAll: ['House trades', 'Senate trades', 'Contract awards', 'Ticker links', 'Committee history', 'Signal scores', 'Score bands:', 'a prompt to look closer, not a finding', 'below the $1,000 reporting threshold', 'Known gaps', 'Last loaded', 'scanned House filings were not read', 'from the newest'],
   notBody: ['being rebuilt'],
   group: 'status and latest (D6b)',
 });
@@ -418,6 +474,7 @@ await hit('/sitemap.xml', 200, { bodyAll: ['/latest', '/data/status'], notBody: 
 for (const p of KEEP_PAGES) {
   if (p === '/withdrawn') { await hit(p, 410, { group: 'keep (v2)' }); continue; }
   if (p === '/search') { await hit('/search?q=Warren', 200, { group: 'keep (v2)' }); continue; }
+  if ((p === '/design' || p === '/design/story') && !designPagesEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // D8d L2
   await hit(p, 200, { group: 'keep (v2)', noindex: p === '/design' || p === '/design/story' || p === '/rebuilding' });
 }
 // The draft corrections entry must not render while its status is 'draft' and the preview flag is off.
@@ -485,7 +542,9 @@ async function wordingGate(path) {
   let res;
   try { res = await fetch(base + path); } catch { res = null; }
   const status = res ? res.status : 'error';
-  const text = res && res.ok ? visibleText(await res.text()) : '';
+  const html = res && res.ok ? await res.text() : '';
+  const text = visibleText(html);
+  if (!path.endsWith('.xml')) seoGate(path, html);
   const hits = [];
   const allowed = new Set();
   for (const p of WORDING_RES) {
@@ -503,6 +562,36 @@ async function wordingGate(path) {
     group: 'wording gate (D8a)',
   });
 }
+// A8 N1 (D8d): each page's canonical and og:url are its own address (query string dropped), never the homepage;
+// og:title is the page's own. Pages served under many addresses by rewrite (rebuilding, withdrawn) carry neither.
+const SITE = 'https://slushfund.net';
+const NO_CANONICAL = new Set(['/rebuilding', '/withdrawn']);
+function metaContent(html, attr, name) {
+  const tag = [...html.matchAll(/<(?:meta|link)\b[^>]*>/g)].map((m) => m[0]).find((t) => new RegExp(`${attr}="${name}"`).test(t));
+  if (!tag) return null;
+  const v = /(?:content|href)="([^"]*)"/.exec(tag);
+  return v ? v[1].replace(/&amp;/g, '&') : null;
+}
+function seoGate(path, html) {
+  if (!html) return; // the wording row already fails on a non-200
+  const pathname = new URL(base + path).pathname;
+  const gated = matchGatedPage(pathname);
+  const want = NO_CANONICAL.has(pathname) || gated ? null : SITE + (pathname === '/' ? '' : pathname);
+  const canonical = metaContent(html, 'rel', 'canonical');
+  const ogUrl = metaContent(html, 'property', 'og:url');
+  const ogTitle = metaContent(html, 'property', 'og:title');
+  const same = (a, b) => (a ?? '').replace(/\/$/, '') === (b ?? '').replace(/\/$/, '') && (a === null) === (b === null);
+  const titleOk = pathname === '/' || want === null || (ogTitle !== null && ogTitle !== 'SlushFund: follow public money');
+  // A page-level openGraph replaces the inherited image, so every page must still name one.
+  const ogImage = metaContent(html, 'property', 'og:image');
+  const ok = same(canonical, want) && same(ogUrl, want) && titleOk && ogImage !== null;
+  if (!ok) failed++;
+  rows.push({
+    path, status: `canonical ${canonical ?? 'none'} · og:url ${ogUrl ?? 'none'}`, expect: want ?? 'none', ok,
+    note: [titleOk ? '' : `og:title "${ogTitle}"`, ogImage ? `og:image ${ogImage.replace(SITE, '').replace(/\?.*$/, '')}` : 'no og:image'].filter(Boolean).join(' · '),
+    group: 'canonical and og:url (D8d N1)',
+  });
+}
 const sitemapXml = await (await fetch(base + '/sitemap.xml')).text();
 const sitemapPaths = [...sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname || '/');
 const WORDING_PATHS = [...new Set([
@@ -517,6 +606,143 @@ const WORDING_PATHS = [...new Set([
 ])];
 if (sitemapPaths.length < 10) { failed++; rows.push({ path: '/sitemap.xml', status: sitemapPaths.length, expect: '>= 10 URLs', ok: false, note: 'sitemap read for the wording gate', group: 'wording gate (D8a)' }); }
 for (const p of WORDING_PATHS) await wordingGate(p);
+
+// ---------------------------------------------------------------- D8e (A8 N2-N6, N9-N11): copy and labels
+// Checks that need a count run against the database with the same anon key the pages use (restAll).
+const D8E = 'copy and labels (D8e)';
+function d8e(path, ok, note, expect = 'ok') {
+  if (!ok) failed++;
+  rows.push({ path, status: ok ? 'ok' : 'FAIL', expect, ok, note, group: D8E });
+}
+const fetchHtml = async (p) => { const r = await fetch(base + p); return { status: r.status, html: (await r.text()).replace(/<!-- -->/g, '') }; };
+const nfmt = (n) => Number(n).toLocaleString('en-US');
+
+// N2, N3, N11: method copy, committee wording and copy nits (absent and present phrases).
+await hit('/about/methodology/trades', 200, {
+  bodyAll: ['Options are shown with their terms', 'strike price', 'second link beside it', 'hand-built map links to a committee the member sat on', 'publishes no match rate'],
+  notBody: ['but not whether it was a call or a put', 'We do not show days-to-file yet', 'audit of this dataset is not finished', 'committee the member serves on'], group: D8E });
+await hit('/about/methodology/contracts', 200, { bodyAll: ['A separate review the same month'], notBody: ['independent audit is not finished'], group: D8E });
+await hit('/about/methodology/tickers', 200, {
+  bodyAll: ['hand-built map links to a committee the member sat on', 'publishes no overall match rate'],
+  notBody: ['independent audit is not finished', 'whose business sits under a committee', 'committee the member serves on'], group: D8E });
+await hit('/about/methodology', 200, { bodyAll: ['Official records first', 'labelled as ours'], notBody: ['nothing typed in by hand', 'the FEC, congress.gov'], group: D8E });
+await hit('/about', 200, { bodyAll: ['Campaign money and lobbying are planned and not loaded yet', 'congress-legislators'], notBody: ['the FEC and congress.gov'], group: D8E });
+await hit('/latest', 200, { bodyAll: ['are not checked one by one before they appear here'], notBody: ['Everything here is unaudited'], group: D8E });
+await hit('/companies', 200, { bodyAll: ['foreign governments, funds and other organisations'], group: D8E });
+await hit('/people/T000278', 200, { bodyAll: ['An option is a contract tied to a stock'], notBody: ['An option is a bet', 'Self (incl. trusts/accounts)', 'a bet on'], group: D8E });
+await hit('/people/G000583', 200, { bodyAll: ['Disclosed trades', 'Self (incl. trusts/accounts)'], notBody: ['An option is a bet'], group: D8E });
+await hit('/people/M001203', 200, { bodyAll: ['Past seats are not shown yet'], notBody: ['Past seats are not in our records yet'], group: D8E });
+{
+  // A count of 1 reads "is a scanned image" / "was filed on paper", never "1 of ... are".
+  let bad = [];
+  for (const p of ['/people/M001203', ...KEEP_DYNAMIC.values()].filter((p) => p.startsWith('/people/'))) {
+    const t = visibleText((await fetchHtml(p)).html);
+    if (/(?:^|\D)1 of this (?:member|senator)\S* (?:House|Senate) reports[^.]*\b(?:are|were)\b/.test(t)) bad.push(p);
+  }
+  d8e('/people/M001203 (singular report count)', bad.length === 0, bad.length ? `plural verb after "1 of": ${bad.join(', ')}` : 'agrees');
+}
+
+// N4: /data/status prints the newest period end, as the database holds it.
+{
+  const [latest] = await restAll('contract_spending_summary?select=period_end&period_end=not.is.null&order=period_end.desc&limit=1').then((r) => r.slice(0, 1)).catch(() => []);
+  const want = latest ? new Date(`${latest.period_end}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }) : null;
+  const t = visibleText((await fetchHtml('/data/status')).html);
+  const got = t.match(/Latest period ends\s*([A-Z][a-z]{2} \d{1,2}, \d{4})/)?.[1] ?? null;
+  d8e('/data/status "Latest period ends"', !!want && got === want, `page ${got}, database ${want}`);
+  d8e('/data/status static unread-filings count', /In our count of Oct 3, 2026/.test(t) && !/unaudited/i.test(t), 'dated count, no "unaudited"');
+}
+
+// N5: purchases + sales + exchanges + options and other = disclosed trades, on /people, company pages and member pages.
+const trows = await restAll('congress_trades?select=bio_guide_id,transaction_type,asset_type,company_name,option_type&order=id.asc');
+const byMember = new Map();
+for (const r of trows) {
+  if (!r.bio_guide_id) continue;
+  const s = byMember.get(r.bio_guide_id) ?? { t: 0, b: 0, s: 0, x: 0, o: 0 };
+  s.t++;
+  if (instrumentKind(r) !== 'stock') s.o++;
+  else if (r.transaction_type === 'BUY') s.b++;
+  else if (r.transaction_type.startsWith('SELL')) s.s++;
+  else s.x++;
+  byMember.set(r.bio_guide_id, s);
+}
+function tableSums(html) {
+  // Every table with an Exchanges column: each body row's cells must add up (header names pick the columns).
+  const out = [];
+  for (const tb of html.matchAll(/<table[\s\S]*?<\/table>/g)) {
+    const head = [...(tb[0].match(/<thead[\s\S]*?<\/thead>/)?.[0] ?? '').matchAll(/<th[^>]*>([\s\S]*?)<\/th>/g)].map((m) => visibleText(m[1]).replace(/[▲▼↑↓]/g, '').trim());
+    const ix = (re) => head.findIndex((h) => re.test(h));
+    const c = { t: ix(/^(Disclosed|Reported) trades/), b: ix(/purchases/i), s: ix(/sales/i), x: ix(/^Exchanges/), o: ix(/Options and other/) };
+    if (Object.values(c).some((i) => i < 0)) continue;
+    for (const tr of (tb[0].match(/<tbody[\s\S]*?<\/tbody>/)?.[0] ?? '').matchAll(/<tr[\s\S]*?<\/tr>/g)) {
+      const cells = [...tr[0].matchAll(/<(?:th|td)[^>]*>([\s\S]*?)<\/(?:th|td)>/g)].map((m) => visibleText(m[1]).trim());
+      const n = (i) => Number((cells[i] ?? '').replace(/,/g, ''));
+      if ([c.t, c.b, c.s, c.x, c.o].some((i) => !Number.isFinite(n(i)))) continue;
+      out.push({ who: cells[0], t: n(c.t), sum: n(c.b) + n(c.s) + n(c.x) + n(c.o), x: n(c.x) });
+    }
+  }
+  return out;
+}
+for (const p of ['/people', '/people?chamber=Senate', '/people?q=Hern', '/people?status=former', '/companies/lockheed-martin-corp-zfn2jjxblzt3']) {
+  const rowsSum = tableSums((await fetchHtml(p)).html);
+  const bad = rowsSum.filter((r) => r.t !== r.sum);
+  d8e(`${p} (columns add up)`, rowsSum.length > 0 && bad.length === 0, `${rowsSum.length} rows checked${bad.length ? `, ${bad.length} do not add up, e.g. ${bad[0].who}: ${bad[0].t} vs ${bad[0].sum}` : `, ${rowsSum.filter((r) => r.x > 0).length} with exchanges`}`);
+}
+{
+  const top = [...byMember.entries()].filter(([, s]) => s.x > 0).sort((a, b) => b[1].x - a[1].x).slice(0, 4);
+  for (const [id, s] of top) {
+    const t = visibleText((await fetchHtml(`/people/${id}`)).html);
+    const m = t.match(/disclosed transactions: ([\d,]+) stock purchases?, ([\d,]+) sales?(?:, ([\d,]+) exchanges?)?(?:, ([\d,]+) options and other)?/);
+    const n = (v) => (v == null ? 0 : Number(v.replace(/,/g, '')));
+    const total = t.match(/Disclosed trades\s+([\d,]+)/)?.[1];
+    const got = m ? { b: n(m[1]), s: n(m[2]), x: n(m[3]), o: n(m[4]) } : null;
+    const ok = !!got && got.b === s.b && got.s === s.s && got.x === s.x && got.o === s.o && n(total) === s.t && got.b + got.s + got.x + got.o === n(total);
+    d8e(`/people/${id} (member header adds up)`, ok, ok ? `${nfmt(s.t)} = ${nfmt(s.b)} + ${nfmt(s.s)} + ${nfmt(s.x)} exchanges + ${nfmt(s.o)} options and other` : `page ${JSON.stringify(got)} total ${total}, database ${JSON.stringify(s)}`);
+  }
+}
+
+// N6: labels say what is counted.
+d8e('MONEY_TYPES.trades.label', MONEY_TYPES.trades.label === 'Disclosed trades', MONEY_TYPES.trades.label);
+await hit('/', 200, { bodyAll: ['Disclosed trades', 'trades disclosed by members of Congress, on file: stocks, options and other assets'], notBody: ['stock trades disclosed by members'], group: D8E });
+await hit('/data', 200, { bodyAll: ['Disclosed trades', 'stocks, options and other assets'], group: D8E });
+
+// N9: a row links its first report; the amendment is a second link. CSV: filing_url is the first report.
+{
+  const rowsF = await restAll('congress_trades?select=id,disclosure_url,original_disclosure_url,filed_date,original_filed_date&bio_guide_id=eq.F000246&order=id.asc');
+  const am = rowsF.find((r) => r.original_disclosure_url && r.disclosure_url && r.original_disclosure_url !== r.disclosure_url);
+  if (!am) d8e('/people/F000246 (amendment links)', false, 'no amended row found for the sample member');
+  else {
+    const { html } = await fetchHtml('/people/F000246?show=all');
+    // Both links sit in one table row. The amendment's address can also be another row's first report, so read the row.
+    const trHtml = [...html.matchAll(/<tr[\s\S]*?<\/tr>/g)].map((m) => m[0]).find((r) => r.includes(`href="${am.original_disclosure_url}"`) && r.includes(`href="${am.disclosure_url}"`));
+    const labelIn = (r, url) => [...(r ?? '').matchAll(/<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)].filter((m) => m[1] === url).map((m) => visibleText(m[2]).trim());
+    const first = labelIn(trHtml, am.original_disclosure_url);
+    const amend = labelIn(trHtml, am.disclosure_url);
+    const ok = !!trHtml && first.length === 1 && /^View filing/.test(first[0]) && amend.length === 1 && /^Amended report/.test(amend[0]);
+    d8e('/people/F000246 (amendment links)', ok, `first report ${am.original_disclosure_url.slice(-20)} labelled "${first[0]}"; amendment ${am.disclosure_url.slice(-20)} labelled "${amend[0]}"`);
+    const csv = (await (await fetch(`${base}/data/trades/export?member=F000246`)).text()).split(/\r?\n/);
+    const cells = (l) => [...l.matchAll(/("([^"]|"")*"|[^,]*)(,|$)/g)].map((m) => m[1].replace(/^"|"$/g, '').replace(/""/g, '"'));
+    const hd = cells(csv[0]);
+    const iF = hd.indexOf('Filing URL (first report)');
+    const iA = hd.indexOf('Amendment URL (blank if none)');
+    const body = csv.slice(1).filter(Boolean).map(cells);
+    const amended = body.filter((r) => r[iA]);
+    const okCsv = iF > 0 && iA > 0 && amended.length > 0 && amended.every((r) => r[iF] && r[iF] !== r[iA]) && amended.some((r) => r[iA] === am.disclosure_url && r[iF] === am.original_disclosure_url);
+    d8e('/data/trades/export?member=F000246 (first report, amendment)', okCsv, `${amended.length} amended rows of ${body.length}; header has ${hd.length} columns`);
+  }
+}
+
+// N10: the /latest share card counts by first report. The card is an image, so the query is read from source.
+{
+  const src = readFileSync(join(ROOT, 'src', 'lib', 'v2', 'og-figures.ts'), 'utf8');
+  const card = src.slice(src.indexOf('export async function latestCard'), src.indexOf('// ---------------------------------------------------------------- /about'));
+  const ok = /gte\('original_filed_date'/.test(card) && !/gte\('filed_date'/.test(card) && /newest\?\.\[0\]\?\.original_filed_date/.test(card);
+  const flat = trows.length ? await restAll('congress_trades?select=filed_date,original_filed_date&date_flag=is.null&original_filed_date=not.is.null&order=id.asc') : [];
+  const newest = flat.reduce((m, r) => (r.original_filed_date > m ? r.original_filed_date : m), '');
+  const since = new Date(new Date(`${newest}T00:00:00Z`).getTime() - 30 * 86_400_000).toISOString().slice(0, 10);
+  const byFirst = flat.filter((r) => r.original_filed_date >= since).length;
+  const byFiled = flat.filter((r) => r.filed_date >= since).length;
+  d8e('og-figures.ts latestCard (first report)', ok, `query reads original_filed_date; by first report ${byFirst} trades since ${since}, by filed_date ${byFiled}`);
+}
 
 const byGroup = {};
 for (const r of rows) (byGroup[r.group] ??= []).push(r);

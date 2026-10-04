@@ -4,7 +4,7 @@ import { lateFilersEnabled } from '@/lib/v2/flags';
 
 export const DATA_TABS = [
   { href: '/data', label: 'Overview' },
-  { href: '/data/trades', label: 'Stock trades' },
+  { href: '/data/trades', label: 'Trades' },
   { href: '/data/contracts', label: 'Contracts' },
   { href: '/data/late-filers', label: 'Late filers' },
   { href: '/data/status', label: 'Status' },

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
 import BigSearch from '@/components/v2/BigSearch';
 import EmptyState from '@/components/v2/EmptyState';
@@ -11,10 +12,11 @@ import { companiesForTickers, searchAgencies, searchCompanyGroups, type AgencyHi
 import { fmtCount, fmtPct, fmtUsdCompact } from '@/lib/v2/format';
 import { cleanQuery, searchMembers, searchTraded, type Aggregated, type MemberHit, type TradedHit } from '@/lib/v2/queries';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/search',
   title: 'Search',
   robots: { index: false, follow: true },
-};
+});
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string | string[] }> }) {
   const raw = (await searchParams).q;

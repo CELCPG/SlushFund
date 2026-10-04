@@ -32,7 +32,7 @@ export default function LateFilersTable({ trades, caption, hideMember = false }:
       : null;
     const firstUrl = t.original_disclosure_url ?? t.disclosure_url;
     const range = fmtRange(t.amount_min, t.amount_max, t.amount_range);
-    const owner = ownerLabel(t.owner);
+    const owner = ownerLabel(t.owner, t.member_chamber);
     const kind = instrumentKind(t);
     return {
       id: t.id,

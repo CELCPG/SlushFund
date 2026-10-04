@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
 import DataTable, { type DataTableColumn, type DataTableRow } from '@/components/v2/DataTable';
 import EmptyState from '@/components/v2/EmptyState';
@@ -12,10 +13,11 @@ import { fmtDate, fmtPct, fmtUsdCompact } from '@/lib/v2/format';
 
 export const revalidate = 1800;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/agencies',
   title: 'Non-competed contract share by agency',
   description: 'The share of each federal agency’s contract dollars that was not competed, by fiscal year, from USAspending’s agency totals.',
-};
+});
 
 const NOTE_LAG = 'Incomplete: the Department of Defense reports contract actions 90 days late, so this year’s totals will rise.';
 

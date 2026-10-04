@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { Card } from '@/components/ui/Card';
 import { Badge, toneForConnection } from '@/components/ui/Badge';
 
-const OG = `/api/og?title=${encodeURIComponent('Vendor Directory')}&eyebrow=${encodeURIComponent('SlushFund')}&stat=${encodeURIComponent(String(VENDORS.length))}&statLabel=${encodeURIComponent('politically connected vendors')}`;
+const OG = '/opengraph-image'; // D8d (A8 L1): /api/og is gone; /vendors 301s, fixed site card
 
 export const metadata: Metadata = {
   title: 'Vendor Directory. Politically Connected Federal Contractors',

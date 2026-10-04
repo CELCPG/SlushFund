@@ -2,6 +2,7 @@ import 'server-only';
 import { cache } from 'react';
 import { supabase } from '@/lib/supabase';
 import { TRADE_COLS, type TradeRow } from '@/lib/v2/queries';
+import { memo, readAll } from '@/lib/v2/reads';
 
 /**
  * Companies and agencies (D3). Read-only against the database.
@@ -28,24 +29,7 @@ import { TRADE_COLS, type TradeRow } from '@/lib/v2/queries';
 export const FISCAL_YEARS = [2024, 2025, 2026] as const;
 export type FiscalYear = (typeof FISCAL_YEARS)[number];
 
-const TTL_MS = 30 * 60 * 1000;
 const UEI_RE = /^[A-Z0-9]{12}$/;
-
-/** Memoize an async loader in module scope for TTL_MS; failures are never cached. */
-function memo<T>(fn: () => Promise<T>): () => Promise<T> {
-  let hit: { at: number; p: Promise<T> } | null = null;
-  return () => {
-    if (!hit || Date.now() - hit.at > TTL_MS) {
-      const p = fn();
-      const mine = { at: Date.now(), p };
-      hit = mine;
-      p.catch(() => {
-        if (hit === mine) hit = null;
-      });
-    }
-    return hit.p;
-  };
-}
 
 // ---------------------------------------------------------------- slugs
 
@@ -70,31 +54,6 @@ export function parseCompanySlug(slug: string): string | null {
   const m = /(?:^|-)([a-z0-9]{12})$/i.exec(decodeURIComponent(slug));
   const key = m?.[1]?.toUpperCase() ?? null;
   return key && UEI_RE.test(key) ? key : null;
-}
-
-// ---------------------------------------------------------------- paging
-
-type Page<T> = { data: T[] | null; error: unknown; count?: number | null };
-
-/** Read every page of a query (PostgREST caps a response at 1,000 rows). null on any failure. */
-async function readAll<T>(build: (from: number, to: number) => PromiseLike<Page<T>>, maxRows = 60_000): Promise<T[] | null> {
-  const SIZE = 1000;
-  const first = await build(0, SIZE - 1);
-  if (first.error || !first.data) return null;
-  const rows = [...first.data];
-  const total = first.count ?? null;
-  if (first.data.length < SIZE) return rows;
-  const want = Math.min(total ?? maxRows, maxRows);
-  const starts: number[] = [];
-  for (let s = SIZE; s < want; s += SIZE) starts.push(s);
-  for (let i = 0; i < starts.length; i += 8) {
-    const batch = await Promise.all(starts.slice(i, i + 8).map((s) => build(s, s + SIZE - 1)));
-    for (const b of batch) {
-      if (b.error || !b.data) return null;
-      rows.push(...b.data);
-    }
-  }
-  return rows;
 }
 
 // ---------------------------------------------------------------- ticker links (r7)
@@ -186,7 +145,8 @@ export const getEntityIndex = memo(async (): Promise<EntityIndex | null> => {
       .range(from, to),
   );
   if (!rows) return null;
-  const links = (await getTickerLinks()) ?? [];
+  const links = await getTickerLinks();
+  if (!links) return null; // D8d (A8 L4): a partial index must not be memoized as a good one
   const tickersBy = new Map<string, Set<string>>();
   for (const l of links) {
     const k = linkKey(l);

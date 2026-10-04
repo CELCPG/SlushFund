@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
 import EmptyState from '@/components/v2/EmptyState';
 import { Card } from '@/components/v2/PageBand';
@@ -9,10 +10,11 @@ import { fmtDate } from '@/lib/v2/format';
 // Read at request time: the draft preview flag (SHOW_DRAFT_CORRECTIONS=1) is a runtime env var.
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/about/corrections',
   title: 'Corrections',
   description: 'Every correction to SlushFund stories and data, with dates.',
-};
+});
 
 const KIND_LABEL: Record<CorrectionKind, string> = {
   withdrawal: 'Withdrawal',

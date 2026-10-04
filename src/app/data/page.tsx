@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
 import { DataStatusTable } from '@/components/v2/DataStatus';
 import EmptyState from '@/components/v2/EmptyState';
@@ -7,16 +8,18 @@ import { Card, SectionHead } from '@/components/v2/PageBand';
 import SimplePage from '@/components/v2/SimplePage';
 import { lateFilersEnabled } from '@/lib/v2/flags';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/data',
+  card: 'own',
   title: 'Data',
   description: 'The datasets behind SlushFund, their sources and freshness, and downloads.',
-};
+});
 export const revalidate = 600;
 
 // Data hub (D1), with the explorers (D4).
 export default function DataHub() {
   const explorers = [
-    { href: '/data/trades', title: 'Stock trades', text: 'Every transaction members of Congress disclosed, with a link to the filing on each row. Filter by member, party, state, ticker, owner, date and amount band.', cta: 'Explore trades' },
+    { href: '/data/trades', title: 'Disclosed trades', text: 'Every transaction members of Congress disclosed (stocks, options and other assets), with a link to the filing on each row. Filter by member, party, state, ticker, owner, date and amount band.', cta: 'Explore trades' },
     { href: '/data/contracts', title: 'Non-competed contracts', text: 'Federal contracts the agency coded not competed, $1 million and up, FY2024–26. Filter by year, agency, company and amount; each row links to USAspending.', cta: 'Explore contracts' },
     ...(lateFilersEnabled()
       ? [{ href: '/data/late-filers', title: 'Late filers (preview)', text: 'The longest gaps between a trade and the first report that disclosed it, stated as days after the trade. Hidden on the live site until audited.', cta: 'See the board' }]

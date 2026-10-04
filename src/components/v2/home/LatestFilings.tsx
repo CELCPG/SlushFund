@@ -50,7 +50,7 @@ export default function LatestFilings({ filings }: { filings: LatestFiling[] }) 
               <ul className="mt-2.5 space-y-1.5">
                 {f.trades.map((t) => {
                   const opt = optionDetail(t);
-                  const owner = ownerLabel(t.owner);
+                  const owner = ownerLabel(t.owner, t.member_chamber);
                   return (
                     <li key={t.id} className="flex items-start gap-2 text-[14px] leading-snug">
                       <MoneyIcon type="trades" size="sm" className="mt-px" />

@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
 import { AuditNote, Caveat, ExtLink, MethodPage, MethodSection, WorthALookNote } from '@/components/v2/trust/Method';
 import { lateFilersEnabled } from '@/lib/v2/flags';
 
-export const metadata: Metadata = {
-  title: 'Methodology: stock trades',
-  description: 'Where House and Senate stock trades come from, what we load, how each row traces to its filing, and what the numbers cannot tell you.',
-};
+export const metadata: Metadata = pageMetadata({
+  path: '/about/methodology/trades',
+  title: 'Methodology: congressional trades',
+  description: 'Where House and Senate trades come from, what we load, how each row traces to its filing, and what the numbers cannot tell you.',
+});
 export const revalidate = 600;
 
 const TOC = [
@@ -20,7 +22,7 @@ const TOC = [
 export default function TradesMethodology() {
   return (
     <MethodPage
-      title="Stock trades: House and Senate"
+      title="Trades: House and Senate"
       dek="Every row is one line from a periodic transaction report that a member of Congress filed under the STOCK Act. This page says what we load, how a row traces back to its filing, and what the numbers can and cannot tell you."
       datasets={['house_trades', 'senate_trades']}
       moneyType="trades"
@@ -50,7 +52,7 @@ export default function TradesMethodology() {
         <ul className="list-disc space-y-2 pl-5">
           <li>Every row keeps the filing&rsquo;s own ID (the House document number or the Senate report ID) and the web address of that filing.</li>
           <li>&ldquo;View filing ↗&rdquo; on a row opens the original PDF or eFD page, so anyone can check the line against the source.</li>
-          <li>When a member amends a report, the newest version replaces the older one, and the row points at the amendment.</li>
+          <li>When a member amends a report, the row keeps both: the first report is the main link, and the amendment is a second link beside it.</li>
           <li>The filed date is the date the first version of the report was filed, because the STOCK Act&rsquo;s 45-day clock belongs to the original filing.</li>
           <li>The member and party are matched to the roster by name and checked by hand when a name is ambiguous. A name we cannot match is listed for review, never guessed.</li>
         </ul>
@@ -70,11 +72,11 @@ export default function TradesMethodology() {
           <Caveat lead="Only lines with a ticker symbol are loaded.">
             In our first full Senate load (October 2026), about four in ten source lines had no ticker, such as bonds, many funds and private assets. Those lines are not in the table. Treat any count of trades as a minimum.
           </Caveat>
-          <Caveat lead="Options are not described in detail.">
-            We store that a line was an option, but not whether it was a call or a put, the strike price or the expiry date.
+          <Caveat lead="Options are shown with their terms, when the filing gives them.">
+            Where the filing says whether an option is a call or a put, we show it, with the strike price and the expiry date (for example &ldquo;Sold call options &middot; strike $340 &middot; expires Dec 18, 2026&rdquo;). Where a filing leaves a term out, the row says so and the filing has the rest. Options and other non-stock assets are listed apart from stock purchases and sales and never counted as one.
           </Caveat>
           <Caveat lead="&ldquo;Days to file&rdquo; is not a verdict.">
-            We do not show days-to-file yet. The STOCK Act sets 45 days, but the clock can start when the member learns of the trade, up to 30 days after it, and an amended report carries a later date than the original. Days-to-file will be computed from the original filing date, checked, and then shown without calling any filing late.
+            We do not show a days-to-file count or label any filing late on a trade row. The STOCK Act sets 45 days, but the clock can start when the member learns of the trade, up to 30 days after it, and an amended report carries a later date than the original. Where a trade is dated more than two years before its report, or the dates as filed look inconsistent, the row carries a plain date note that describes the dates; it is not a ruling. Any days-to-file figure is measured to the first report, never to an amendment.
             {lateFilersEnabled() && <>{' '}A preview-only <Link href="/data/late-filers" className="font-semibold underline">late-filers board</Link> already shows it, measured to the first report, until an audit decides whether it goes public.</>}
           </Caveat>
           <Caveat lead="Who owns the asset matters.">
@@ -93,7 +95,7 @@ export default function TradesMethodology() {
       <MethodSection id="checks" title="How we check">
         <p>After a load, we re-open a random sample of stored rows against the original filing, using a second parser written separately from the loader, and compare every field. A row that does not match is investigated, and the cause is fixed in the loader, not patched in the data.</p>
         <AuditNote>
-          The builder&rsquo;s own samples of Senate rows matched the filings once the checker&rsquo;s gaps were fixed. The House load is still being verified. An independent audit of this dataset is not finished, so this page describes the method and does not publish a match rate. We will add the audited rate and date here.
+          A review separate from the builder (October 2026) compared sampled rows and page figures with the original House Clerk and Senate eFD filings. Data problems it found were fixed and checked again. It was a sample, so this page describes the method and publishes no match rate.
         </AuditNote>
         <p className="text-[14.5px] text-muted">
           Found something wrong? <Link href="/about#report-an-error" className="font-semibold text-trades-ink hover:underline">Report an error</Link>. Past changes are in the <Link href="/about/corrections" className="font-semibold text-trades-ink hover:underline">corrections log</Link>.

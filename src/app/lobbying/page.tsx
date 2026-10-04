@@ -4,7 +4,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { LobbyingView } from './LobbyingView';
 import byIssue from '@/data/lobbying/lda_by_issue.json';
 
-const OG = `/api/og?title=${encodeURIComponent('Federal Lobbying')}&eyebrow=${encodeURIComponent('Influence')}&stat=${encodeURIComponent('LDA')}&statLabel=${encodeURIComponent('disclosure filings, who pays whom')}`;
+const OG = '/opengraph-image'; // D8d (A8 L1): /api/og is gone; gated page, fixed site card
 
 export const metadata: Metadata = {
   title: 'Federal Lobbying. Who Pays to Influence Congress',

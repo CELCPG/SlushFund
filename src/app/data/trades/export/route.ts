@@ -1,6 +1,7 @@
 import { toCsv, csvFilename } from '@/lib/v2/csv';
 import { dateFlagNote } from '@/lib/v2/date-flags';
 import { EXPORT_ROW_CAP, type SP } from '@/lib/v2/explorer';
+import { filingLinks } from '@/lib/v2/filing-links';
 import { instrumentKind, ownerLabel, typeLabel } from '@/lib/v2/instruments';
 import { getTradesForExport, parseTradeFilters } from '@/lib/v2/trades-explorer';
 
@@ -26,8 +27,8 @@ export async function GET(request: Request) {
     ['instrument', 'Instrument'], ['transaction', 'Transaction'], ['transaction_code', 'Transaction code'],
     ['option_type', 'Option type'], ['strike', 'Option strike'], ['expiry', 'Option expiry'],
     ['amount_range', 'Amount (disclosed range)'], ['lot_count', 'Same-day lots'],
-    ['traded', 'Trade date'], ['first_report_filed', 'First report filed'], ['report_shown_filed', 'Filed (report at filing_url)'],
-    ['date_flag', 'Date flag'], ['date_note', 'Date note'], ['source', 'Source'], ['filing_url', 'Filing URL'],
+    ['traded', 'Trade date'], ['first_report_filed', 'First report filed'], ['amendment_filed', 'Amendment filed (blank if none)'],
+    ['date_flag', 'Date flag'], ['date_note', 'Date note'], ['source', 'Source'], ['filing_url', 'Filing URL (first report)'], ['amendment_url', 'Amendment URL (blank if none)'],
   ].map(([key, label]) => ({ key, label }));
   const rows = result.rows.map((t) => ({
     member_name: t.member_name,
@@ -35,7 +36,7 @@ export async function GET(request: Request) {
     chamber: t.member_chamber,
     party: t.member_party,
     state: t.member_state,
-    owner: ownerLabel(t.owner),
+    owner: ownerLabel(t.owner, t.member_chamber),
     ticker: t.ticker,
     company_name: t.company_name,
     asset_type_as_filed: t.asset_type,
@@ -49,11 +50,12 @@ export async function GET(request: Request) {
     lot_count: t.lot_count,
     traded: t.transaction_date,
     first_report_filed: t.original_filed_date ?? t.filed_date,
-    report_shown_filed: t.filed_date,
+    amendment_filed: filingLinks(t).amendment ? t.filed_date : null,
     date_flag: t.date_flag,
     date_note: dateFlagNote(t.date_flag),
     source: t.source_system === 'House_Clerk' ? 'House Clerk PTR' : t.source_system === 'Senate_EFD' ? 'Senate eFD report' : t.source_system,
-    filing_url: t.disclosure_url,
+    filing_url: filingLinks(t).first,
+    amendment_url: filingLinks(t).amendment,
   }));
   return new Response(toCsv(headers, rows), {
     headers: {

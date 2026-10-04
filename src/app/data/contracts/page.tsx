@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
 import AwardsTable from '@/components/v2/AwardsTable';
 import DataSubNav from '@/components/v2/DataSubNav';
@@ -18,12 +19,12 @@ import { fmtCount, fmtDate } from '@/lib/v2/format';
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<SP> }): Promise<Metadata> {
   const sp = await searchParams;
-  return {
+  return pageMetadata({
+    path: '/data/contracts',
     title: 'Non-competed federal contracts explorer',
     description: 'Federal contracts the agency coded "not competed", $1 million and up, FY2024–26: filter by year, agency, company and amount, with a link to the USAspending award page on every row and a CSV export.',
-    alternates: { canonical: '/data/contracts' },
     robots: hasAny(sp, CONTRACT_PARAMS) ? { index: false, follow: true } : undefined,
-  };
+  });
 }
 
 const field = 'h-11 w-full min-w-0 rounded-xl border border-line bg-page px-3 text-[15px] text-ink placeholder:text-muted focus:border-contracts focus:outline-none';

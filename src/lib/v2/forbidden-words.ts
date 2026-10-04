@@ -10,7 +10,7 @@ export interface ForbiddenPhrase {
   /** RegExp source, matched with the `gi` flags. */
   re: string;
   /** Which part of A7b's list it comes from. */
-  from: 'late filers' | 'signals' | 'contractor';
+  from: 'late filers' | 'signals' | 'contractor' | 'A8 L3';
 }
 
 export const FORBIDDEN_PHRASES: readonly ForbiddenPhrase[] = [
@@ -43,6 +43,11 @@ export const FORBIDDEN_PHRASES: readonly ForbiddenPhrase[] = [
   { re: String.raw`\bjurisdiction over\b`, from: 'signals' },
   { re: String.raw`\boversaw\b`, from: 'signals' },
   { re: String.raw`\bno conflict\b`, from: 'signals' },
+  // A8 N3: committee wording is "our hand-built map links", never a statement about what a committee covers.
+  { re: String.raw`\bbusiness sits under a committee\b`, from: 'signals' },
+  { re: String.raw`\bcommittee the member serves on\b`, from: 'signals' },
+  // A8 N11: neutral wording for options.
+  { re: String.raw`\ban option is a bet\b`, from: 'signals' },
   // "clean" as a verdict ("a clean record", "is clean"), not inside a name as filed ("Clean Energy Fuels Corp.").
   { re: String.raw`\bclean (?:record|bill|slate|hands)\b|\b(?:is|are|was|were|looks?|came back) clean\b`, from: 'signals' },
   // Contractor signal
@@ -61,6 +66,10 @@ export const FORBIDDEN_PHRASES: readonly ForbiddenPhrase[] = [
   { re: String.raw`\bfraud(?:ulent)?\b`, from: 'contractor' },
   { re: String.raw`\binflated\b`, from: 'contractor' },
   { re: String.raw`\boverpa(?:y|id|yment|yments)\b`, from: 'contractor' },
+  // A8 L3: the member-page heading that implied contract ties for every member, and the flag word used as a verdict line.
+  { re: String.raw`\bcompanies with federal contracts this member traded\b`, from: 'A8 L3' },
+  { re: String.raw`\bpattern worth a look\b`, from: 'A8 L3' },
+  { re: String.raw`\bworth a look, not an accusation\b`, from: 'A8 L3' },
 ];
 
 /**

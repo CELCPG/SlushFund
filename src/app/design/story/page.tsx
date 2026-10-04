@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation';
 import { FlagChip } from '@/components/v2/MoneyChip';
 import { Wrap } from '@/components/v2/PageBand';
 import {
@@ -13,11 +14,12 @@ import {
   type FootnoteItem,
   type SourceItem,
 } from '@/components/v2/story/Story';
+import { designPagesEnabled } from '@/lib/v2/flags';
 
 // Story template (D5): Direction B's reading layout in the C system. EVERY word below is
 // labelled placeholder text. No real or made-up claim appears here: when a real story adopts the
 // template it replaces the placeholders and supplies a real footnote for every figure.
-// noindex comes from the segment layout.
+// noindex comes from the segment layout. Behind designPagesEnabled(): 404 on the production deployment (A8 L2).
 
 const PH = '[Placeholder]';
 
@@ -34,6 +36,7 @@ const SOURCES: SourceItem[] = [
 ];
 
 export default function StoryTemplatePage() {
+  if (!designPagesEnabled()) notFound();
   return (
     <div data-v2>
       <div role="note" className="bg-stale-tint text-stale-ink">

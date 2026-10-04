@@ -1,6 +1,7 @@
 import { sentence } from '@/components/v2/AwardsTable';
 import { fmtDate, fmtRange, fmtUsd } from '@/lib/v2/format';
 import { dateFlagNote } from '@/lib/v2/date-flags';
+import { filingLinks } from '@/lib/v2/filing-links';
 import { instrumentKind, optionDetail, ownerLabel, tradeSentence } from '@/lib/v2/instruments';
 import { getLatestForFeed, type LatestItem } from '@/lib/v2/latest';
 
@@ -25,7 +26,8 @@ function itemXml(item: LatestItem): string {
     const t = item.trade;
     const range = fmtRange(t.amount_min, t.amount_max, t.amount_range);
     const kind = instrumentKind(t);
-    const owner = ownerLabel(t.owner);
+    const owner = ownerLabel(t.owner, t.member_chamber);
+    const links = filingLinks(t);
     const flag = dateFlagNote(t.date_flag);
     const title = `${t.member_name} (${t.member_chamber}): ${tradeSentence(t)}`;
     const parts = [
@@ -34,9 +36,10 @@ function itemXml(item: LatestItem): string {
       owner ? `Owner: ${owner}` : null,
       `Traded ${fmtDate(t.transaction_date)}; first reported ${fmtDate(item.date)}`,
       flag,
+      links.amendment ? `Amended report: ${links.amendment}` : null,
       t.bio_guide_id ? `Member page: ${SITE}/people/${t.bio_guide_id}` : null,
     ].filter(Boolean);
-    const link = t.disclosure_url ?? `${SITE}/latest`;
+    const link = links.first ?? `${SITE}/latest`;
     return `    <item>
       <title>${escapeXml(title)}</title>
       <link>${escapeXml(link)}</link>

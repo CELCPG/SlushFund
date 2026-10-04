@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
 import { MoneyLegend } from '@/components/v2/MoneyChip';
 import { Card } from '@/components/v2/PageBand';
@@ -7,10 +8,12 @@ import DraftBlock from '@/components/v2/trust/DraftBlock';
 
 // D5 About. The founder note and the error-report contact are Colin's to write (DraftBlock
 // renders them everywhere except Vercel production). Do not name the founder anywhere else.
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/about',
+  card: 'own',
   title: 'About',
   description: 'SlushFund is a free, cross-party site built only on public records, where every number links to the official filing.',
-};
+});
 
 const LINKS = [
   { href: '/about/methodology', label: 'Methodology', text: 'Where each dataset comes from, what is loaded, and its known limits.' },
@@ -23,7 +26,7 @@ export default function AboutPage() {
     <SimplePage
       eyebrow="About"
       title="A free, cross-party look at public money"
-      dek="SlushFund follows federal contracts, congressional stock trades, campaign money and lobbying through the people, companies and agencies involved. Every number links to the official record it came from."
+      dek="SlushFund follows federal contracts and congressional stock trades through the people, companies and agencies involved. Campaign money and lobbying are planned and not loaded yet. Every number links to the official record it came from."
     >
       <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] gap-4 max-lg:grid-cols-1">
         <div className="grid gap-4">
@@ -38,7 +41,7 @@ export default function AboutPage() {
             <h2 className="font-display text-[24px] font-extrabold">Cross-party, by rule</h2>
             <ul className="mt-3 max-w-[680px] list-disc space-y-2 pl-5 text-[16px] leading-relaxed">
               <li>The same standard applies to every member, whichever party they belong to. Party appears as a word, never as a chart color.</li>
-              <li><b>Public records only.</b> The House Clerk, the Senate, USAspending.gov, the FEC and congress.gov. No leaked documents and no third-party data aggregators.</li>
+              <li><b>Public records only.</b> The House Clerk, the Senate and USAspending.gov, plus the public congress-legislators dataset for who sits where. No leaked documents and no third-party data aggregators.</li>
               <li>Data is loaded by code on a schedule and checked against the source documents. If a source is down, the figure is hidden, not guessed.</li>
               <li>A pattern we flag is &ldquo;worth a look&rdquo;, never an accusation. A sequence of events is not proof of wrongdoing.</li>
             </ul>

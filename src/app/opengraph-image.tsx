@@ -1,8 +1,9 @@
+import { SHARE_CARDS } from '@/lib/v2/seo';
 import { getDatasetStatuses } from '@/lib/v2/datasets';
 import { fmtCount, fmtDate } from '@/lib/v2/format';
 import { OG_SIZE, renderOgCard } from '@/lib/v2/og';
 
-export const alt = 'SlushFund: see where public money goes, and who’s on both ends of it.';
+export const alt = SHARE_CARDS.site.alt;
 export const size = OG_SIZE;
 export const contentType = 'image/png';
 // The card carries a live count, so it is regenerated hourly instead of frozen at build time.
@@ -21,7 +22,7 @@ export default async function Image() {
     eyebrow: 'Stock trades, from the filings',
     type: 'trades',
     stat: fmtCount(house.rowCount! + senate.rowCount!) ?? undefined,
-    statLabel: 'stock trades disclosed by members of Congress',
+    statLabel: 'trades disclosed by members of Congress',
     source: 'House Clerk + Senate eFD',
     asOf: asOf ? (fmtDate(asOf) ?? undefined) : undefined,
   });

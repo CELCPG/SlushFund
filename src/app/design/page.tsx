@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/v2/seo';
 import type { ReactNode } from 'react';
+import { notFound } from 'next/navigation';
 import { DataStatusPanelView, DataStatusTableView, StatePill } from '@/components/v2/DataStatus';
 import EmptyState from '@/components/v2/EmptyState';
 import FilingLink from '@/components/v2/FilingLink';
@@ -9,16 +11,19 @@ import { Card, PageBand, SectionHead, Wrap } from '@/components/v2/PageBand';
 import { SourceBarView } from '@/components/v2/SourceBarView';
 import TradesTable from '@/components/v2/TradesTable';
 import { getDatasetStatuses, type DatasetStatus } from '@/lib/v2/datasets';
+import { designPagesEnabled } from '@/lib/v2/flags';
 import { fmtCount, fmtDate, fmtUsdCompact } from '@/lib/v2/format';
 import { MONEY_TYPES, MONEY_TYPE_ORDER } from '@/lib/v2/money';
 import { getContractTotals, getLatestTrades, getMembersInOffice } from '@/lib/v2/queries';
 
 // Component gallery for review (D1). Real database values wherever a
 // component shows data; state previews are labeled as previews.
-export const metadata: Metadata = {
+// Behind designPagesEnabled(): 404 on the production deployment (A8 L2).
+export const metadata: Metadata = pageMetadata({
+  path: '/design',
   title: 'Design system',
   robots: { index: false, follow: false },
-};
+});
 export const revalidate = 600;
 
 const PALETTE: { name: string; hex: string; text: string; note: string }[] = [
@@ -54,6 +59,7 @@ function asState(s: DatasetStatus, state: DatasetStatus['state']): DatasetStatus
 }
 
 export default async function DesignPage() {
+  if (!designPagesEnabled()) notFound();
   const [statuses, totals, trades, inOffice] = await Promise.all([
     getDatasetStatuses(),
     getContractTotals(),
@@ -218,32 +224,16 @@ export default async function DesignPage() {
           </Card>
         </Block>
 
-        <Block id="og" title="Share card (OG image)" sub="1200×630, rendered by /api/og. A figure only appears with its source and as-of date.">
+        <Block id="og" title="Share card (OG image)" sub="1200×630, one opengraph-image per route (src/lib/v2/og.tsx). A figure only appears with its source and as-of date.">
           <div className="grid grid-cols-2 gap-4 max-lg:grid-cols-1">
             <Preview label="Site card (/opengraph-image)">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/opengraph-image" alt="SlushFund share card" width={1200} height={630} className="h-auto w-full rounded-2xl shadow-card" />
             </Preview>
-            {fy && (
-              <Preview label="With a real figure">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`/api/og?${new URLSearchParams({
-                    title: 'Federal prime contract obligations, all agencies',
-                    eyebrow: 'Contracts',
-                    type: 'contracts',
-                    stat: fmtUsdCompact(fy.total_obligations) ?? '',
-                    statLabel: `FY${fy.fiscal_year}, incomplete (DoD 90-day lag)`,
-                    source: 'USAspending.gov',
-                    asof: fmtDate(fy.fetched_at) ?? '',
-                  }).toString()}`}
-                  alt="Share card with the FY contract total"
-                  width={1200}
-                  height={630}
-                  className="h-auto w-full rounded-2xl shadow-card"
-                />
-              </Preview>
-            )}
+            <Preview label="With a real figure (/data/opengraph-image)">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/data/opengraph-image" alt="Data share card with the trade count" width={1200} height={630} className="h-auto w-full rounded-2xl shadow-card" />
+            </Preview>
           </div>
         </Block>
       </Wrap>

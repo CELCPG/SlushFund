@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
 import { AuditNote, Caveat, ExtLink, MethodPage, MethodSection, WorthALookNote } from '@/components/v2/trust/Method';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/about/methodology/tickers',
   title: 'Methodology: company and ticker links',
   description: 'How SlushFund links a federal contractor to a publicly traded company and its ticker, and why only confirmed matches are shown.',
-};
+});
 export const revalidate = 600;
 
 const TOC = [
@@ -71,7 +73,7 @@ export default function TickersMethodology() {
       <MethodSection id="checks" title="How we check">
         <p>After the job runs we draw random samples of confirmed pairs and check each against the contractor&rsquo;s USAspending record and the company&rsquo;s SEC record, one pair at a time. The first sample exposed a real problem (note issuers with many tickers), and the rule was changed to fix it.</p>
         <AuditNote>
-          The builder&rsquo;s two samples of 30 confirmed pairs each matched (October 2026). An independent audit is not finished, so this is our own check and not an audited result.
+          The builder&rsquo;s two samples of 30 confirmed pairs each matched (October 2026). These are our own samples, so this page publishes no overall match rate.
         </AuditNote>
         <p className="text-[14.5px] text-muted">
           Think a link is wrong? <Link href="/about#report-an-error" className="font-semibold text-trades-ink hover:underline">Report an error</Link>. Contracts are described on the <Link href="/about/methodology/contracts" className="font-semibold text-trades-ink hover:underline">contracts page</Link>.

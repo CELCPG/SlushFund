@@ -94,12 +94,15 @@ export function optionDetail(t: InstrumentFields): string | null {
   return parts.length ? parts.join(' · ') : null;
 }
 
-/** H1: "Self" covers trusts and accounts filed with a blank owner. Lists ("Self, Spouse") stay lists. */
-export function ownerLabel(owner: string | null | undefined): string | null {
+/**
+ * H1: in House filings "Self" covers trusts and accounts filed with a blank owner. A Senate row says just "Self"
+ * (A8 N11). Lists ("Self, Spouse") stay lists.
+ */
+export function ownerLabel(owner: string | null | undefined, chamber?: string | null): string | null {
   if (!owner) return null;
   return owner
     .split(/\s*,\s*/)
-    .map((o) => (/^self$/i.test(o) ? 'Self (incl. trusts/accounts)' : o))
+    .map((o) => (/^self$/i.test(o) && chamber === 'House' ? 'Self (incl. trusts/accounts)' : o))
     .join(', ');
 }
 

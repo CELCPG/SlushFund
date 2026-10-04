@@ -3,6 +3,7 @@ import { cache } from 'react';
 import { supabase } from '@/lib/supabase';
 import { TRADE_COLS, type TradeRow } from '@/lib/v2/queries';
 import { companySlug, FISCAL_YEARS } from '@/lib/v2/companies';
+import { memo, readAll } from '@/lib/v2/reads';
 import { instrumentKind } from '@/lib/v2/instruments';
 import unreadData from '@/data/unread-filings.json';
 
@@ -15,44 +16,7 @@ import unreadData from '@/data/unread-filings.json';
  * disclosed bands and are never added up.
  */
 
-const TTL_MS = 30 * 60 * 1000;
 export const BIOGUIDE_RE = /^[A-Z]\d{6}$/;
-
-function memo<T>(fn: () => Promise<T>): () => Promise<T> {
-  let hit: { at: number; p: Promise<T> } | null = null;
-  return () => {
-    if (!hit || Date.now() - hit.at > TTL_MS) {
-      const p = fn();
-      const mine = { at: Date.now(), p };
-      hit = mine;
-      p.catch(() => {
-        if (hit === mine) hit = null;
-      });
-    }
-    return hit.p;
-  };
-}
-
-type Page<T> = { data: T[] | null; error: unknown; count?: number | null };
-
-async function readAll<T>(build: (from: number, to: number) => PromiseLike<Page<T>>, maxRows = 60_000): Promise<T[] | null> {
-  const SIZE = 1000;
-  const first = await build(0, SIZE - 1);
-  if (first.error || !first.data) return null;
-  const rows = [...first.data];
-  if (first.data.length < SIZE) return rows;
-  const want = Math.min(first.count ?? maxRows, maxRows);
-  const starts: number[] = [];
-  for (let s = SIZE; s < want; s += SIZE) starts.push(s);
-  for (let i = 0; i < starts.length; i += 8) {
-    const batch = await Promise.all(starts.slice(i, i + 8).map((s) => build(s, s + SIZE - 1)));
-    for (const b of batch) {
-      if (b.error || !b.data) return null;
-      rows.push(...b.data);
-    }
-  }
-  return rows;
-}
 
 // ---------------------------------------------------------------- roster
 
@@ -102,6 +66,8 @@ export interface TradeStats {
   /** Stock purchases / sales (options and other assets never count as one). */
   buys: number;
   sells: number;
+  /** Stock exchanges (every stock row that is neither a purchase nor a sale), so buys + sells + exchanges + other = total (A8 N5). */
+  exchanges: number;
   /** Options, bonds, funds and other non-stock rows. */
   other: number;
   /** Newest filing date among rows whose dates are not flagged. */
@@ -124,11 +90,12 @@ export const getTradeStats = memo(async (): Promise<Map<string, TradeStats> | nu
   const by = new Map<string, TradeStats>();
   for (const r of rows) {
     if (!r.bio_guide_id) continue;
-    const s = by.get(r.bio_guide_id) ?? { total: 0, buys: 0, sells: 0, other: 0, latestFiled: null };
+    const s = by.get(r.bio_guide_id) ?? { total: 0, buys: 0, sells: 0, exchanges: 0, other: 0, latestFiled: null };
     s.total += 1;
     if (instrumentKind(r) !== 'stock') s.other += 1;
     else if (r.transaction_type === 'BUY') s.buys += 1;
     else if (r.transaction_type.startsWith('SELL')) s.sells += 1;
+    else s.exchanges += 1;
     if (!r.date_flag && r.filed_date && (!s.latestFiled || r.filed_date > s.latestFiled)) s.latestFiled = r.filed_date;
     by.set(r.bio_guide_id, s);
   }
@@ -223,7 +190,7 @@ export function getUnreadFilings(bioguide: string): UnreadFilings | null {
 // ---------------------------------------------------------------- contracts of traded companies (R6b)
 
 /**
- * "Companies with federal contracts this member traded" stays OFF until R6b fills
+ * The member page's "trades paired with contractors' awards" section stays OFF until R6b fills
  * company_tickers.instrument_class / valid_from / valid_to / window_status and the join is audited.
  * Preview locally with SHOW_MEMBER_CONTRACTS=1 (read at request time).
  */

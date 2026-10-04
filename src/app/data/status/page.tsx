@@ -1,15 +1,16 @@
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
 import DataStatusBoard from '@/components/v2/DataStatusBoard';
 import DataSubNav from '@/components/v2/DataSubNav';
 import { Card, PageBand, SectionHead, Wrap } from '@/components/v2/PageBand';
 import { STATUS_ORDER, STATUS_OTHER_ORDER, getDatasetStatuses } from '@/lib/v2/datasets';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
+  path: '/data/status',
   title: 'Data status: every dataset, its source, coverage and last load',
   description: 'Each dataset on SlushFund: its official source, what it covers, how many rows it holds, when it last loaded and what is missing.',
-  alternates: { canonical: '/data/status' },
-};
+});
 
 // Read from the database on request, cached for 10 minutes.
 export const revalidate = 600;
@@ -69,8 +70,8 @@ export default async function DataStatusPage() {
               </li>
             </ul>
             <p className="mt-4 text-[13.5px] text-muted">
-              Method for each dataset: <Link href="/about/methodology" className="font-semibold text-trades-ink hover:underline">how we collect and check the data</Link>. Everything here is unaudited until the
-              pre-publish check.
+              Method for each dataset: <Link href="/about/methodology" className="font-semibold text-trades-ink hover:underline">how we collect and check the data</Link>. Everything on this page describes our own loads and
+              counts, read from the database each time; the checks against the filings are described there.
             </p>
           </Card>
         </section>

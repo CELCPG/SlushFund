@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { SITE_DESCRIPTION } from '@/lib/v2/seo';
 import Script from 'next/script';
 import { Bricolage_Grotesque, DM_Mono, Inter } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
@@ -10,8 +11,7 @@ const display = Bricolage_Grotesque({ subsets: ['latin'], variable: '--font-bric
 const body = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 const mono = DM_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-dm-mono', display: 'swap' });
 
-const DESCRIPTION =
-  'The stock trades members of Congress disclose and the federal contracts agencies award, from the official filings. Every number shows its source and when it was last updated.';
+const DESCRIPTION = SITE_DESCRIPTION;
 
 export const metadata: Metadata = {
   title: {
@@ -20,8 +20,8 @@ export const metadata: Metadata = {
   },
   description: DESCRIPTION,
   metadataBase: new URL('https://slushfund.net'),
+  // No canonical and no og:url here (A8 N1): each page sets its own with pageMetadata() (src/lib/v2/seo.ts).
   alternates: {
-    canonical: '/',
     types: {
       'application/rss+xml': [{ url: '/feed.xml', title: 'SlushFund. Investigations' }],
     },
@@ -30,7 +30,6 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://slushfund.net',
     siteName: 'SlushFund',
     title: 'SlushFund: follow public money',
     description: DESCRIPTION,
