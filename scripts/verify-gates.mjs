@@ -252,6 +252,18 @@ await hit('/congress/trades', 301, { location: '/data/trades', group: 'explorer 
 await hit('/congress/trades?chamber=House', 301, { location: '/data/trades?chamber=House', group: 'explorer redirects (D4)' });
 await hit('/congress/trades/trump', 200, { body: 'being rebuilt', noindex: true, group: 'explorer redirects (D4)' });
 
+// 5e. Homepage (D6a): live counts with source, coverage and as-of; the latest filings, linked to the member
+// and the filing; three ways in; the rebuilding note. No late-filers module, no verdict words, and no
+// failed-load state (a dataset that didn't load fails this check instead of passing quietly).
+await hit('/', 200, {
+  bodyAll: ['Members tracked', 'stock trades disclosed by members of Congress', 'Non-competed contracts', 'not competed, $1 million or more', 'Source:', 'Coverage:', 'as of ',
+    'Latest filings', 'First report filed', 'View filing', 'href="/people/', 'Three ways in', 'Find your members', 'Rebuilding: stories return after audit'],
+  notBody: ['/data/late-filers', 'late filer', 'filed late', 'violation', 'illegal', 'broke the law', 'guilty', 'crime', 'corrupt', 'insider trading', 'stock_act_late',
+    'The source did not load', 'Data temporarily unavailable', 'unavailable right now', 'campaign money and lobbying, linked'],
+  group: 'homepage (D6a)',
+});
+await hit('/opengraph-image', 200, { ctype: 'image/png', group: 'homepage (D6a)' });
+
 // 6. Kept v2 pages
 for (const p of KEEP_PAGES) {
   if (p === '/withdrawn') { await hit(p, 410, { group: 'keep (v2)' }); continue; }

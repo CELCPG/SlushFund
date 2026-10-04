@@ -11,7 +11,7 @@ const body = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swa
 const mono = DM_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-dm-mono', display: 'swap' });
 
 const DESCRIPTION =
-  'Contracts, congressional stock trades, campaign money and lobbying, linked together. Every number shows its source and when it was last updated.';
+  'The stock trades members of Congress disclose and the federal contracts agencies award, from the official filings. Every number shows its source and when it was last updated.';
 
 export const metadata: Metadata = {
   title: {
