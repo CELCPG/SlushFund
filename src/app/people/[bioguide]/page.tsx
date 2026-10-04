@@ -273,7 +273,7 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
                 <p className="mt-3 text-[12.5px] text-muted">
                   Source: {member.chamber === 'Senate' ? 'Senate eFD' : 'House Clerk'} periodic transaction reports, as of {fmtDate(tradesAsOf) ?? 'an unknown date'}. Counts of transactions, not money: the amounts are ranges and are never added up.
                   {early > 0 && <> {fmtCount(early)} transaction{early === 1 ? ' is' : 's are'} dated before {CHART_FROM_YEAR} as filed and {early === 1 ? 'is' : 'are'} in the list below, not on the chart.</>}
-                  {flagged > 0 && <> {fmtCount(flagged)} with a date that looks wrong in the filing {flagged === 1 ? 'is' : 'are'} left off the chart.</>}
+                  {flagged > 0 && <> {fmtCount(flagged)} with a date note (see the table) {flagged === 1 ? 'is' : 'are'} left off the chart.</>}
                 </p>
               </>
             )}

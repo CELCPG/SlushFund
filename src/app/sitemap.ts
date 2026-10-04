@@ -22,7 +22,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/about/methodology/trades', changeFrequency: 'monthly', priority: 0.6 },
     { path: '/about/methodology/contracts', changeFrequency: 'monthly', priority: 0.6 },
     { path: '/about/methodology/tickers', changeFrequency: 'monthly', priority: 0.6 },
-    { path: '/about/data-status', changeFrequency: 'daily', priority: 0.5 },
+    { path: '/data/status', changeFrequency: 'daily', priority: 0.5 },
+    { path: '/latest', changeFrequency: 'daily', priority: 0.7 },
   ];
   // The corrections log is listed only once it has a published entry.
   if (hasPublishedCorrections()) paths.push({ path: '/about/corrections', changeFrequency: 'weekly', priority: 0.6 });

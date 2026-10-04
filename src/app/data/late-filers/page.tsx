@@ -6,7 +6,7 @@ import DataTable, { type DataTableColumn, type DataTableRow } from '@/components
 import EmptyState from '@/components/v2/EmptyState';
 import ExplorerForm from '@/components/v2/ExplorerForm';
 import FilingLink from '@/components/v2/FilingLink';
-import LateFilersTable from '@/components/v2/LateFilersTable';
+import LateReportList from '@/components/v2/LateReportList';
 import { Card, PageBand, SectionHead, Wrap } from '@/components/v2/PageBand';
 import Pager from '@/components/v2/Pager';
 import SourceBar from '@/components/v2/SourceBar';
@@ -16,13 +16,13 @@ import { buildHref, one, type SP } from '@/lib/v2/explorer';
 import { lateFilersEnabled } from '@/lib/v2/flags';
 import { fmtCount, fmtDateShort, fmtPct } from '@/lib/v2/format';
 import {
-  MEMBER_SORTS, OVER_OPTIONS, STOCK_ACT_DAYS, getLateSummary, getLateTrades, parseLateFilters, sortMembers, type MemberSort,
+  MEMBER_SORTS, OVER_OPTIONS, REPORT_SORTS, STOCK_ACT_DAYS, getLateSummary, getReportTrades, pageReports, parseLateFilters, sortMembers, type MemberSort,
 } from '@/lib/v2/late-filers';
 
 // Behind lateFilersEnabled(): on in dev and preview, off on the production deployment until an Auditor GO.
 export const metadata: Metadata = {
   title: 'Late filers: the longest gaps between a trade and its report',
-  description: 'The stock trades members of Congress reported the longest after the trade date, measured to the first report, each with a link to the filing.',
+  description: 'The stock trades members of Congress reported the longest after the trade date, measured to the first report, grouped by report, each with a link to the filing.',
   robots: { index: false, follow: false },
 };
 
@@ -36,14 +36,18 @@ export default async function LateFilersPage({ searchParams }: { searchParams: P
   const f = parseLateFilters(sp);
   const msort: MemberSort = (MEMBER_SORTS.find((m) => m.value === one(sp.msort))?.value) ?? 'gap';
   const showAllMembers = one(sp.members) === 'all';
-  const [summary, trades, statuses] = await Promise.all([
-    getLateSummary(),
-    getLateTrades(f, sp.page),
-    getDatasetStatuses(['house_trades', 'senate_trades']),
-  ]);
+  const [summary, statuses] = await Promise.all([getLateSummary(), getDatasetStatuses(['house_trades', 'senate_trades'])]);
   const ranked = summary ? sortMembers(summary.members, msort) : [];
   const shownMembers = showAllMembers ? ranked : ranked.slice(0, MEMBERS_SHOWN);
-  const tradeParams = { chamber: f.chamber, over: f.over === STOCK_ACT_DAYS ? '' : String(f.over), msort: msort === 'gap' ? '' : msort, members: showAllMembers ? 'all' : '' };
+  const rp = summary ? pageReports(summary, f, sp.page) : null;
+  const reportItems = rp ? await Promise.all(rp.reports.map(async (report) => ({ report, trades: await getReportTrades(report, f.over) }))) : [];
+  const tradeParams = {
+    chamber: f.chamber,
+    over: f.over === STOCK_ACT_DAYS ? '' : String(f.over),
+    rsort: f.rsort === 'gap' ? '' : f.rsort,
+    msort: msort === 'gap' ? '' : msort,
+    members: showAllMembers ? 'all' : '',
+  };
   const pagerHref = (page: number) => buildHref('/data/late-filers', { ...tradeParams, page: page > 1 ? String(page) : undefined });
 
   const memberColumns: DataTableColumn[] = [
@@ -105,12 +109,13 @@ export default async function LateFilersPage({ searchParams }: { searchParams: P
                 is a measured fact about two dates, not a finding about the filer.
               </li>
               <li>
-                <b className="text-ink">Reports, not just rows.</b> One report can hold hundreds of trades, so members are ranked by the longest single gap and, separately, by how many reports hold a trade over {STOCK_ACT_DAYS} days.
+                <b className="text-ink">Grouped by report.</b> One report can hold hundreds of trades, so the trade list has one row per report, each opening to its trades. Members are ranked by the longest single
+                gap and, separately, by how many reports hold a trade over {STOCK_ACT_DAYS} days.
               </li>
               <li>
                 <b className="text-ink">What is left out.</b>{' '}
                 {notComputed != null && summary
-                  ? <>{fmtCount(notComputed)} of {fmtCount(summary.totalRows)} trade rows have no gap here: their trade date looks wrong in the filing, or the first report is not in our records. </>
+                  ? <>{fmtCount(notComputed)} of {fmtCount(summary.totalRows)} trade rows have no gap here: the report&rsquo;s own dates disagree or don&rsquo;t fit together, or the first report is not in our records. </>
                   : null}
                 Scanned House reports and paper Senate reports have not been read, so a trade in one of them is missing, not on time. Senate filings are loaded from 2024 and House filings from 2021.
               </li>
@@ -118,7 +123,7 @@ export default async function LateFilersPage({ searchParams }: { searchParams: P
             {summary && (
               <p className="mt-4 rounded-2xl bg-page px-4 py-3 text-[14px]">
                 <b>{fmtCount(summary.over)}</b> of the <b>{fmtCount(summary.computed)}</b> trades with a gap were reported more than {STOCK_ACT_DAYS} days after the trade ({fmtPct(summary.over / summary.computed)}),
-                by <b>{fmtCount(summary.members.length)}</b> members.
+                by <b>{fmtCount(summary.members.length)}</b> members, in <b>{fmtCount(summary.reports.length)}</b> reports.
               </p>
             )}
           </Card>
@@ -169,11 +174,11 @@ export default async function LateFilersPage({ searchParams }: { searchParams: P
         <section className="pt-8" aria-labelledby="lf-trades">
           <SectionHead
             as="h2"
-            title={<span id="lf-trades">Trades, by gap</span>}
-            sub={`Each trade filed after day ${f.over}, longest first.`}
+            title={<span id="lf-trades">Trades, by report</span>}
+            sub={`One row per report that holds a trade filed after day ${f.over}. Open a row for its trades.`}
           />
           <Card>
-            <ExplorerForm action="/data/late-filers" defaults={{ over: String(STOCK_ACT_DAYS) }} className="mb-4 grid grid-cols-[1fr_1fr_auto] gap-3 max-sm:grid-cols-1">
+            <ExplorerForm action="/data/late-filers" defaults={{ over: String(STOCK_ACT_DAYS), rsort: 'gap' }} className="mb-4 grid grid-cols-[1fr_1fr_1fr_auto] gap-3 max-md:grid-cols-2 max-sm:grid-cols-1">
               {msort !== 'gap' && <input type="hidden" name="msort" value={msort} />}
               {showAllMembers && <input type="hidden" name="members" value="all" />}
               <div>
@@ -190,23 +195,29 @@ export default async function LateFilersPage({ searchParams }: { searchParams: P
                   {OVER_OPTIONS.map((o) => <option key={o} value={o}>{o} days</option>)}
                 </select>
               </div>
+              <div>
+                <label htmlFor="lf-rsort" className={label}>Order reports by</label>
+                <select id="lf-rsort" name="rsort" defaultValue={f.rsort} className={field}>
+                  {REPORT_SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                </select>
+              </div>
               <div className="flex items-end">
                 <button type="submit" className="h-11 rounded-xl bg-ink px-5 text-sm font-bold text-white hover:bg-deep max-sm:w-full">Apply</button>
               </div>
             </ExplorerForm>
-            {trades === null ? (
-              <EmptyState title="The trades are unavailable right now" tone="warning" statuses={statuses}>
+            {rp === null ? (
+              <EmptyState title="The reports are unavailable right now" tone="warning" statuses={statuses}>
                 The database did not answer, so nothing is shown rather than a stand-in.
               </EmptyState>
-            ) : trades.total === 0 ? (
-              <p className="rounded-2xl bg-page px-4 py-6 text-center text-[14.5px] text-muted">No trade in our records has a gap longer than {f.over} days{f.chamber ? ` in the ${f.chamber}` : ''}.</p>
+            ) : rp.total === 0 ? (
+              <p className="rounded-2xl bg-page px-4 py-6 text-center text-[14.5px] text-muted">No report in our records holds a trade with a gap longer than {f.over} days{f.chamber ? ` in the ${f.chamber}` : ''}.</p>
             ) : (
               <>
                 <p className="mb-3 text-[13.5px] text-muted" aria-live="polite">
-                  {fmtCount(trades.total)} {trades.total === 1 ? 'trade' : 'trades'}{trades.pages > 1 ? ` · page ${fmtCount(trades.page)} of ${fmtCount(trades.pages)}` : ''}
+                  {fmtCount(rp.total)} {rp.total === 1 ? 'report' : 'reports'} holding {fmtCount(rp.trades)} {rp.trades === 1 ? 'trade' : 'trades'}{rp.pages > 1 ? ` · page ${fmtCount(rp.page)} of ${fmtCount(rp.pages)}` : ''}
                 </p>
-                <LateFilersTable trades={trades.rows} caption={`Trades filed more than ${f.over} days after the trade, longest first`} />
-                <Pager page={trades.page} pages={trades.pages} href={pagerHref} />
+                <LateReportList items={reportItems} over={f.over} />
+                <Pager page={rp.page} pages={rp.pages} href={pagerHref} />
               </>
             )}
           </Card>

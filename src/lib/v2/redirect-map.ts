@@ -58,6 +58,7 @@ export const LIVE_REDIRECTS: RedirectRow[] = [
   { source: '/blog', destination: '/investigations' },
   { source: '/blog/:slug', destination: '/investigations/:slug' }, // withdrawn slugs then answer 410
   { source: '/analysis', destination: '/investigations' },
+  { source: '/about/data-status', destination: '/data/status' }, // D6b: the data status table lives under Data
   { source: '/analysis/companies', destination: '/companies' },
   { source: '/vendors', destination: '/companies' },
   { source: '/score', destination: '/people?chamber=Senate' }, // D2: the old score was senators-only; cut for v1
@@ -138,7 +139,6 @@ export const GATED_PAGES: GatedPage[] = [
   { path: '/crypto', label: 'Crypto', home: 'A re-verified crypto report', why: 'static figures' },
   { path: '/lobbying', label: 'Lobbying', home: 'Lobbying explorer', why: 'hand-typed seed file shown as Senate filings' },
   { path: '/healthcare', label: 'Healthcare lobbying', home: 'Lobbying explorer, health filter', why: 'scraped totals that disagree with /lobbying' },
-  { path: '/latest', label: 'Latest activity', home: 'Latest', why: 'ranked "risky" contracts with an opinion-based score' },
   { path: '/connect', label: 'Newsletter signup', home: 'Newsletter signup', why: 'the form cannot store addresses yet' },
   { path: '/support', label: 'Support SlushFund', home: 'Support page', why: 'held for a legal check on donation asks' },
   { path: '/store', label: 'Store', home: 'Support page', why: 'held for a legal check' },
@@ -157,7 +157,6 @@ export const GATED_APIS: { path: string; why: string }[] = [
   { path: '/api/latest', why: 'ranked feed' },
   { path: '/api/policy/bills', why: 'curated static bills list' },
   { path: '/api/tax-expenditures', why: 'unaudited table' },
-  { path: '/latest.xml', why: 'ranked feed' },
 ];
 
 /**

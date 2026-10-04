@@ -41,7 +41,7 @@ const ENTRY_CARDS = [
     links: [
       { href: '/data/trades', label: 'Stock trades explorer' },
       { href: '/data/contracts', label: 'Contracts explorer' },
-      { href: '/about/data-status', label: 'Data status' },
+      { href: '/data/status', label: 'Data status' },
     ],
   },
 ] as const;

@@ -7,6 +7,7 @@ export const DATA_TABS = [
   { href: '/data/trades', label: 'Stock trades' },
   { href: '/data/contracts', label: 'Contracts' },
   { href: '/data/late-filers', label: 'Late filers' },
+  { href: '/data/status', label: 'Status' },
 ] as const;
 
 /** Tabs for the Data section, shown in the title band of /data and its explorers. */

@@ -85,7 +85,7 @@ export default function MethodologyPage() {
         </Card>
 
         <p className="text-[14px] text-muted">
-          Current freshness for each dataset is on the <Link href="/about/data-status" className="font-semibold text-trades-ink hover:underline">data status page</Link>. Changes to stories and data are in the <Link href="/about/corrections" className="font-semibold text-trades-ink hover:underline">corrections log</Link>.
+          Current freshness for each dataset is on the <Link href="/data/status" className="font-semibold text-trades-ink hover:underline">data status page</Link>. Changes to stories and data are in the <Link href="/about/corrections" className="font-semibold text-trades-ink hover:underline">corrections log</Link>.
         </p>
       </div>
     </SimplePage>

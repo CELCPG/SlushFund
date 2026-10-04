@@ -178,7 +178,7 @@ export default async function TradesExplorerPage({ searchParams }: { searchParam
                     <span>
                       Source: House Clerk PTRs and Senate eFD, one row per disclosed transaction. &ldquo;Filed&rdquo; is the first report; a later amendment is noted under it. Same-day lots show as
                       &ldquo;2 ×&rdquo; their disclosed range. Owner &ldquo;Self&rdquo; includes trusts and accounts filed without an owner. Options are labelled as options.
-                      A row whose dates look wrong in the filing is marked and sorts last when ordered by date.
+                      A row with a date note (reported more than two years after the trade, or report dates that disagree) is marked and sorts last when ordered by date.
                     </span>
                   }
                 />

@@ -103,7 +103,7 @@ export function ownerLabel(owner: string | null | undefined): string | null {
     .join(', ');
 }
 
-export const DATE_FLAG_NOTE = 'Date as filed; looks like an error in the filing';
+// Reader wording for date_flag lives in date-flags.ts (one map, one file).
 
 export function hasDateFlag(t: InstrumentFields): boolean {
   return !!t.date_flag;

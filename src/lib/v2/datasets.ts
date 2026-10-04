@@ -2,6 +2,7 @@ import 'server-only';
 import { cache } from 'react';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
 import type { MoneyType } from '@/lib/v2/money';
+import unreadData from '@/data/unread-filings.json';
 
 /**
  * Dataset registry and freshness, read from the database so the source bar
@@ -21,6 +22,8 @@ export type DatasetKey =
   | 'contract_totals'
   | 'members'
   | 'company_tickers'
+  | 'committee_history'
+  | 'conflicts'
   | 'campaign'
   | 'lobbying';
 
@@ -41,6 +44,8 @@ export interface DatasetDef {
   /** Label for latestRecord ("Latest filing", "Latest award"). */
   latestRecordLabel: string;
   caveat?: string;
+  /** Known gaps, one reader-facing sentence each (live counts are added by the reader). */
+  gaps?: string[];
 }
 
 export interface DatasetStatus extends DatasetDef {
@@ -48,6 +53,10 @@ export interface DatasetStatus extends DatasetDef {
   /** ISO timestamp of the last successful load, or null. */
   lastUpdated: string | null;
   updatedBasis: 'sync_log' | 'row_timestamps' | null;
+  /** Which column the last-loaded time was read from ("updated_at", "created_at", "completed_at"). */
+  updatedColumn: string | null;
+  /** Static gaps plus the counts the reader measured. */
+  knownGaps: string[];
   /** Newest record date in the data (filing date, award date). */
   latestRecord: string | null;
   /** Coverage derived from the rows, e.g. "2021–2026" or "FY2026". */
@@ -71,6 +80,7 @@ export const DATASETS: Record<DatasetKey, DatasetDef> = {
     methodologyHref: `${METHODS}/trades`,
     latestRecordLabel: 'Latest filing',
     caveat: 'Amounts are the ranges members disclose, never exact values.',
+    gaps: ['Filings before 2021 are not loaded yet.'],
   },
   senate_trades: {
     key: 'senate_trades',
@@ -83,6 +93,7 @@ export const DATASETS: Record<DatasetKey, DatasetDef> = {
     methodologyHref: `${METHODS}/trades`,
     latestRecordLabel: 'Latest filing',
     caveat: 'Amounts are the ranges senators disclose, never exact values.',
+    gaps: ['Filings before 2024 are not loaded yet.'],
   },
   contracts: {
     key: 'contracts',
@@ -95,6 +106,11 @@ export const DATASETS: Record<DatasetKey, DatasetDef> = {
     methodologyHref: `${METHODS}/contracts`,
     latestRecordLabel: 'Latest award',
     caveat: 'A selection, not all spending: shares like "% no-bid" use the agency totals, not these rows. DoD publishes 90 days late.',
+    gaps: [
+      'Fiscal years before FY2024 are not loaded yet.',
+      'A selection (rule r5-v1: non-competed awards of $1M+ and any award of $10M+), not all federal spending.',
+      'DoD publishes about 90 days late, so its newest awards are missing.',
+    ],
   },
   contract_totals: {
     key: 'contract_totals',
@@ -130,6 +146,31 @@ export const DATASETS: Record<DatasetKey, DatasetDef> = {
     methodologyHref: `${METHODS}#contracts`,
     latestRecordLabel: 'Latest match run',
     caveat: 'A link says the records tie a recipient to a registrant, not that a trade or award means anything. Subsidiaries whose parent is not clear stay unlinked.',
+    gaps: ['Only recipients of FY2024–26 awards are matched.', 'Recipients with no clear SEC registrant, and subsidiaries whose parent is unclear, stay unlinked.'],
+  },
+  committee_history: {
+    key: 'committee_history',
+    label: 'Committee history',
+    source: { name: 'congress-legislators (git history)', url: 'https://github.com/unitedstates/congress-legislators' },
+    scope: 'Which top-level committee each member sat on and when, rebuilt from every snapshot of the public committee-membership file since June 2016',
+    cadence: 'After each congress-legislators update, once automations run',
+    staleAfterDays: 14,
+    methodologyHref: `${METHODS}/trades`,
+    latestRecordLabel: 'Latest snapshot',
+    caveat: 'The file lags real appointments by days to weeks, so seats are approximate at their start and end dates.',
+    gaps: ['No second source: congress.gov has no committee-roster endpoint to check against.'],
+  },
+  conflicts: {
+    key: 'conflicts',
+    label: 'Conflict signals',
+    moneyType: 'trades',
+    source: { name: 'Computed from the trade, committee and ticker-link datasets', url: '/about/methodology/trades' },
+    scope: 'For every trade: whether the member sat on a committee at the trade date and whether the company holds a federal contract',
+    cadence: 'After any trade, committee or ticker-link load, once automations run',
+    staleAfterDays: 4,
+    methodologyHref: `${METHODS}/trades`,
+    latestRecordLabel: 'Latest filing scored',
+    caveat: 'A signal says two public records overlap, not that anything improper happened. No page shows these scores yet.',
   },
   campaign: {
     key: 'campaign',
@@ -155,6 +196,10 @@ export const DATASETS: Record<DatasetKey, DatasetDef> = {
   },
 };
 
+/** /data/status: one row each, in reader order. The rest follow under "Supporting and not loaded". */
+export const STATUS_ORDER: DatasetKey[] = ['house_trades', 'senate_trades', 'contracts', 'company_tickers', 'committee_history', 'conflicts'];
+export const STATUS_OTHER_ORDER: DatasetKey[] = ['contract_totals', 'members', 'campaign', 'lobbying'];
+
 export const DATASET_ORDER: DatasetKey[] = [
   'contracts', 'contract_totals', 'house_trades', 'senate_trades', 'members', 'campaign', 'lobbying',
 ];
@@ -166,6 +211,8 @@ type Raw = {
   latestRecord: string | null;
   coverage: string | null;
   failed: boolean;
+  updatedColumn?: string | null;
+  extraGaps?: string[];
 };
 
 const EMPTY: Raw = { rowCount: null, lastUpdated: null, updatedBasis: null, latestRecord: null, coverage: null, failed: false };
@@ -185,23 +232,101 @@ function yearSpan(a: string | null, b: string | null): string | null {
   return x === y ? x : `${x}–${y}`;
 }
 
+const nf = (n: number) => n.toLocaleString('en-US');
+
+/** Sum of a field over D2's snapshot of the filings R3 and R4 could not read (scanned House PDFs, paper Senate reports). */
+function unreadTotal(field: 'house_scanned' | 'senate_paper'): number {
+  return Object.values(unreadData as Record<string, { house_scanned: number; senate_paper: number }>).reduce((n, m) => n + (m[field] ?? 0), 0);
+}
+
 async function readTrades(system: 'House_Clerk' | 'Senate_EFD'): Promise<Raw> {
   if (!supabase) return { ...EMPTY, failed: true };
   const t = () => supabase!.from('congress_trades');
-  const [count, newestFiled, oldestFiled, newestRow] = await Promise.all([
+  const [count, newestFiled, oldestFiled, newestRow, flagged, noFirst] = await Promise.all([
     t().select('id', { count: 'exact', head: true }).eq('source_system', system),
     t().select('filed_date').eq('source_system', system).not('filed_date', 'is', null).order('filed_date', { ascending: false }).limit(1),
     t().select('filed_date').eq('source_system', system).not('filed_date', 'is', null).order('filed_date', { ascending: true }).limit(1),
     t().select('updated_at').eq('source_system', system).order('updated_at', { ascending: false }).limit(1),
+    t().select('id', { count: 'exact', head: true }).eq('source_system', system).not('date_flag', 'is', null),
+    t().select('id', { count: 'exact', head: true }).eq('source_system', system).is('original_filed_date', null),
   ]);
   if (count.error || newestFiled.error || oldestFiled.error || newestRow.error) return { ...EMPTY, failed: true };
   const latest = first(newestFiled, 'filed_date');
+  const gaps: string[] = [];
+  const unread = unreadTotal(system === 'House_Clerk' ? 'house_scanned' : 'senate_paper');
+  if (unread > 0) {
+    gaps.push(system === 'House_Clerk'
+      ? `${nf(unread)} scanned House filings were not read (images, not text); their trades are missing, not on time.`
+      : `${nf(unread)} paper Senate filings were not read; their trades are missing, not on time.`);
+  }
+  if (!flagged.error && flagged.count) gaps.push(`${nf(flagged.count)} trades carry a date note (reported over two years after the trade, or report dates that disagree).`);
+  if (!noFirst.error && noFirst.count) gaps.push(`${nf(noFirst.count)} trades have no first-report date in our records, so no delay is computed for them.`);
   return {
     rowCount: count.count ?? null,
     lastUpdated: first(newestRow, 'updated_at'),
     updatedBasis: 'row_timestamps',
+    updatedColumn: 'updated_at',
     latestRecord: latest,
     coverage: yearSpan(first(oldestFiled, 'filed_date'), latest),
+    extraGaps: gaps,
+    failed: false,
+  };
+}
+
+async function readCommitteeHistory(): Promise<Raw> {
+  if (!supabase) return { ...EMPTY, failed: true };
+  const seats = () => supabase!.from('committee_seats');
+  const snaps = () => supabase!.from('committee_snapshots');
+  const [count, snapCount, newestSeat, newestSnap, firstSnap, lastSnap, noCommittee] = await Promise.all([
+    seats().select('id', { count: 'exact', head: true }),
+    snaps().select('commit_sha', { count: 'exact', head: true }),
+    seats().select('created_at').order('created_at', { ascending: false }).limit(1),
+    snaps().select('created_at').order('created_at', { ascending: false }).limit(1),
+    snaps().select('snapshot_date').order('snapshot_date', { ascending: true }).limit(1),
+    snaps().select('snapshot_date').order('snapshot_date', { ascending: false }).limit(1),
+    supabase.from('congress_trades').select('id', { count: 'exact', head: true }).is('committee_conflict', null),
+  ]);
+  if (count.error || newestSeat.error || newestSnap.error || firstSnap.error || lastSnap.error) return { ...EMPTY, failed: true };
+  const a = first(newestSeat, 'created_at');
+  const b = first(newestSnap, 'created_at');
+  const latest = first(lastSnap, 'snapshot_date');
+  const gaps: string[] = [];
+  if (!snapCount.error && snapCount.count) gaps.push(`Built from ${nf(snapCount.count)} snapshots of the file; the gap between two snapshots is days to weeks.`);
+  if (!noCommittee.error && noCommittee.count) gaps.push(`${nf(noCommittee.count)} trades have no committee signal: a new Congress began and no complete snapshot existed yet, or the trade date is unreliable. They are blank, not "no conflict".`);
+  return {
+    rowCount: count.count ?? null,
+    lastUpdated: a && b ? (a > b ? a : b) : (a ?? b),
+    updatedBasis: 'row_timestamps',
+    updatedColumn: 'created_at',
+    latestRecord: latest,
+    coverage: yearSpan(first(firstSnap, 'snapshot_date'), latest),
+    extraGaps: gaps,
+    failed: false,
+  };
+}
+
+async function readConflicts(): Promise<Raw> {
+  if (!supabase) return { ...EMPTY, failed: true };
+  const t = () => supabase!.from('congress_trades');
+  const [count, newestRow, oldestFiled, newestFiled, noContract] = await Promise.all([
+    t().select('id', { count: 'exact', head: true }).not('conflict_tier', 'is', null),
+    t().select('updated_at').not('conflict_tier', 'is', null).order('updated_at', { ascending: false }).limit(1),
+    t().select('filed_date').not('conflict_tier', 'is', null).not('filed_date', 'is', null).order('filed_date', { ascending: true }).limit(1),
+    t().select('filed_date').not('conflict_tier', 'is', null).not('filed_date', 'is', null).order('filed_date', { ascending: false }).limit(1),
+    t().select('id', { count: 'exact', head: true }).is('has_federal_contract', null),
+  ]);
+  if (count.error || newestRow.error || oldestFiled.error || newestFiled.error) return { ...EMPTY, failed: true };
+  const latest = first(newestFiled, 'filed_date');
+  const gaps = ['There is no separate scored-at time: this is the newest updated_at among the scored trade rows, which a trade load moves too.'];
+  if (!noContract.error && noContract.count) gaps.push(`${nf(noContract.count)} trades have no contractor signal: it was not computed for them. They are blank, not "no conflict".`);
+  return {
+    rowCount: count.count ?? null,
+    lastUpdated: first(newestRow, 'updated_at'),
+    updatedBasis: 'row_timestamps',
+    updatedColumn: 'updated_at',
+    latestRecord: latest,
+    coverage: yearSpan(first(oldestFiled, 'filed_date'), latest),
+    extraGaps: gaps,
     failed: false,
   };
 }
@@ -243,6 +368,7 @@ async function readContracts(): Promise<Raw> {
     rowCount: count.count ?? null,
     lastUpdated,
     updatedBasis: basis,
+    updatedColumn: basis === 'sync_log' ? 'completed_at' : 'updated_at',
     latestRecord: first(newest, 'posted_date'),
     coverage: lo && hi ? (lo === hi ? `FY${lo}` : `FY${lo}–FY${hi}`) : null,
     failed: false,
@@ -265,6 +391,7 @@ async function readContractTotals(): Promise<Raw> {
     rowCount: count.count ?? null,
     lastUpdated: first(fetched, 'fetched_at'),
     updatedBasis: 'row_timestamps',
+    updatedColumn: 'fetched_at',
     latestRecord: first(fetched, 'period_end'),
     coverage: lo && hi ? (lo === hi ? `FY${lo}` : `FY${lo}–FY${hi}`) : null,
     failed: false,
@@ -283,6 +410,7 @@ async function readMembers(): Promise<Raw> {
     rowCount: count.count ?? null,
     lastUpdated: first(newestRow, 'updated_at'),
     updatedBasis: 'row_timestamps',
+    updatedColumn: 'updated_at',
     latestRecord: null,
     coverage: '2016–today',
     failed: false,
@@ -301,6 +429,7 @@ async function readCompanyTickers(): Promise<Raw> {
     rowCount: count.count ?? null,
     lastUpdated: first(newest, 'matched_at'),
     updatedBasis: 'row_timestamps',
+    updatedColumn: 'matched_at',
     latestRecord: first(newest, 'matched_at'),
     coverage: 'FY2024–26 recipients',
     failed: false,
@@ -314,6 +443,8 @@ const READERS: Record<DatasetKey, () => Promise<Raw>> = {
   contract_totals: readContractTotals,
   members: readMembers,
   company_tickers: readCompanyTickers,
+  committee_history: readCommitteeHistory,
+  conflicts: readConflicts,
   // No loader yet: say so instead of showing anything.
   campaign: async () => ({ ...EMPTY, rowCount: 0 }),
   lobbying: async () => ({ ...EMPTY, rowCount: 0 }),
@@ -336,7 +467,7 @@ export const getDatasetStatus = cache(async (key: DatasetKey): Promise<DatasetSt
   } catch {
     raw = { ...EMPTY, failed: true };
   }
-  return { ...def, ...raw, ...classify(def, raw) };
+  return { ...def, ...raw, ...classify(def, raw), updatedColumn: raw.updatedColumn ?? null, knownGaps: [...(def.gaps ?? []), ...(raw.extraGaps ?? [])] };
 });
 
 export async function getDatasetStatuses(keys: DatasetKey[] = DATASET_ORDER): Promise<DatasetStatus[]> {

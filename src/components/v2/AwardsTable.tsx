@@ -7,7 +7,7 @@ import { fmtDate, fmtUsd } from '@/lib/v2/format';
 const KEEP_UPPER = new Set(['far', 'sap', 'ndo', 'ii', 'iii', 'iv', 'usa']);
 
 /** USAspending labels are upper case ("NOT COMPETED"): sentence case, acronyms kept. */
-function sentence(v: string | null | undefined): string | null {
+export function sentence(v: string | null | undefined): string | null {
   if (!v) return null;
   const words = v.toLowerCase().split(/(\s+)/).map((w) => (KEEP_UPPER.has(w.replace(/[^a-z]/g, '')) ? w.toUpperCase() : w));
   const s = words.join('');

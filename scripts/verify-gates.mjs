@@ -22,6 +22,7 @@ import {
 } from '../src/lib/v2/redirect-map.ts';
 import { LEGACY_AGENCIES, LEGACY_PEOPLE, LEGACY_VENDORS } from '../src/lib/v2/legacy-map.generated.ts';
 import { lateFilersEnabled } from '../src/lib/v2/flags.ts';
+import { DATE_FLAG_FALLBACK, DATE_FLAG_WORDING, dateFlagNote } from '../src/lib/v2/date-flags.ts';
 
 const ROOT = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
 const APP = join(ROOT, 'src', 'app');
@@ -29,10 +30,10 @@ const APP = join(ROOT, 'src', 'app');
 // v2 pages and routes that stay reachable. Everything else under src/app must be gated,
 // redirected or retired.
 const KEEP_PAGES = new Set([
-  '/', '/about', '/about/corrections', '/about/data-status', '/about/methodology', '/about/methodology/contracts',
+  '/', '/about', '/about/corrections', '/about/methodology', '/about/methodology/contracts',
   '/about/methodology/tickers', '/about/methodology/trades', '/companies', '/data', '/design', '/design/story',
   '/investigations', '/people', '/rebuilding', '/search', '/withdrawn', '/agencies',
-  '/data/trades', '/data/contracts', '/data/late-filers',
+  '/data/trades', '/data/contracts', '/data/late-filers', '/data/status', '/latest',
 ]);
 // Dynamic v2 pages, each with a real sample URL that must answer 200.
 const KEEP_DYNAMIC = new Map([
@@ -53,6 +54,7 @@ const KEEP_ROUTES = new Map([
   ['/api/newsletter/subscribe', 'signup write; fails visibly until Buttondown is wired (D7)'],
   ['/api/og', 'share-card image; draws a figure only when its source comes with it'],
   ['/feed.xml', 'valid RSS with no items'],
+  ['/latest.xml', 'RSS of new trade reports and awards, data items only, each linking to the official record (D6b)'],
   ['/sitemap.xml', 'live URLs only'],
   ['/opengraph-image', 'site share card'],
 ]);
@@ -126,7 +128,7 @@ let failed = 0;
 async function hit(path, expect, extra = {}) {
   const res = await fetch(base + path, { redirect: 'manual', method: extra.method ?? 'GET' });
   // React puts <!-- --> between text and interpolated values; strip them so phrases match as a reader sees them.
-  const body = extra.body || extra.bodyAll || extra.notBody || extra.noindex || extra.startsWith ? (await res.text()).replace(/<!-- -->/g, '') : '';
+  const body = extra.body || extra.bodyAll || extra.notBody || extra.noindex || extra.startsWith ? (await res.text()).replace(/<!-- -->/g, '').replace(/&#x27;/g, "'") : '';
   const loc = res.headers.get('location');
   const robots = res.headers.get('x-robots-tag') || '';
   let ok = res.status === expect;
@@ -263,6 +265,57 @@ await hit('/', 200, {
   group: 'homepage (D6a)',
 });
 await hit('/opengraph-image', 200, { ctype: 'image/png', group: 'homepage (D6a)' });
+
+// D6b: /data/status, /latest, latest.xml and the reader wording for date flags.
+// Visible text (scripts and tags stripped) must never read "NaN", "undefined" or "[object Object]".
+async function visibleClean(path) {
+  const html = await (await fetch(base + path)).text();
+  const text = html.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<style[\s\S]*?<\/style>/g, ' ').replace(/<[^>]+>/g, ' ');
+  const bad = [/\bNaN\b/, /\bundefined\b/, /\[object Object\]/].filter((re) => re.test(text)).map(String);
+  if (bad.length) failed++;
+  rows.push({ path, status: 'visible text', expect: 'no NaN/undefined', ok: bad.length === 0, note: bad.join(' '), group: 'visible text (D6b)' });
+}
+for (const p of ['/data/status', '/latest', '/latest?type=awards', '/data/late-filers']) await visibleClean(p);
+await hit('/data/status', 200, {
+  bodyAll: ['House stock trades', 'Senate stock trades', 'Contract awards', 'Ticker links', 'Committee history', 'Conflict signals', 'Known gaps', 'Last loaded', 'scanned House filings were not read', 'from the newest'],
+  notBody: ['being rebuilt'],
+  group: 'status and latest (D6b)',
+});
+await hit('/about/data-status', 301, { location: '/data/status', group: 'status and latest (D6b)' });
+await hit('/latest', 200, { bodyAll: ['New filings and awards', 'RSS feed', 'Awards have no chamber', 'data-kind="trade"', 'data-kind="award"', 'first reported'], notBody: ['being rebuilt', 'risk score', 'high-risk', 'flagged contracts', 'unavailable right now'], group: 'status and latest (D6b)' });
+await hit('/latest?chamber=House', 200, { body: 'data-kind="trade"', notBody: ['data-kind="award"', 'unavailable right now'], noindex: true, group: 'status and latest (D6b)' });
+await hit('/latest?type=awards', 200, { body: 'data-kind="award"', notBody: ['data-kind="trade"', 'unavailable right now'], noindex: true, group: 'status and latest (D6b)' });
+await hit('/latest?chamber=zz&type=zz&page=-3', 200, { notBody: ['unavailable right now'], group: 'status and latest (D6b) junk input' });
+await hit('/latest?page=99999', 200, { notBody: ['unavailable right now'], group: 'status and latest (D6b) junk input' });
+await hit('/latest.xml', 200, { ctype: 'rss', startsWith: '<?xml', bodyAll: ['<item>', 'slushfund:trade:', 'slushfund:award:', 'official record', '<category>Contract award</category>', '<category>Congressional trade report</category>'], notBody: ['withdrawn', '/investigations', '/blog', 'risk score', 'suspicious', 'stale_2y'], group: 'status and latest (D6b) rss' });
+await hit('/api/latest', 503, { group: 'status and latest (D6b)' });
+// Reader wording for date_flag: one map, no raw token on a page. One real row per flag value.
+const FLAG_ROWS = [
+  ['stale_2y_corroborated', '/data/trades?member=S001201&from=2017-01-05&to=2017-01-05'],
+  ['stale_2y', '/data/trades?member=S001229&from=2015-05-08&to=2015-05-08'],
+  ['after_filing', '/data/trades?member=L000579&from=2021-02-22&to=2021-02-22'],
+  ['future', '/data/trades?member=C001068&from=2026-12-26&to=2026-12-26'],
+];
+for (const [flag, url] of FLAG_ROWS) {
+  await hit(url, 200, { body: DATE_FLAG_WORDING[flag], notBody: ['stale_2y', 'stale 2y', 'after_filing', 'corroborated'], group: 'date flag wording (D6b)' });
+}
+for (const [flag, want] of [
+  ['stale_2y_corroborated', "Reported more than two years after the trade. The report's own dates agree with each other."],
+  ['stale_2y', "The report's own dates disagree, so we don't compute a delay."],
+  [null, null], ['', null], ['made_up_token_x', DATE_FLAG_FALLBACK],
+]) {
+  const got = dateFlagNote(flag);
+  const ok = got === want && (got == null || !/[a-z]+_[a-z0-9_]+/.test(got));
+  if (!ok) failed++;
+  rows.push({ path: `dateFlagNote(${JSON.stringify(flag)})`, status: String(got), expect: String(want), ok, note: '', group: 'date flag wording (D6b)' });
+}
+if (lateFilersEnabled()) {
+  await hit('/data/late-filers', 200, { bodyAll: ['Trades, by report', 'Report filed', 'Largest gap', DATE_FLAG_WORDING.stale_2y_corroborated, '<details'], notBody: ['stale_2y', 'stale 2y', 'Date flag in our data', 'unavailable right now'], group: 'late filers by report (D6b)' });
+  await hit('/data/late-filers?chamber=Senate&over=90&rsort=recent', 200, { body: 'Report filed', notBody: ['unavailable right now'], group: 'late filers by report (D6b)' });
+  await hit('/data/late-filers?rsort=trades&over=365&page=2', 200, { notBody: ['unavailable right now'], group: 'late filers by report (D6b)' });
+  await hit('/data/late-filers?rsort=zz&page=99999&over=7', 200, { notBody: ['unavailable right now'], group: 'late filers by report (D6b) junk input' });
+}
+await hit('/sitemap.xml', 200, { bodyAll: ['/latest', '/data/status'], notBody: '/about/data-status', group: 'status and latest (D6b)' });
 
 // 6. Kept v2 pages
 for (const p of KEEP_PAGES) {

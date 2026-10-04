@@ -1,4 +1,5 @@
 import { toCsv, csvFilename } from '@/lib/v2/csv';
+import { dateFlagNote } from '@/lib/v2/date-flags';
 import { EXPORT_ROW_CAP, type SP } from '@/lib/v2/explorer';
 import { instrumentKind, ownerLabel, typeLabel } from '@/lib/v2/instruments';
 import { getTradesForExport, parseTradeFilters } from '@/lib/v2/trades-explorer';
@@ -26,7 +27,7 @@ export async function GET(request: Request) {
     ['option_type', 'Option type'], ['strike', 'Option strike'], ['expiry', 'Option expiry'],
     ['amount_range', 'Amount (disclosed range)'], ['lot_count', 'Same-day lots'],
     ['traded', 'Trade date'], ['first_report_filed', 'First report filed'], ['report_shown_filed', 'Filed (report at filing_url)'],
-    ['date_flag', 'Date flag'], ['source', 'Source'], ['filing_url', 'Filing URL'],
+    ['date_flag', 'Date flag'], ['date_note', 'Date note'], ['source', 'Source'], ['filing_url', 'Filing URL'],
   ].map(([key, label]) => ({ key, label }));
   const rows = result.rows.map((t) => ({
     member_name: t.member_name,
@@ -50,6 +51,7 @@ export async function GET(request: Request) {
     first_report_filed: t.original_filed_date ?? t.filed_date,
     report_shown_filed: t.filed_date,
     date_flag: t.date_flag,
+    date_note: dateFlagNote(t.date_flag),
     source: t.source_system === 'House_Clerk' ? 'House Clerk PTR' : t.source_system === 'Senate_EFD' ? 'Senate eFD report' : t.source_system,
     filing_url: t.disclosure_url,
   }));

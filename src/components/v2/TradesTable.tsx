@@ -4,7 +4,8 @@ import DataTable, { type DataTableColumn, type DataTableRow } from '@/components
 import FilingLink from '@/components/v2/FilingLink';
 import type { TradeRow } from '@/lib/v2/queries';
 import { fmtDate, fmtDateShort, fmtRange } from '@/lib/v2/format';
-import { DATE_FLAG_NOTE, instrumentKind, optionDetail, ownerLabel, typeLabel } from '@/lib/v2/instruments';
+import { dateFlagNote } from '@/lib/v2/date-flags';
+import { instrumentKind, optionDetail, ownerLabel, typeLabel } from '@/lib/v2/instruments';
 
 /** Party is text, never a color (design rule 1). */
 export function partyLetter(p: string | null | undefined): string {
@@ -30,7 +31,7 @@ const COLUMNS: DataTableColumn[] = [
   { key: 'traded', header: 'Traded', csvOnly: true },
   { key: 'filed', header: 'Filed (first report)', csvOnly: true },
   { key: 'amended', header: 'Amended report filed', csvOnly: true },
-  { key: 'date_flag', header: 'Date flag', csvOnly: true },
+  { key: 'date_note', header: 'Date note', csvOnly: true },
   { key: 'filing', header: 'Filing', sortable: false, mobile: 'action' },
 ];
 
@@ -48,8 +49,8 @@ function sourceName(system: string): string {
 /**
  * Trades as a DataTable: ranges stay ranges, traded → filed dates, and "View filing" on every row.
  * Options read "Bought put options" (never "Purchase"), other instruments say what they are, owner
- * "Self" reads "Self (incl. trusts/accounts)" (A7 H1), and a row whose dates look wrong in the
- * filing is marked and sorts last. Days-to-file is not shown until R6a's lateness is audited (A7 S2).
+ * "Self" reads "Self (incl. trusts/accounts)" (A7 H1), and a row with a date flag carries the reader wording
+ * from date-flags.ts and sorts last. Days-to-file is not shown until R6a's lateness is audited (A7 S2).
  */
 export default function TradesTable({
   trades,
@@ -106,7 +107,7 @@ export default function TradesTable({
         amended,
         // Flagged dates never drive sorting: they sort last.
         filed_sort: flagged ? null : filed,
-        date_flag: t.date_flag ?? null,
+        date_note: dateFlagNote(t.date_flag),
         filing: t.disclosure_url,
       },
       cells: {
@@ -152,7 +153,7 @@ export default function TradesTable({
             {amended && <span className="mt-0.5 block font-sans text-[12px] text-muted">amended {fmtDateShort(amended)}</span>}
             {flagged && (
               <span className="mt-0.5 block font-sans text-[12px]">
-                <span className="rounded-md bg-stale-tint px-1.5 py-0.5 text-stale-ink">{DATE_FLAG_NOTE}</span>
+                <span className="rounded-md bg-stale-tint px-1.5 py-0.5 text-stale-ink">{dateFlagNote(t.date_flag)}</span>
               </span>
             )}
           </span>

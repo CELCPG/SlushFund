@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 const LINKS = [
   { href: '/about/methodology', label: 'Methodology', text: 'Where each dataset comes from, what is loaded, and its known limits.' },
-  { href: '/about/data-status', label: 'Data status', text: 'When each dataset last loaded, and whether it is behind.' },
+  { href: '/data/status', label: 'Data status', text: 'When each dataset last loaded, and whether it is behind.' },
   { href: '/about/corrections', label: 'Corrections', text: 'What we changed, and when.' },
 ];
 

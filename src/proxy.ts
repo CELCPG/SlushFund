@@ -36,7 +36,7 @@ export function proxy(request: NextRequest) {
       {
         error: 'unavailable',
         message: 'This endpoint is being rebuilt. Its figures have not been verified against official records yet.',
-        status: 'https://slushfund.net/about/data-status',
+        status: 'https://slushfund.net/data/status',
       },
       { status: 503, headers: { 'Retry-After': '86400', 'X-Robots-Tag': 'noindex', 'Cache-Control': 'no-store' } },
     );

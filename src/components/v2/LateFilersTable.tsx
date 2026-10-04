@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import DataTable, { type DataTableColumn, type DataTableRow } from '@/components/v2/DataTable';
 import FilingLink from '@/components/v2/FilingLink';
+import { dateFlagNote } from '@/lib/v2/date-flags';
 import { partyLetter } from '@/components/v2/TradesTable';
 import { fmtDate, fmtRange } from '@/lib/v2/format';
 import { instrumentKind, ownerLabel, typeLabel } from '@/lib/v2/instruments';
@@ -22,7 +23,7 @@ const COLUMNS: DataTableColumn[] = [
  * days after the trade; the STOCK Act asks for 45 days", with the filing one tap away. A row that
  * carries a date_flag is shown with the flag as a plain note, whatever its value.
  */
-export default function LateFilersTable({ trades, caption }: { trades: LateTrade[]; caption: string }) {
+export default function LateFilersTable({ trades, caption, hideMember = false }: { trades: LateTrade[]; caption: string; hideMember?: boolean }) {
   const rows: DataTableRow[] = trades.map((t) => {
     const first = t.original_filed_date ?? t.filed_date;
     const amended = t.original_filed_date && t.filed_date && t.filed_date !== t.original_filed_date ? t.filed_date : null;
@@ -54,6 +55,7 @@ export default function LateFilersTable({ trades, caption }: { trades: LateTrade
             <span className="font-mono text-[13px] font-medium">{t.ticker}</span>{' '}
             <span className="text-[13px] text-muted sm:line-clamp-1">{t.company_name}</span>
             {kind !== 'stock' && <span className="mt-0.5 block text-[12px] text-muted">Asset type as filed: {t.asset_type || 'not stated'}</span>}
+            {hideMember && owner && <span className="mt-0.5 block text-[12px] text-muted">Owner: {owner}</span>}
           </span>
         ),
         gap: (
@@ -71,7 +73,7 @@ export default function LateFilersTable({ trades, caption }: { trades: LateTrade
             {amended && <span className="mt-0.5 block font-sans text-[12px] text-muted">amended {fmtDate(amended)}</span>}
             {t.date_flag && (
               <span className="mt-0.5 block font-sans text-[12px]">
-                <span className="rounded-md bg-stale-tint px-1.5 py-0.5 text-stale-ink">Date flag in our data: {t.date_flag.replace(/_/g, ' ')}</span>
+                <span className="rounded-md bg-stale-tint px-1.5 py-0.5 text-stale-ink">{dateFlagNote(t.date_flag)}</span>
               </span>
             )}
           </span>
@@ -91,5 +93,9 @@ export default function LateFilersTable({ trades, caption }: { trades: LateTrade
       },
     };
   });
-  return <DataTable columns={COLUMNS} rows={rows} caption={caption} captionHidden emptyMessage="No trades match." />;
+  // Inside one member's report the member column is noise: it stays in the CSV, and the owner moves into the asset cell.
+  const columns = hideMember
+    ? COLUMNS.map((c) => (c.key === 'member' ? { ...c, csvOnly: true, mobile: 'hidden' as const } : c.key === 'asset' ? { ...c, mobile: 'title' as const } : c))
+    : COLUMNS;
+  return <DataTable columns={columns} rows={rows} caption={caption} captionHidden emptyMessage="No trades match." />;
 }

@@ -47,14 +47,14 @@ export function DataStatusPanelView({ statuses, className }: { statuses: Dataset
           </li>
         ))}
       </ul>
-      <Link href="/about/data-status" className="ml-auto font-semibold text-trades-ink hover:underline">
+      <Link href="/data/status" className="ml-auto font-semibold text-trades-ink hover:underline">
         All datasets →
       </Link>
     </div>
   );
 }
 
-/** Full table for /about/data-status: one card per dataset, stacked on phones. */
+/** One card per dataset, stacked on phones (the full table is /data/status, DataStatusBoard). */
 export async function DataStatusTable({ datasets }: { datasets?: DatasetKey[] }) {
   const statuses = await getDatasetStatuses(datasets);
   return <DataStatusTableView statuses={statuses} />;

@@ -14,7 +14,7 @@ const ELSEWHERE = [
   { href: '/', label: 'Home' },
   { href: '/search', label: 'Search members, companies and stocks' },
   { href: '/data', label: 'The data, with its sources' },
-  { href: '/about/data-status', label: 'Data status' },
+  { href: '/data/status', label: 'Data status' },
 ];
 
 export default async function RebuildingPage({ searchParams }: { searchParams: Promise<{ from?: string }> }) {

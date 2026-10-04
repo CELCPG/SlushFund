@@ -41,7 +41,7 @@ export default function DataHub() {
           </li>
         ))}
       </ul>
-      <SectionHead title="Datasets" sub={<>Source, coverage and last load for each. The same facts feed the <Link href="/about/data-status" className="font-semibold text-trades-ink hover:underline">data status page</Link>.</>} />
+      <SectionHead title="Datasets" sub={<>Source, coverage and last load for each. The same facts feed the <Link href="/data/status" className="font-semibold text-trades-ink hover:underline">data status page</Link>.</>} />
       <DataStatusTable />
       <section id="downloads" className="scroll-mt-6 pt-10">
         <SectionHead title="Downloads" />
