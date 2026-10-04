@@ -1,0 +1,374 @@
+// ─── Award Types ─────────────────────────────────────────────────────────────
+export type AwardCategory = 'contract' | 'grant' | 'loan' | 'direct_payment' | 'other';
+
+export type CompetitionStatus =
+  | 'open_competition'
+  | 'limited_competition'
+  | 'no_bid'
+  | 'sole_source'
+  | 'unknown';
+
+// ─── Flags ────────────────────────────────────────────────────────────────────
+// Competition flags
+export type CompetitionFlag = 'no_bid' | 'sole_source' | 'limited_competition' | 'non_competitive';
+// Price/Value flags
+export type PriceFlag = 'no_compete_high_value' | 'large_award' | 'inflated' | 'cost_plus';
+// Connection flags
+export type ConnectionFlag = 'related_party' | 'donor' | 'lobbyist' | 'mar-a-lago';
+// Structural flags
+export type StructuralFlag = 'covid_related' | 'infrastructure' | 'emergency' | 'pass_through' | 'pandemic_emergency' | 'covid_inflated' | 'ppp_related';
+
+export type ContractFlag = CompetitionFlag | PriceFlag | ConnectionFlag | StructuralFlag;
+
+// ─── Connection Types ────────────────────────────────────────────────────────
+export type ConnectionType =
+  | 'trump_family'
+  | 'elon_musk'
+  | 'trump_ally'
+  | 'mar-a-lago'
+  | 'gop_donor'
+  | 'lobbyist'
+  | 'none'
+  | 'suspected';
+
+// ─── Eras (administrative periods) ─────────────────────────────────────────────
+export type Era = 'trump_1' | 'covid' | 'biden' | 'trump_2';
+
+export const ERA_LABELS: Record<Era, string> = {
+  trump_1: 'Trump 1.0',
+  covid: 'COVID Era',
+  biden: 'Biden',
+  trump_2: 'Trump 2.0 + DOGE',
+};
+
+export const ERA_FYS: Record<Era, number[]> = {
+  trump_1: [2019],
+  covid: [2020, 2021],
+  biden: [2022, 2023, 2024],
+  trump_2: [2025, 2026],
+};
+
+export const ALL_FYS = [2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026];
+
+// ─── Core Award Record (contracts, grants, loans, direct payments) ────────────
+export interface Award {
+  id: string;
+  award_id: string; // PIID for contracts, FAIN for grants, URI for loans
+
+  // Recipient
+  recipient_name: string;
+  recipient_uei: string | null;
+  recipient_duns: string | null;
+  recipient_parent_name: string | null;
+  recipient_location: string | null;
+
+  // Amount
+  dollar_amount: number;
+  total_outlays: number | null;
+  subsidy_cost: number | null; // loans only
+  loan_value: number | null;   // loans only
+
+  // Description
+  description: string;
+  assistance_listing: string | null; // CFDA number for grants
+  cfda_program: string | null;
+
+  // Agency
+  awarding_agency: string;
+  awarding_agency_code: string;
+  awarding_sub_agency: string;
+  funding_agency: string;
+  funding_agency_code: string;
+  funding_sub_agency: string;
+
+  // Classification
+  award_category: AwardCategory;
+  contract_type: string;    // original type code from USAspending
+  competition_status: CompetitionStatus;
+  extent_competed: string | null;
+  extent_competed_code: string | null;
+  naics_code: string | null;
+  psc_code: string | null;
+
+  // Dates
+  posted_date: string;
+  performance_start: string | null;
+  performance_end: string | null;
+  base_obligation_date: string;
+  last_modified_date: string;
+
+  // Place of performance
+  pop_state: string | null;
+  pop_country: string;
+  pop_city: string | null;
+  primary_place_of_performance: string | null;
+
+  // Flags
+  flags: ContractFlag[];
+  competition_flags: CompetitionFlag[];
+  price_flags: PriceFlag[];
+  connection_flags: ConnectionFlag[];
+  structural_flags: StructuralFlag[];
+
+  // Political connection
+  connection_type: ConnectionType | null;
+  political_connection: string | null;
+  confidence: 'high' | 'medium' | 'low';
+  connection_sources: string[];
+
+  // Risk scoring
+  risk_score: number;
+  risk_factors: string[];
+
+  // Inflation analysis
+  estimated_market_rate: number | null;
+  price_premium_pct: number | null;
+
+  // COVID / Infrastructure
+  covid_obligations: number | null;
+  covid_outlays: number | null;
+  infrastructure_obligations: number | null;
+  infrastructure_outlays: number | null;
+
+  // Era
+  era: Era | null;
+
+  // Links
+  fpds_url: string | null;
+  usaspending_url: string | null;
+
+  // Metadata
+  notes: string | null;
+  source: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// ─── Backward-compatibility alias ──────────────────────────────────────────────
+export type Contract = Award;
+
+// ─── Vendor (for company-level aggregation) ──────────────────────────────────
+export interface Vendor {
+  recipient_name: string;
+  recipient_uei: string | null;
+  total_contracts: number;
+  total_grants: number;
+  total_dollars: number;
+  awards: Award[];
+  connection_type: ConnectionType | null;
+  political_connection: string | null;
+  risk_score: number;
+  flags: ContractFlag[];
+}
+
+// ─── Agency Spending ─────────────────────────────────────────────────────────
+export interface AgencySpending {
+  agency: string;
+  agency_code: string;
+  fiscal_year: number;
+  total_obligations: number;
+  total_awards: number;
+  contract_count: number;
+  grant_count: number;
+  connected_dollars: number;
+  flagged_dollars: number;
+  top_vendors: { name: string; dollars: number; connection: ConnectionType | null }[];
+}
+
+// ─── Monthly Trend ───────────────────────────────────────────────────────────
+export interface MonthlySpending {
+  month: string;
+  total_contracts: number;
+  total_grants: number;
+  total_loans: number;
+  total_dollars: number;
+  connected_dollars: number;
+  flagged_dollars: number;
+  no_bid_dollars: number;
+  new_awards: number;
+}
+
+// ─── Political Connection Group ─────────────────────────────────────────────
+export interface ConnectionGroup {
+  connection_type: ConnectionType;
+  label: string;
+  total_dollars: number;
+  award_count: number;
+  vendor_count: number;
+  flags: ContractFlag[];
+  awards: Award[];
+}
+
+// ─── Risk Score Breakdown ───────────────────────────────────────────────────
+export interface RiskBreakdown {
+  overall_score: number;
+  connection_score: number;
+  competition_score: number;
+  price_score: number;
+  structural_score: number;
+  factors: string[];
+}
+
+// ─── API Response Shapes ─────────────────────────────────────────────────────
+export interface AwardsResponse {
+  awards: Award[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+  demo?: boolean;
+}
+
+export interface StatsResponse {
+  total_awards: number;
+  total_dollars: number;
+  contract_count: number;
+  grant_count: number;
+  loan_count: number;
+  connected_count: number;
+  connected_dollars: number;
+  flagged_count: number;
+  flagged_dollars: number;
+  no_bid_count: number;
+  no_bid_dollars: number;
+  breakdown: ConnectionBreakdown[];
+  top_agencies: AgencySpending[];
+  monthly_trend: MonthlySpending[];
+}
+
+export interface ConnectionBreakdown {
+  connection_type: ConnectionType;
+  label: string;
+  count: number;
+  total: number;
+  risk_score_avg: number;
+}
+
+// ─── Stock Holdings & Insider Trading ────────────────────────────────────────
+export interface StockHolding {
+  ticker: string;
+  company_name: string;
+  politician_name: string;
+  shares_owned: number | null;
+  estimated_value_low: number;
+  estimated_value_high: number;
+  filing_date: string;
+  filing_type: 'periodic' | 'initial' | 'annual' | 'amended';
+  source_url: string;
+  sector: string;
+  notes: string;
+}
+
+export interface InsiderTradingSignal {
+  id: string;
+  company_ticker: string;
+  company_name: string;
+  politician_name: string;
+  filing_date: string;
+  transaction_type: 'purchase' | 'sale' | 'exchange';
+  shares_estimate: number | null;
+  estimated_value: number;
+  related_contract?: {
+    contract_id: string;
+    dollar_amount: number;
+    awarding_agency: string;
+    description: string;
+    date: string;
+  };
+  sector: string;
+  confidence: 'high' | 'medium' | 'low';
+  analysis_notes: string;
+  source_url: string;
+}
+
+// ─── Cost Overrun / Project Inflation ────────────────────────────────────────
+export interface CostOverrun {
+  id: string;
+  project_name: string;
+  agency: string;
+  awarding_subagency?: string;   // e.g. 'Air Force', 'NAVSEA', 'CBP'
+  contractor: string;            // prime contractor(s)
+  subcontractors?: string[];     // known sub-contractors
+  state: string;                // primary place of performance state
+  start_year: number;
+  end_year: number | null;      // null = ongoing
+
+  // Cost data
+  original_cost: number;
+  current_cost?: number;         // latest approved baseline (if revised)
+  final_cost: number;           // actual or projected final cost
+  overrun_pct: number;          // (final - original) / original * 100
+  overrun_dollars: number;      // final_cost - original_cost
+
+  // Project details
+  description: string;
+  program_description?: string; // larger program context (e.g. F-35 is part of $1.7T program)
+  category: OverrunCategory;
+
+  // Why flagged
+  flagged_reason: string;
+  flags: OverrunFlag[];
+
+  // Competition / contracting
+  competition_status: CompetitionStatus;
+  contract_type: ContractType2; // cost_plus | firm_fixed | time_and_materials | idiq | unknown
+  bundling?: boolean;           // were smaller contracts bundled to avoid competition?
+
+  // Oversight
+  gao_high_risk: boolean;
+  oig_investigation?: boolean;
+  oig_report_urls?: string[];
+  congressional_hearing?: string; // e.g. 'House Armed Services Committee 2024-03-15'
+  oversight_committee?: string;   // e.g. 'House Appropriations Committee'
+
+  // Contractor financials
+  contractor_total_federal_contracts?: number; // what we know about their total federal $ from our DB
+
+  // Political connection
+  political_connection?: string;
+  trump_donor?: boolean;
+  mar_a_lago_visitor?: boolean;
+
+  // Timeline
+  delay_years?: number;
+  baseline_revisions?: number;    // how many times the estimate was revised upward
+
+  // Sources
+  source_url: string;
+  additional_sources?: string[];
+  notes: string;
+}
+
+export type OverrunCategory =
+  | 'defense_weapons'
+  | 'defense_ships'
+  | 'defense_aircraft'
+  | 'defense_it'
+  | 'border_security'
+  | 'construction'
+  | 'it_modernization'
+  | 'nuclear'
+  | 'healthcare'
+  | 'space'
+  | 'postal'
+  | 'civilian_it'
+  | 'infrastructure';
+
+export type OverrunFlag =
+  | 'sole_source'
+  | 'no_bid'
+  | 'limited_competition'
+  | 'cost_plus'
+  | 'non_competitive'
+  | 'gao_high_risk'
+  | 'oig_investigation'
+  | 'congressional_override'
+  | 'political_connection'
+  | 'mid_project_contractor_change'
+  | 'emergency_waiver'
+  | 'single_bid'
+  | 'delayed'
+  | 'scope_creep'
+  | 'bundling';
+
+export type ContractType2 = 'cost_plus' | 'firm_fixed' | 'time_and_materials' | 'idiq' | 'hybrid' | 'unknown' | 'sole_source';

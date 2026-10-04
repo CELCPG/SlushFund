@@ -1,0 +1,87 @@
+{
+  "source": "https://www.opensecrets.org/federal-lobbying/top-spenders",
+  "slug": "top-spenders",
+  "count": 20,
+  "data": [
+    {
+      "Lobbying Client": "US Chamber of Commerce",
+      "Total Spent": "$20,220,000"
+    },
+    {
+      "Lobbying Client": "National Assn of Realtors",
+      "Total Spent": "$15,532,885"
+    },
+    {
+      "Lobbying Client": "Pharmaceutical Research & Manufacturers of America",
+      "Total Spent": "$12,300,000"
+    },
+    {
+      "Lobbying Client": "General Motors",
+      "Total Spent": "$11,420,000"
+    },
+    {
+      "Lobbying Client": "American Medical Assn",
+      "Total Spent": "$8,130,000"
+    },
+    {
+      "Lobbying Client": "Blue Cross/Blue Shield",
+      "Total Spent": "$7,970,487"
+    },
+    {
+      "Lobbying Client": "Business Roundtable",
+      "Total Spent": "$7,590,000"
+    },
+    {
+      "Lobbying Client": "American Hospital Assn",
+      "Total Spent": "$7,581,197"
+    },
+    {
+      "Lobbying Client": "Meta",
+      "Total Spent": "$7,080,000"
+    },
+    {
+      "Lobbying Client": "CTIA",
+      "Total Spent": "$7,080,000"
+    },
+    {
+      "Lobbying Client": "America's Health Insurance Plans",
+      "Total Spent": "$5,320,000"
+    },
+    {
+      "Lobbying Client": "Amazon.com",
+      "Total Spent": "$4,830,000"
+    },
+    {
+      "Lobbying Client": "Pfizer Inc",
+      "Total Spent": "$4,560,000"
+    },
+    {
+      "Lobbying Client": "RTX Corp",
+      "Total Spent": "$4,490,000"
+    },
+    {
+      "Lobbying Client": "Merck & Co",
+      "Total Spent": "$4,200,000"
+    },
+    {
+      "Lobbying Client": "Lockheed Martin",
+      "Total Spent": "$4,171,700"
+    },
+    {
+      "Lobbying Client": "Alphabet Inc",
+      "Total Spent": "$4,135,000"
+    },
+    {
+      "Lobbying Client": "Novartis AG",
+      "Total Spent": "$4,070,000"
+    },
+    {
+      "Lobbying Client": "Roche Holdings",
+      "Total Spent": "$4,010,000"
+    },
+    {
+      "Lobbying Client": "AARP",
+      "Total Spent": "$3,830,000"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://slushfund.net/sitemap.xml
+
+# Crawl delay for polite bots
+Crawl-delay: 1

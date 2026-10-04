@@ -1,0 +1,223 @@
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import DataSubNav from '@/components/v2/DataSubNav';
+import DataTable, { type DataTableColumn, type DataTableRow } from '@/components/v2/DataTable';
+import EmptyState from '@/components/v2/EmptyState';
+import ExplorerForm from '@/components/v2/ExplorerForm';
+import FilingLink from '@/components/v2/FilingLink';
+import LateFilersTable from '@/components/v2/LateFilersTable';
+import { Card, PageBand, SectionHead, Wrap } from '@/components/v2/PageBand';
+import Pager from '@/components/v2/Pager';
+import SourceBar from '@/components/v2/SourceBar';
+import { partyLetter } from '@/components/v2/TradesTable';
+import { getDatasetStatuses } from '@/lib/v2/datasets';
+import { buildHref, one, type SP } from '@/lib/v2/explorer';
+import { lateFilersEnabled } from '@/lib/v2/flags';
+import { fmtCount, fmtDateShort, fmtPct } from '@/lib/v2/format';
+import {
+  MEMBER_SORTS, OVER_OPTIONS, STOCK_ACT_DAYS, getLateSummary, getLateTrades, parseLateFilters, sortMembers, type MemberSort,
+} from '@/lib/v2/late-filers';
+
+// Behind lateFilersEnabled(): on in dev and preview, off on the production deployment until an Auditor GO.
+export const metadata: Metadata = {
+  title: 'Late filers: the longest gaps between a trade and its report',
+  description: 'The stock trades members of Congress reported the longest after the trade date, measured to the first report, each with a link to the filing.',
+  robots: { index: false, follow: false },
+};
+
+const MEMBERS_SHOWN = 20;
+const field = 'h-11 w-full min-w-0 rounded-xl border border-line bg-page px-3 text-[15px] text-ink focus:border-trades focus:outline-none';
+const label = 'mb-1 block text-[12px] font-semibold uppercase tracking-[0.05em] text-muted';
+
+export default async function LateFilersPage({ searchParams }: { searchParams: Promise<SP> }) {
+  if (!lateFilersEnabled()) notFound();
+  const sp = await searchParams;
+  const f = parseLateFilters(sp);
+  const msort: MemberSort = (MEMBER_SORTS.find((m) => m.value === one(sp.msort))?.value) ?? 'gap';
+  const showAllMembers = one(sp.members) === 'all';
+  const [summary, trades, statuses] = await Promise.all([
+    getLateSummary(),
+    getLateTrades(f, sp.page),
+    getDatasetStatuses(['house_trades', 'senate_trades']),
+  ]);
+  const ranked = summary ? sortMembers(summary.members, msort) : [];
+  const shownMembers = showAllMembers ? ranked : ranked.slice(0, MEMBERS_SHOWN);
+  const tradeParams = { chamber: f.chamber, over: f.over === STOCK_ACT_DAYS ? '' : String(f.over), msort: msort === 'gap' ? '' : msort, members: showAllMembers ? 'all' : '' };
+  const pagerHref = (page: number) => buildHref('/data/late-filers', { ...tradeParams, page: page > 1 ? String(page) : undefined });
+
+  const memberColumns: DataTableColumn[] = [
+    { key: 'member', header: 'Member', mobile: 'title', sortable: false },
+    { key: 'gap', header: 'Longest gap', numeric: true, sortable: false },
+    { key: 'over', header: `Trades over ${STOCK_ACT_DAYS} days`, numeric: true, sortable: false },
+    { key: 'reports', header: 'In how many reports', numeric: true, sortable: false },
+  ];
+  const memberRows: DataTableRow[] = shownMembers.map((m) => ({
+    id: m.key,
+    values: { member: m.name, gap: m.maxDays, over: m.over, reports: m.reports },
+    cells: {
+      member: (
+        <span className="block min-w-0">
+          {m.bioguide ? <Link href={`/people/${m.bioguide}`} className="font-semibold hover:underline">{m.name}</Link> : <b className="font-semibold">{m.name}</b>}
+          <span className="block text-[12.5px] font-normal text-muted">{partyLetter(m.party)} · {m.state} · {m.chamber}</span>
+        </span>
+      ),
+      gap: (
+        <span className="block">
+          <b className="font-mono text-[15px] font-semibold">{m.maxDays.toLocaleString('en-US')} days</b>
+          <span className="block font-sans text-[12px] font-normal text-muted">{m.maxTicker}, traded {fmtDateShort(m.maxTraded)}</span>
+          <FilingLink href={m.maxUrl} className="font-sans" />
+        </span>
+      ),
+      over: <span>{fmtCount(m.over)} <span className="font-sans text-[12px] text-muted">of {fmtCount(m.computed)}</span></span>,
+      reports: <span>{fmtCount(m.reports)}</span>,
+    },
+  }));
+
+  const notComputed = summary ? summary.totalRows - summary.computed : null;
+
+  return (
+    <div data-v2>
+      <PageBand>
+        <p className="mt-8 text-[13px] font-bold uppercase tracking-[0.06em] text-on-deep max-md:mt-5">Data</p>
+        <h1 className="mt-1 font-display text-[44px] font-extrabold leading-[1.06] tracking-[-1px] max-md:text-[30px]">Late filers</h1>
+        <p className="mt-3 max-w-[760px] text-[16px] text-on-deep max-md:text-[15px]">
+          The longest gaps between a stock trade and the first report that disclosed it. Each is stated as days after the trade, with the STOCK Act&rsquo;s {STOCK_ACT_DAYS} days beside it and a link to the filing.
+        </p>
+        <DataSubNav current="/data/late-filers" />
+      </PageBand>
+
+      <Wrap className="pb-12">
+        <p className="mt-6 rounded-2xl bg-stale-tint px-4 py-2.5 text-[13.5px] text-stale-ink">
+          Preview only. This page is hidden on slushfund.net until its figures and wording have been audited.
+        </p>
+        <SourceBar datasets={['house_trades', 'senate_trades']} className="mt-4" />
+
+        <section className="pt-6" aria-labelledby="lf-read">
+          <Card>
+            <h2 id="lf-read" className="font-display text-[22px] font-extrabold">How to read this</h2>
+            <ul className="mt-3 list-disc space-y-1.5 pl-5 text-[14.5px] text-muted">
+              <li>
+                <b className="text-ink">The gap</b> is the number of days from the trade date to the day the first report holding it was filed. An amended report does not reset it.
+              </li>
+              <li>
+                <b className="text-ink">The STOCK Act asks for {STOCK_ACT_DAYS} days.</b> The count can start when the member learns of the trade, which a filing does not show, so a gap over {STOCK_ACT_DAYS} days
+                is a measured fact about two dates, not a finding about the filer.
+              </li>
+              <li>
+                <b className="text-ink">Reports, not just rows.</b> One report can hold hundreds of trades, so members are ranked by the longest single gap and, separately, by how many reports hold a trade over {STOCK_ACT_DAYS} days.
+              </li>
+              <li>
+                <b className="text-ink">What is left out.</b>{' '}
+                {notComputed != null && summary
+                  ? <>{fmtCount(notComputed)} of {fmtCount(summary.totalRows)} trade rows have no gap here: their trade date looks wrong in the filing, or the first report is not in our records. </>
+                  : null}
+                Scanned House reports and paper Senate reports have not been read, so a trade in one of them is missing, not on time. Senate filings are loaded from 2024 and House filings from 2021.
+              </li>
+            </ul>
+            {summary && (
+              <p className="mt-4 rounded-2xl bg-page px-4 py-3 text-[14px]">
+                <b>{fmtCount(summary.over)}</b> of the <b>{fmtCount(summary.computed)}</b> trades with a gap were reported more than {STOCK_ACT_DAYS} days after the trade ({fmtPct(summary.over / summary.computed)}),
+                by <b>{fmtCount(summary.members.length)}</b> members.
+              </p>
+            )}
+          </Card>
+        </section>
+
+        <section className="pt-8" aria-labelledby="lf-members">
+          <SectionHead
+            as="h2"
+            title={<span id="lf-members">Members, by gap</span>}
+            sub="Members with at least one trade reported more than 45 days after the trade date."
+          />
+          {summary === null ? (
+            <EmptyState title="The member ranking is unavailable right now" tone="warning" statuses={statuses}>
+              The database did not answer, so nothing is shown rather than a stand-in.
+            </EmptyState>
+          ) : (
+            <Card>
+              <p className="mb-3 flex flex-wrap items-center gap-2 text-[13.5px]">
+                <span className="text-muted">Rank by:</span>
+                {MEMBER_SORTS.map((m) => (
+                  <Link
+                    key={m.value}
+                    href={buildHref('/data/late-filers', { ...tradeParams, msort: m.value === 'gap' ? '' : m.value, page: undefined })}
+                    aria-current={msort === m.value ? 'true' : undefined}
+                    className={`rounded-full px-3 py-1 font-semibold ${msort === m.value ? 'bg-ink text-white' : 'bg-page text-ink hover:bg-neutral-tint'}`}
+                  >
+                    {m.label}
+                  </Link>
+                ))}
+              </p>
+              <DataTable
+                columns={memberColumns}
+                rows={memberRows}
+                caption="Members ranked by the gap between a trade and its first report"
+                footer={<span>&ldquo;Trades over {STOCK_ACT_DAYS} days&rdquo; counts rows; &ldquo;of N&rdquo; is all of the member&rsquo;s trades with a computed gap.</span>}
+              />
+              {ranked.length > MEMBERS_SHOWN && (
+                <p className="mt-3 text-[13.5px]">
+                  {showAllMembers
+                    ? <Link href={buildHref('/data/late-filers', { ...tradeParams, members: undefined, page: undefined })} className="font-semibold text-trades-ink hover:underline">Show the top {MEMBERS_SHOWN}</Link>
+                    : <Link href={buildHref('/data/late-filers', { ...tradeParams, members: 'all', page: undefined })} className="font-semibold text-trades-ink hover:underline">Show all {fmtCount(ranked.length)} members</Link>}
+                </p>
+              )}
+            </Card>
+          )}
+        </section>
+
+        <section className="pt-8" aria-labelledby="lf-trades">
+          <SectionHead
+            as="h2"
+            title={<span id="lf-trades">Trades, by gap</span>}
+            sub={`Each trade filed after day ${f.over}, longest first.`}
+          />
+          <Card>
+            <ExplorerForm action="/data/late-filers" defaults={{ over: String(STOCK_ACT_DAYS) }} className="mb-4 grid grid-cols-[1fr_1fr_auto] gap-3 max-sm:grid-cols-1">
+              {msort !== 'gap' && <input type="hidden" name="msort" value={msort} />}
+              {showAllMembers && <input type="hidden" name="members" value="all" />}
+              <div>
+                <label htmlFor="lf-chamber" className={label}>Chamber</label>
+                <select id="lf-chamber" name="chamber" defaultValue={f.chamber} className={field}>
+                  <option value="">Both</option>
+                  <option value="House">House</option>
+                  <option value="Senate">Senate</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="lf-over" className={label}>Gap longer than</label>
+                <select id="lf-over" name="over" defaultValue={String(f.over)} className={field}>
+                  {OVER_OPTIONS.map((o) => <option key={o} value={o}>{o} days</option>)}
+                </select>
+              </div>
+              <div className="flex items-end">
+                <button type="submit" className="h-11 rounded-xl bg-ink px-5 text-sm font-bold text-white hover:bg-deep max-sm:w-full">Apply</button>
+              </div>
+            </ExplorerForm>
+            {trades === null ? (
+              <EmptyState title="The trades are unavailable right now" tone="warning" statuses={statuses}>
+                The database did not answer, so nothing is shown rather than a stand-in.
+              </EmptyState>
+            ) : trades.total === 0 ? (
+              <p className="rounded-2xl bg-page px-4 py-6 text-center text-[14.5px] text-muted">No trade in our records has a gap longer than {f.over} days{f.chamber ? ` in the ${f.chamber}` : ''}.</p>
+            ) : (
+              <>
+                <p className="mb-3 text-[13.5px] text-muted" aria-live="polite">
+                  {fmtCount(trades.total)} {trades.total === 1 ? 'trade' : 'trades'}{trades.pages > 1 ? ` · page ${fmtCount(trades.page)} of ${fmtCount(trades.pages)}` : ''}
+                </p>
+                <LateFilersTable trades={trades.rows} caption={`Trades filed more than ${f.over} days after the trade, longest first`} />
+                <Pager page={trades.page} pages={trades.pages} href={pagerHref} />
+              </>
+            )}
+          </Card>
+        </section>
+
+        <p className="mt-6 max-w-[860px] text-[13px] text-muted">
+          Gaps are computed by our loader from two dates in the filings (the trade date and the first report&rsquo;s filing date) and can be checked by hand from the linked filing.
+          Where an amendment replaced a row, the link opens the amended report and the first report&rsquo;s date is shown beside it.
+          See <Link href="/about/methodology/trades" className="font-semibold text-trades-ink hover:underline">how trades are collected</Link>.
+        </p>
+      </Wrap>
+    </div>
+  );
+}

@@ -1,0 +1,90 @@
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { MoneyLegend } from '@/components/v2/MoneyChip';
+import { Card } from '@/components/v2/PageBand';
+import SimplePage from '@/components/v2/SimplePage';
+import DraftBlock from '@/components/v2/trust/DraftBlock';
+
+// D5 About. The founder note and the error-report contact are Colin's to write (DraftBlock
+// renders them everywhere except Vercel production). Do not name the founder anywhere else.
+export const metadata: Metadata = {
+  title: 'About',
+  description: 'SlushFund is a free, cross-party site built only on public records, where every number links to the official filing.',
+};
+
+const LINKS = [
+  { href: '/about/methodology', label: 'Methodology', text: 'Where each dataset comes from, what is loaded, and its known limits.' },
+  { href: '/about/data-status', label: 'Data status', text: 'When each dataset last loaded, and whether it is behind.' },
+  { href: '/about/corrections', label: 'Corrections', text: 'What we changed, and when.' },
+];
+
+export default function AboutPage() {
+  return (
+    <SimplePage
+      eyebrow="About"
+      title="A free, cross-party look at public money"
+      dek="SlushFund follows federal contracts, congressional stock trades, campaign money and lobbying through the people, companies and agencies involved. Every number links to the official record it came from."
+    >
+      <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] gap-4 max-lg:grid-cols-1">
+        <div className="grid gap-4">
+          <Card as="section">
+            <h2 className="font-display text-[24px] font-extrabold">What this site is</h2>
+            <p className="mt-3 max-w-[680px] text-[16px] leading-relaxed">
+              A free public tool for looking up where public money goes and how elected officials&rsquo; finances connect to it. You can look up a member of Congress, a contractor or an agency and see the filings behind every figure.
+            </p>
+          </Card>
+
+          <Card as="section">
+            <h2 className="font-display text-[24px] font-extrabold">Cross-party, by rule</h2>
+            <ul className="mt-3 max-w-[680px] list-disc space-y-2 pl-5 text-[16px] leading-relaxed">
+              <li>The same standard applies to every member, whichever party they belong to. Party appears as a word, never as a chart color.</li>
+              <li><b>Public records only.</b> The House Clerk, the Senate, USAspending.gov, the FEC and congress.gov. No leaked documents and no third-party data aggregators.</li>
+              <li>Data is loaded by code on a schedule and checked against the source documents. If a source is down, the figure is hidden, not guessed.</li>
+              <li>A pattern we flag is &ldquo;worth a look&rdquo;, never an accusation. A sequence of events is not proof of wrongdoing.</li>
+            </ul>
+          </Card>
+
+          <Card as="section">
+            <h2 className="font-display text-[24px] font-extrabold">Who is behind it</h2>
+            <div className="mt-3">
+              <DraftBlock title="Founder note: Colin to write">
+                Who runs SlushFund, why it exists, and who publishes it (the publisher entity, once there is one). Left blank on purpose: the founder is not named anywhere else on the site. Delete this block and write the paragraph here.
+              </DraftBlock>
+            </div>
+          </Card>
+
+          <Card as="section">
+            <h2 id="report-an-error" className="scroll-mt-6 font-display text-[24px] font-extrabold">Report an error</h2>
+            <p className="mt-3 max-w-[680px] text-[16px] leading-relaxed">
+              If a figure, a name or a date on this site is wrong, tell us. Please include the page address, the number or sentence you think is wrong, and the official record that differs (a link is best). We check every report against the source filing, and we fix confirmed errors and log them on the{' '}
+              <Link href="/about/corrections" className="font-semibold text-trades-ink hover:underline">corrections page</Link>. We never edit a story silently.
+            </p>
+            <div className="mt-3">
+              <DraftBlock title="How to send it: Colin to supply">
+                An email address or a form for error reports, and the promised response time. Nothing is published here until it exists, so a visitor is never given an address that nobody reads.
+              </DraftBlock>
+            </div>
+          </Card>
+        </div>
+
+        <div className="grid content-start gap-4">
+          <Card>
+            <h2 className="mb-3 font-display text-[24px] font-extrabold">The color code</h2>
+            <MoneyLegend />
+          </Card>
+          <Card>
+            <h2 className="font-display text-[24px] font-extrabold">Read the details</h2>
+            <ul className="mt-3 grid gap-3">
+              {LINKS.map((l) => (
+                <li key={l.href}>
+                  <Link href={l.href} className="font-semibold text-trades-ink hover:underline">{l.label} →</Link>
+                  <span className="block text-[14px] text-muted">{l.text}</span>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </div>
+      </div>
+    </SimplePage>
+  );
+}

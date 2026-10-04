@@ -1,0 +1,87 @@
+{
+  "source": "https://www.opensecrets.org/federal-lobbying/industries",
+  "slug": "industries",
+  "count": 20,
+  "data": [
+    {
+      "Industry": "Pharmaceuticals/Health Products",
+      "Total": "$131,965,102"
+    },
+    {
+      "Industry": "Electronics Mfg & Equip",
+      "Total": "$85,627,994"
+    },
+    {
+      "Industry": "Securities & Investment",
+      "Total": "$51,428,529"
+    },
+    {
+      "Industry": "Insurance",
+      "Total": "$49,954,955"
+    },
+    {
+      "Industry": "Air Transport",
+      "Total": "$41,938,886"
+    },
+    {
+      "Industry": "Health Services/HMOs",
+      "Total": "$41,460,719"
+    },
+    {
+      "Industry": "Electric Utilities",
+      "Total": "$41,194,883"
+    },
+    {
+      "Industry": "Hospitals/Nursing Homes",
+      "Total": "$38,747,738"
+    },
+    {
+      "Industry": "Oil & Gas",
+      "Total": "$38,535,448"
+    },
+    {
+      "Industry": "Misc Manufacturing & Distributing",
+      "Total": "$36,591,490"
+    },
+    {
+      "Industry": "Business Associations",
+      "Total": "$36,465,927"
+    },
+    {
+      "Industry": "Automotive",
+      "Total": "$35,968,089"
+    },
+    {
+      "Industry": "Civil Servants/Public Officials",
+      "Total": "$34,591,713"
+    },
+    {
+      "Industry": "Real Estate",
+      "Total": "$34,172,944"
+    },
+    {
+      "Industry": "Telecom Services",
+      "Total": "$32,227,985"
+    },
+    {
+      "Industry": "Education",
+      "Total": "$30,370,332"
+    },
+    {
+      "Industry": "Internet",
+      "Total": "$30,307,904"
+    },
+    {
+      "Industry": "Health Professionals",
+      "Total": "$25,921,737"
+    },
+    {
+      "Industry": "Misc Defense",
+      "Total": "$25,642,064"
+    },
+    {
+      "Industry": "Commercial Banks",
+      "Total": "$23,614,229"
+    }
+  ]
+}

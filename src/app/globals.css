@@ -1,0 +1,127 @@
+@import "tailwindcss";
+
+/* ─── SlushFund v2 design tokens: Direction C "Money Map" ───
+   Source of truth: openclaw-shared/projects/slushfund/design-directions.md
+   (palette checked for WCAG AA in mockups/_work/palette-check.txt).
+
+   Rule 1: one color = one kind of money, everywhere. The four money colors
+   (contracts, trades, campaign, lobbying) are never used for anything else,
+   and every use carries its label and letter icon (C / T / $ / L) so color
+   is never the only cue. Brand red is never a data color. Party is text.
+
+   Fonts come from next/font (layout.tsx) as --font-bricolage, --font-inter
+   and --font-dm-mono, so they are self-hosted and never render-block. */
+@theme {
+  /* Surfaces and text */
+  --color-page: #F3F5FB;
+  --color-card: #FFFFFF;
+  --color-ink: #14142B;          /* 16.5:1 on page */
+  --color-muted: #4F5170;        /* 7.7:1 on white */
+  --color-line: #DFE3EF;
+  --color-deep: #1D1A4E;         /* header indigo; white text 16.0:1 */
+  --color-deep-2: #2B2770;
+  --color-deep-glow: #3B2F9A;
+  --color-on-deep: #D9D8F2;      /* secondary text on indigo */
+
+  /* Brand (never a data color) */
+  --color-wordmark: #FF5A6E;     /* on indigo 5.3:1 */
+  --color-brand: #D21F3C;        /* primary button, white text */
+  --color-highlight: #FFE066;    /* "Worth a look" */
+  --color-highlight-ink: #3A2E00;/* 10.3:1 on highlight */
+
+  /* Money types: tile (white text), tint (chip bg), ink (chip text) */
+  --color-contracts: #0B7A84;
+  --color-contracts-tint: #DDF3F4;
+  --color-contracts-ink: #0A5E66;
+  --color-trades: #6534D9;
+  --color-trades-tint: #ECE6FD;
+  --color-trades-ink: #4C22B0;
+  --color-campaign: #C2410C;
+  --color-campaign-tint: #FDE9DD;
+  --color-campaign-ink: #9A3412;
+  --color-lobbying: #A61E4D;
+  --color-lobbying-tint: #FBE4EE;
+  --color-lobbying-ink: #8F1D48;
+
+  /* Data status */
+  --color-fresh: #1A8F4E;
+  --color-stale: #C77700;
+  --color-stale-tint: #FFF3D6;
+  --color-stale-ink: #6B4300;    /* 7.9:1 on stale-tint */
+  --color-down: #B42318;
+  --color-down-tint: #FEE4E2;
+  --color-down-ink: #8A1C12;     /* 7.6:1 on down-tint */
+  --color-neutral-tint: #EEF0F6;
+
+  /* Type */
+  --font-display: var(--font-bricolage), system-ui, sans-serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-dm-mono), ui-monospace, monospace;
+
+  /* Shape */
+  --radius-card: 20px;
+  --radius-tile: 20px;
+  --shadow-card: 0 1px 2px rgba(20, 20, 43, 0.06), 0 0 0 1px #DFE3EF;
+  --shadow-tile: 0 8px 24px rgba(20, 20, 43, 0.12);
+  --shadow-search: 0 10px 30px rgba(0, 0, 0, 0.25);
+
+  /* Legacy brand red (old pages only; v2 uses --color-brand) */
+  --color-slush-red: #E63946;
+  --color-slush-red-dark: #c1303b;
+  --color-slush-red-light: #ff6b75;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-page);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Indigo header and page bands share one glow: the band's gradient center is
+   offset by the header height so the two read as one surface. */
+:root { --header-h: 68px; }
+@media (max-width: 767px) { :root { --header-h: 60px; } }
+.v2-header {
+  background:
+    radial-gradient(1200px 500px at 85% -50px, var(--color-deep-glow) 0%, transparent 60%),
+    var(--color-deep);
+}
+.v2-band {
+  background:
+    radial-gradient(1200px 500px at 85% calc(-50px - var(--header-h)), var(--color-deep-glow) 0%, transparent 60%),
+    var(--color-deep);
+}
+
+/* Visible keyboard focus everywhere */
+:where(a, button, input, select, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--color-highlight);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ─── Legacy frame ───
+   Pages that have not been rebuilt yet were designed dark. Until D2-D6
+   replace them they render inside a dark frame, so their light-on-dark
+   text stays legible. A v2 page marks its root with data-v2 and the frame
+   drops away (no client JS needed). */
+.legacy-frame {
+  background: #0a0a0f;
+  color: #e8e8f0;
+}
+.legacy-frame:has([data-v2]) {
+  background: transparent;
+  color: inherit;
+}
+.legacy-frame .font-mono { font-family: var(--font-mono); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

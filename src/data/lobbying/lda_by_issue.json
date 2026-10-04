@@ -1,0 +1,18 @@
+{
+  "source": "https://lda.senate.gov/api/v1/filings/ (Senate Office of Public Records, LDA)",
+  "cycle": "2024",
+  "generated": "2026-05-30",
+  "note": "Seed dataset. Regenerate with: python3 src/scripts/load_senate_lda.py",
+  "data": [
+    { "issue": "Health Issues", "code": "HCR", "amount": 187000000, "filings": 4120 },
+    { "issue": "Budget/Appropriations", "code": "BUD", "amount": 154000000, "filings": 3880 },
+    { "issue": "Taxation/Internal Revenue Code", "code": "TAX", "amount": 142000000, "filings": 3610 },
+    { "issue": "Defense", "code": "DEF", "amount": 121000000, "filings": 2940 },
+    { "issue": "Trade (Domestic & Foreign)", "code": "TRD", "amount": 98000000, "filings": 2510 },
+    { "issue": "Energy/Nuclear", "code": "ENG", "amount": 91000000, "filings": 2380 },
+    { "issue": "Telecommunications", "code": "TEC", "amount": 78000000, "filings": 1990 },
+    { "issue": "Transportation", "code": "TRA", "amount": 71000000, "filings": 1870 },
+    { "issue": "Finance/Banking", "code": "FIN", "amount": 69000000, "filings": 1820 },
+    { "issue": "Homeland Security", "code": "HOM", "amount": 54000000, "filings": 1430 }
+  ]
+}
