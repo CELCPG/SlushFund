@@ -48,13 +48,14 @@ from collections import Counter, defaultdict
 from collections import deque
 import threading
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 from _venv import activate as _activate_venv
 _activate_venv()
 
 import pdfplumber
 from supabase import create_client
+from trade_fields import STRONG_OPTION, date_flag, date_typo_twin, lateness_detail, parse_option
 
 SUPABASE_URL = os.environ.get("NEXT_PUBLIC_SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
@@ -62,7 +63,7 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 ROSTER_PATH = os.path.join(DATA_DIR, "congress_roster.json")
 TERMS_PATH = os.path.join(DATA_DIR, "house_terms.json")
 UA = "slushfund-bulk-loader/1.0"
-PARSER_VERSION = "r3-6"
+PARSER_VERSION = "r6c-1"   # r6c-1 = r6a-1 + each line's own notification date (R6c); r6a-1 records stay valid
 PARSE_WORKERS = 3
 FETCH_WINDOW = 3  # downloads in flight at once (request *starts* stay >= MIN_REQUEST_INTERVAL apart)
 MIN_REQUEST_INTERVAL = 1.0  # seconds between requests to the Clerk (data-rules: <= 1 req/s)
@@ -71,6 +72,9 @@ INDEX_URL = "https://disclosures-clerk.house.gov/public_disc/financial-pdfs/{yea
 PTR_URL = "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/{year}/{doc}.pdf"
 
 TYPE_MAP = {"P": "BUY", "S": "SELL", "E": "EXCHANGE"}
+# R6a lossless upsert key (migration 20261006_r6a_trades_key.sql)
+NATURAL_KEY = ("member_name", "ticker", "transaction_date", "transaction_type", "owner", "asset_type",
+               "option_type", "strike", "expiry")
 # Owner column codes (blank = the filer). Same words as the Senate loader's `owner` column
 # (migration 20261005_congress_trades_owner.sql, R4).
 OWNER_MAP = {"SP": "Spouse", "JT": "Joint", "DC": "Child"}
@@ -102,6 +106,38 @@ LABEL_RE = re.compile(
 # repeated table header at the top of each page + the form's footnote
 HEADER_RE = re.compile(r"^\s*(?:ID\s+Owner\s+Asset|Type\s+Date\s+Gains|\$200\?\s*$|\*\s*For the complete list)", re.I)
 CHECKBOX_RE = re.compile(r"gfedc[a-z]?")
+
+
+# end of the transactions table: whatever follows is not part of a transaction's description
+STOP_RE = re.compile(
+    r"^\s*(?:\*\s*For the complete|I\s*P\s*O\b|Initial\s+Public|Certification|Digitally\s+Signed|Clerk of the House"
+    r"|Filing ID|Name:|Status:|State/District|\$200\?)", re.I)
+
+
+def _label_block(lines, start):
+    """(description, filing status) from the label lines under one transaction (R6a). They run from
+    `start` to the next transaction line: 'F S : New' / 'FILING STATUS: New', 'S O : ...', and the free-text
+    'D : Call options; Strike price $340; Expires 10/16/2026' / 'DESCRIPTION: Purchased 100 call options...',
+    which can wrap onto further lines. Options (call / put, strike, expiry) are only readable here."""
+    desc, status, cur = [], "", None
+    for k in range(start, min(len(lines), start + 14)):
+        ln = re.sub(r"[\x00-\x1f]", " ", lines[k])      # 2023+ PDFs pad the label letters with NULs ('F\x00\x00 S\x00: New')
+        if CORE_RE.search(ln) or STOP_RE.match(ln):
+            break
+        if LABEL_RE.match(ln):
+            key, _, rest = ln.partition(":")
+            key = re.sub(r"[^a-z]", "", key.lower())
+            if key in ("d", "description"):
+                cur = "d"
+                desc.append(rest.strip())
+            elif key in ("fs", "filingstatus"):
+                cur = "fs"
+                status = rest.strip()
+            else:
+                cur = "x"
+        elif cur == "d" and len(desc) < 4:
+            desc.append(ln.strip())
+    return _clean_text(" ".join(desc))[:300] or None, status or None
 
 
 def _norm_district(d) -> str:
@@ -385,16 +421,20 @@ def parse_ptr_pdf(pdf_bytes: bytes):
             company = company.replace(tk.group(0), "")
             company = re.sub(r"\[[A-Za-z0-9]{2}\]|\$\s*[\d,]+(?:\.\d+)?", "", company)
             company = _fix_glitch(_clean_text(company).strip(" -"))[:200] or symbol
+            desc, filing_status = _label_block(lines, j)
             trades.append({
                 "ticker": symbol,
                 "company_name": company,
                 "transaction_type": TYPE_MAP.get(ttype, "BUY"),
                 "transaction_date": iso,
+                "notification_date": to_iso(notif_date),   # R6c: the filing's own 'notification date' for this line
                 "amount_min": amt_min,
                 "amount_max": amt_max,
                 "amount_range": band,
                 "asset_type": ASSET_TYPE_MAP.get(code, "Other" if code else "Stock"),
                 "owner": OWNER_MAP[owner_m.group(1)] if owner_m else "Self",   # no code = the filer
+                "desc": desc,                     # R6a: the filing's own description of the asset / trade
+                "filing_status": filing_status,   # R6a: 'New' / 'Amended' as printed
             })
             stats["loaded"] += 1
     except Exception as e:  # noqa: BLE001 — a bad PDF must not abort the batch
@@ -404,32 +444,53 @@ def parse_ptr_pdf(pdf_bytes: bytes):
     return trades, stats
 
 
+def option_of(trade):
+    """(option_type, strike, expiry) for one parsed transaction (R6a), None x3 when it is not an option.
+    An option is a line the Clerk coded [OP], or one whose own description names call / put options. A
+    description of an option EXERCISE ('Exercised 100 call options ... acquired 10,000 shares') on a line coded
+    as stock stays a stock line. The call / put, strike and expiry come only from the filer's description."""
+    desc = trade.get("desc") or ""
+    if trade["asset_type"] == "Option":
+        return parse_option(desc, True)
+    if desc and STRONG_OPTION.search(desc) and not re.search(r"exercis", desc, re.I):
+        return parse_option(desc, True)
+    return None, None, None
+
+
 def fold_lots(trades):
-    """The table's unique key (member, ticker, date, direction) has no amount, so same-day
-    lots in one PTR share one row: the band is the sum of the lots' bands, the lots are listed
-    in amount_range ('... (2 lots)') and owners are merged. Same convention as the Senate loader.
-    Returns (rows, lots folded away, lots dropped because another asset type holds the key)."""
+    """Same-day lots of one instrument and one owner in one PTR share a row: the band is the sum of the lots'
+    bands, lot_count says how many, and the lots are listed in amount_range ('... (2 lots)'). The instrument is
+    ticker + direction + asset type + call/put + strike + expiry, so two owners, a stock and its option, or two
+    different option contracts on one day are different rows (R6a lossless key).
+    Returns (rows, lots folded away)."""
     groups = {}
     for t in trades:
-        groups.setdefault((t["ticker"], t["transaction_date"], t["transaction_type"]), []).append(t)
-    out, folded, dropped = [], 0, 0
+        opt, strike, expiry = option_of(t)
+        t = dict(t, option_type=opt, strike=strike, expiry=expiry.isoformat() if expiry else None)
+        groups.setdefault((t["ticker"], t["transaction_date"], t["transaction_type"], t["owner"], t["asset_type"],
+                           opt, strike, t["expiry"]), []).append(t)
+    out, folded = [], 0
     for lots in groups.values():
-        kind = "Stock" if any(x["asset_type"] == "Stock" for x in lots) else lots[0]["asset_type"]
-        same = [x for x in lots if x["asset_type"] == kind]
-        dropped += len(lots) - len(same)
-        folded += len(same) - 1
-        row = dict(same[0])
-        if len(same) > 1:
-            mins, maxs = [x["amount_min"] for x in same], [x["amount_max"] for x in same]
-            owners = {x["owner"] for x in same}
+        folded += len(lots) - 1
+        row = {k: v for k, v in lots[0].items() if k not in ("desc", "filing_status")}
+        row["lot_count"] = len(lots)
+        row["_amended"] = any("amend" in (x.get("filing_status") or "").lower() for x in lots)
+        # R6c: one notification date per row. When same-day lots print different ones, keep the one farthest
+        # from the transaction date (the least corroborating), so a typo in one lot is not hidden by the others.
+        notifs = [x.get("notification_date") for x in lots]
+        if any(n is None for n in notifs):
+            row["notification_date"] = None             # an r6a-1 cache record: not captured
+        else:
+            row["notification_date"] = max(notifs, key=lambda n: abs((_d(n) - _d(row["transaction_date"])).days))
+        if len(lots) > 1:
+            mins, maxs = [x["amount_min"] for x in lots], [x["amount_max"] for x in lots]
             row.update(
                 amount_min=sum(mins) if all(v is not None for v in mins) else None,
                 amount_max=sum(maxs) if all(v is not None for v in maxs) else None,
-                amount_range=" + ".join(x["amount_range"] or "?" for x in same) + f" ({len(same)} lots)",
-                owner=", ".join([o for o in OWNER_ORDER if o in owners] + sorted(owners - set(OWNER_ORDER))),
+                amount_range=" + ".join(x["amount_range"] or "?" for x in lots) + f" ({len(lots)} lots)",
             )
         out.append(row)
-    return out, folded, dropped
+    return out, folded
 
 
 def classify(stats) -> str:
@@ -457,23 +518,23 @@ def load_cache(path):
                     continue
                 if _cache_ok(rec):
                     done[rec["doc"]] = rec
+                else:
+                    done.pop(rec["doc"], None)      # the newest record of a filing decides: an outdated one means "fetch again"
     return done
 
 
-# r3-6 only changed how ticker-like text is recognised (glitched d/h letters, "$" in preferred
-# tickers), so an r3-5 record stays valid unless it skipped a line of a type that can carry a
-# ticker; those filings are fetched again.
-SUSPECT_CODES = {"ST", "PS", "OP", "EF", "MF", "OT", "?"}
-
-
+# r6a-1 only added what each transaction's filing text says (desc, filing_status); the ticker
+# rules are r3-6's. A record from r3-5 / r3-6 is still valid when the filing has no loadable
+# transaction (scanned, no ticker): there is nothing to describe. Every filing that produced rows is
+# fetched again so its description lines are in the cache.
+# r6c-1 only adds each line's notification date; an r6a-1 record stays valid (its rows carry
+# notification_date NULL = not captured). Only the filings holding stale_2y rows are re-read (--recapture-stale).
 def _cache_ok(rec) -> bool:
     if rec.get("status") == "fetch_failed":
         return False
-    if rec.get("parser") == PARSER_VERSION:
+    if rec.get("parser") in (PARSER_VERSION, "r6a-1"):
         return True
-    if rec.get("parser") == "r3-5":
-        return not (set((rec.get("stats") or {}).get("no_ticker_codes") or {}) & SUSPECT_CODES)
-    return False
+    return rec.get("parser") in ("r3-5", "r3-6") and rec.get("status") in ("scanned", "no_ticker", "no_transactions")
 
 
 def gaming_ok() -> bool:
@@ -503,30 +564,20 @@ def member_ids(sb):
 
 
 def _filing_rank(filed_date, doc):
-    """Order filings: later filing date wins, then the higher DocID (Clerk DocIDs only grow)."""
+    """Order filings: earlier filing date first, then the lower DocID (Clerk DocIDs only grow)."""
     return (filed_date or "", int(doc) if str(doc).isdigit() else 0)
 
 
-def existing_house_rows(sb):
-    """(member_name, ticker, transaction_date, transaction_type) -> filing rank of the House_Clerk
-    row already stored. The same transaction can be filed again in a later year (an amendment
-    or a late re-filing); the later filing must win whatever order the years are loaded in."""
-    out, start = {}, 0
-    while True:
-        rows = (sb.table("congress_trades")
-                .select("member_name,ticker,transaction_date,transaction_type,filed_date,source_doc_id")
-                .eq("source_system", "House_Clerk").order("id").range(start, start + 999).execute().data)
-        for r in rows:
-            out[(r["member_name"], r["ticker"], r["transaction_date"], r["transaction_type"])] = \
-                _filing_rank(r["filed_date"], r["source_doc_id"])
-        if len(rows) < 1000:
-            return out
-        start += 1000
+def identity(r, txn_date=None):
+    """One disclosed transaction, whatever lots / owners / asset-type code a later filing restates it with.
+    txn_date overrides the row's own date for a row whose year was mistyped (R6e twin rule, build_all)."""
+    return (r["member_name"], r["ticker"], txn_date or r["transaction_date"], r["transaction_type"],
+            r["option_type"], r["strike"], r["expiry"])
 
 
 def _upsert(sb, rows):
     sb.table("congress_trades").upsert(
-        rows, on_conflict="member_name,ticker,transaction_date,transaction_type"
+        rows, on_conflict=",".join(NATURAL_KEY)
     ).execute()
 
 
@@ -555,14 +606,209 @@ def write_trades(sb, trades):
 
 # ───────────────────────── run ─────────────────────────
 
-def run(years, check_only=False, limit=None, cache_dir=None, no_write=False, deadline_min=None):
+def recapture_stale(sb, cache_dir):
+    """R6c: re-read only the filings that hold stale_2y / stale_2y_corroborated rows, so each line's own
+    notification date is in the cache (r6c-1 records). One request per second, one filing at a time, resumable:
+    a filing whose newest cache record is already r6c-1 is skipped. Returns the number of filings fetched."""
+    docs = {}
+    start = 0
+    while True:
+        rows = (sb.table("congress_trades").select("source_doc_id,disclosure_year")
+                .eq("source_system", "House_Clerk").in_("date_flag", ["stale_2y", "stale_2y_corroborated"])
+                .range(start, start + 999).execute().data)
+        for r in rows:
+            docs[r["source_doc_id"]] = r["disclosure_year"]
+        if len(rows) < 1000:
+            break
+        start += 1000
+    print(f"recapture: {len(docs)} filings hold stale_2y rows")
+    fetched = 0
+    for doc, year in sorted(docs.items()):
+        path = os.path.join(cache_dir, f"{year}.jsonl")
+        if load_cache(path).get(doc, {}).get("parser") == PARSER_VERSION:
+            print(f"  {doc}: already recaptured")
+            continue
+        if not gaming_ok():
+            print("  gaming mode on — checkpointed, stopping")
+            raise SystemExit(3)
+        pdf_bytes = fetch(PTR_URL.format(year=year, doc=doc))
+        trades, stats = parse_ptr_pdf(pdf_bytes)
+        rec = {"doc": doc, "year": year, "parser": PARSER_VERSION, "status": classify(stats),
+               "stats": stats, "trades": trades}
+        with open(path, "a", encoding="utf-8") as out:
+            out.write(json.dumps(rec) + "\n")
+        fetched += 1
+        print(f"  {doc} ({year}): {stats['loaded']} lines, {sum(1 for t in trades if t.get('notification_date'))} with a notification date")
+    return fetched
+
+
+def build_all(cache_dir, matcher, ids, sb, prune):
+    """Rows for every cached year, one pass, then written (idempotent upsert on the lossless key).
+
+    Per filing: lots fold by instrument + owner. Across filings: the same transaction (member, ticker, date,
+    direction, option type / strike / expiry) filed again (an amendment or re-filing) is restated by the LATER
+    filing, which replaces the earlier filing's rows for it. original_filed_date is the earliest filing that
+    held the transaction; when that earliest filing is itself marked Amended and no earlier filing is cached,
+    the original is unknown (NULL). Date flags and lateness: trade_fields.py."""
+    today = date.today()
+    run_ts = datetime.now(timezone.utc).isoformat()
+    acct = Counter()
+    per_filing = []
+    years = sorted(int(n[:4]) for n in os.listdir(cache_dir) if re.fullmatch(r"\d{4}-index\.json", n))
+    for year in years:
+        with open(os.path.join(cache_dir, f"{year}-index.json"), encoding="utf-8") as xf:
+            filings = json.load(xf)
+        done = load_cache(os.path.join(cache_dir, f"{year}.jsonl"))
+        for f in filings:
+            doc = (f.get("DocID") or "").strip()
+            rec = done.get(doc)
+            if not rec:
+                acct["filings_not_cached"] += 1
+                continue
+            acct["filings_" + rec["status"]] += 1
+            if not rec["trades"]:
+                continue
+            acct["parsed_lines"] += len(rec["trades"])
+            last, first = (f.get("Last") or "").strip(), (f.get("First") or "").strip()
+            statedst = (f.get("StateDst") or "").strip()
+            state, district = statedst[:2], _norm_district(statedst[2:])
+            filed = to_iso(f.get("FilingDate", ""))
+            term = matcher.match(last, first, state, district, _d(filed) if filed else date(year, 6, 30))
+            bio = term["bioguide_id"] if term else None
+            if not term:
+                acct["filings_unmatched_member"] += 1
+            member_name = matcher.name_for(term, first, last)
+            url = PTR_URL.format(year=year, doc=doc)
+            folded_rows, n_folded = fold_lots(rec["trades"])
+            acct["lots_folded"] += n_folded
+            rows = []
+            for t in folded_rows:
+                rows.append({
+                    **t,
+                    "company_name": _fix_glitch(_clean_text(t["company_name"])),
+                    "member_name": member_name,
+                    "member_chamber": "House",
+                    "member_party": term["party"] if term else "",
+                    "member_state": state,
+                    "district": district,
+                    "bio_guide_id": bio,
+                    "member_id": ids.get(bio) if bio else None,
+                    "disclosure_year": year,
+                    "filed_date": filed,
+                    "disclosure_url": url,
+                    "source_doc_id": doc,
+                    "source_system": "House_Clerk",
+                    "flags": [],
+                    "signal_type": "routine",
+                    # R6e (A7b F6): no has_federal_contract here. compute_conflicts.py owns it (NULL = not computed,
+                    # the column default); the loader used to write false for every row.
+                })
+            per_filing.append((_filing_rank(filed, doc), doc, rows))
+
+    per_filing.sort(key=lambda x: x[0])
+    # R6e (A7b F1): a row whose date cannot be right (after its own filing, or in the future) that a LATER filing
+    # restates with a month/day twin (a mistyped year; Wittman MA 12/07/2023 for 12/07/2022) is the same transaction.
+    # Key it on the twin's date: the later filing then restates it and the earliest filing stays the original.
+    # Twin = same member, ticker, direction, owner and option terms, same month and day, a date on or before the
+    # suspect row's own filing, exactly one candidate (trade_fields.date_typo_twin).
+    def _sig(r):
+        return (r["member_name"], r["ticker"], r["transaction_type"], r["owner"], r["option_type"], r["strike"], r["expiry"])
+    by_sig = defaultdict(list)
+    for rank, _doc, rows in per_filing:
+        for r in rows:
+            by_sig[_sig(r)].append((rank, r["transaction_date"]))
+    twin_date, twin_report = {}, []
+    for rank, doc, rows in per_filing:
+        for r in rows:
+            cands = [d for (rk, d) in by_sig[_sig(r)] if rk > rank]
+            twin = date_typo_twin(r["transaction_date"], r["filed_date"], today, cands) if cands else None
+            if twin:
+                twin_date[id(r)] = twin.isoformat()
+                twin_report.append({"member": r["member_name"], "ticker": r["ticker"], "type": r["transaction_type"],
+                                    "owner": r["owner"], "typo_date": r["transaction_date"], "twin_date": twin.isoformat(),
+                                    "typo_doc": doc, "typo_filed": r["filed_date"]})
+    acct["date_typo_twins"] = len(twin_report)
+    seen = {}                                   # identity -> {"doc", "rows", "orig", "orig_known"}
+    replaced = []
+    for _rank, doc, rows in per_filing:
+        groups = {}
+        for r in rows:
+            groups.setdefault(identity(r, twin_date.get(id(r))), []).append(r)
+        for ident, rs in groups.items():
+            old = seen.get(ident)
+            if old and old["doc"] != doc:
+                acct["lines_replaced_by_a_later_filing"] += sum(x["lot_count"] for x in old["rows"])
+                acct["rows_replaced_by_a_later_filing"] += len(old["rows"])
+                replaced.append({"member": ident[0], "ticker": ident[1], "date": ident[2], "type": ident[3],
+                                 "kept_doc": doc, "dropped_doc": old["doc"],
+                                 "kept": [[x["owner"], x["amount_range"]] for x in rs],
+                                 "dropped": [[x["owner"], x["amount_range"]] for x in old["rows"]]})
+                orig, known = old["orig"], old["orig_known"]      # the earliest filing stays the original
+            else:
+                amended = any(x["_amended"] for x in rs)
+                orig, known = (None, False) if amended else (rs[0]["filed_date"], True)
+            seen[ident] = {"doc": doc, "rows": rs, "orig": orig, "orig_known": known}
+
+    final, keys = [], set()
+    for entry in seen.values():
+        for r in entry["rows"]:
+            r = {k: v for k, v in r.items() if k != "_amended"}
+            r["original_filed_date"] = entry["orig"]
+            r.setdefault("notification_date", None)
+            flag = date_flag(r["transaction_date"], entry["orig"], r["filed_date"], today, r["notification_date"])
+            r["date_flag"] = flag
+            r["days_to_file"], r["stock_act_late"], r["lateness_basis"] = lateness_detail(
+                r["transaction_date"], entry["orig"], flag, r.get("amount_max"))
+            r["updated_at"] = run_ts
+            k = tuple(r[c] for c in NATURAL_KEY)
+            if k in keys:
+                raise SystemExit(f"duplicate lossless key after identity resolution: {k}")
+            keys.add(k)
+            final.append(r)
+    acct["rows"] = len(final)
+    acct["lines_in_rows"] = sum(r["lot_count"] for r in final)
+    acct["reconcile_gap"] = acct["parsed_lines"] - acct["lines_in_rows"] - acct["lines_replaced_by_a_later_filing"]
+    acct["option_rows"] = sum(1 for r in final if r["option_type"])
+    acct["option_rows_unknown"] = sum(1 for r in final if r["option_type"] == "unknown")
+    acct["original_unknown_rows"] = sum(1 for r in final if r["original_filed_date"] is None)
+    acct["flag_" + "_".join(["none"])] = sum(1 for r in final if r["date_flag"] is None)
+    for fl in ("after_filing", "future", "stale_2y_corroborated", "stale_2y"):
+        acct["flag_" + fl] = sum(1 for r in final if r["date_flag"] == fl)
+    acct["notification_date_captured"] = sum(1 for r in final if r["notification_date"])
+    acct["lateness_computed"] = sum(1 for r in final if r["days_to_file"] is not None)
+    acct["late_over_45"] = sum(1 for r in final if r["stock_act_late"])
+    acct["below_reporting_threshold"] = sum(1 for r in final if r["lateness_basis"] == "below_reporting_threshold")
+    with open(os.path.join(cache_dir, "r6e-twins.json"), "w", encoding="utf-8") as sf:
+        json.dump(twin_report, sf, indent=1)
+    with open(os.path.join(cache_dir, "r6a-summary.json"), "w", encoding="utf-8") as sf:
+        json.dump(dict(acct), sf, indent=1)
+    with open(os.path.join(cache_dir, "r6a-replaced.json"), "w", encoding="utf-8") as sf:
+        json.dump(replaced, sf)
+    print("build:", json.dumps(dict(acct)))
+    if not sb:
+        return 0
+    written, failed = write_trades(sb, final)
+    print(f"written {written}, failed {failed}")
+    if failed:
+        print("rows failed: not pruning")
+        return written
+    stale = sb.table("congress_trades").select("id", count="exact").eq("source_system", "House_Clerk").lt("updated_at", run_ts).execute().count
+    print(f"House_Clerk rows this run did not write (old key shape): {stale}")
+    if prune and stale:
+        sb.table("congress_trades").delete().eq("source_system", "House_Clerk").lt("updated_at", run_ts).execute()
+        print(f"pruned {stale}")
+    return written
+
+
+def run(years, check_only=False, limit=None, cache_dir=None, no_write=False, deadline_min=None, prune=False,
+        recapture=False):
     matcher = load_matcher()
     print(f"Matcher: {sum(len(v) for v in matcher.by_state.values())} House terms indexed")
     deadline = time.monotonic() + deadline_min * 60 if deadline_min else None
     cache_dir = cache_dir or os.path.join(tempfile.gettempdir(), "slushfund-house-ptr-cache")
     os.makedirs(cache_dir, exist_ok=True)
 
-    sb, ids, existing = None, {}, {}
+    sb, ids = None, {}
     if not check_only and not no_write:
         if not SUPABASE_URL or not SUPABASE_KEY:
             print("ERROR: Supabase credentials not set")
@@ -570,8 +816,8 @@ def run(years, check_only=False, limit=None, cache_dir=None, no_write=False, dea
         sb = create_client(SUPABASE_URL, SUPABASE_KEY)
         ids = member_ids(sb)
         print(f"congress_members: {len(ids)} bioguide ids")
-        existing = existing_house_rows(sb)
-        print(f"congress_trades: {len(existing)} House_Clerk rows already stored")
+        if recapture:
+            print(f"recapture: {recapture_stale(sb, cache_dir)} filings fetched")
 
     grand_total = 0
     pool = ProcessPoolExecutor(max_workers=PARSE_WORKERS)
@@ -583,6 +829,8 @@ def run(years, check_only=False, limit=None, cache_dir=None, no_write=False, dea
             print(f"{year}: index unreachable — {e}")
             continue
         filings.sort(key=lambda f: (to_iso(f.get("FilingDate", "")) or "", f.get("DocID", "")))
+        with open(os.path.join(cache_dir, f"{year}-index.json"), "w", encoding="utf-8") as xf:
+            json.dump(filings, xf)       # the build step reads every year's index, not only the requested ones
         if limit:
             filings = filings[:limit]
         print(f"\n{year}: {len(filings)} PTR filings")
@@ -647,96 +895,11 @@ def run(years, check_only=False, limit=None, cache_dir=None, no_write=False, dea
             fetch_pool.shutdown()
             return 3
 
-        # build rows from the checkpoint, in filing order (a later filing overrides an earlier one)
-        rows, status_count, unmatched = [], Counter(), 0
-        lots_folded = lots_dropped = 0
-        for f in filings:
-            doc = (f.get("DocID") or "").strip()
-            rec = done.get(doc)
-            if not rec:
-                status_count["fetch_failed"] += 1
-                continue
-            status_count[rec["status"]] += 1
-            if not rec["trades"]:
-                continue
-            last = (f.get("Last") or "").strip()
-            first = (f.get("First") or "").strip()
-            statedst = (f.get("StateDst") or "").strip()
-            state, district = statedst[:2], _norm_district(statedst[2:])
-            filed = to_iso(f.get("FilingDate", ""))
-            term = matcher.match(last, first, state, district, _d(filed) if filed else date(year, 6, 30))
-            bio = term["bioguide_id"] if term else None
-            if not term:
-                unmatched += 1
-            member_name = matcher.name_for(term, first, last)
-            url = PTR_URL.format(year=year, doc=doc)
-            folded_rows, n_folded, n_dropped = fold_lots(rec["trades"])
-            lots_folded += n_folded
-            lots_dropped += n_dropped
-            for t in folded_rows:
-                rows.append({
-                    **t,
-                    "company_name": _fix_glitch(_clean_text(t["company_name"])),
-                    "member_name": member_name,
-                    "member_chamber": "House",
-                    "member_party": term["party"] if term else "",
-                    "member_state": state,
-                    "district": district,
-                    "bio_guide_id": bio,
-                    "member_id": ids.get(bio) if bio else None,
-                    "disclosure_year": year,
-                    "filed_date": filed,
-                    "disclosure_url": url,
-                    "source_doc_id": doc,
-                    "source_system": "House_Clerk",
-                    "flags": [],
-                    "signal_type": "routine",
-                    "has_federal_contract": False,
-                })
-
-        # dedup on the same key as the DB unique index (later filing wins);
-        # count what collapsed so the loss is visible
-        by_key, collapsed_cross_doc = {}, 0
-        for r in rows:
-            key = (r["member_name"], r["ticker"], r["transaction_date"], r["transaction_type"])
-            if key in by_key:
-                collapsed_cross_doc += 1        # the same transaction filed again (amendment / re-filing)
-            by_key[key] = r
-        deduped = list(by_key.values())
-
-        # never overwrite a row stored from a later filing (cross-year amendments / re-filings)
-        superseded = 0
-        if sb:
-            keep = []
-            for r in deduped:
-                key = (r["member_name"], r["ticker"], r["transaction_date"], r["transaction_type"])
-                rank = _filing_rank(r["filed_date"], r["source_doc_id"])
-                if existing.get(key, ("", 0)) > rank:
-                    superseded += 1
-                else:
-                    keep.append(r)
-                    existing[key] = rank
-            deduped_to_write = keep
-        else:
-            deduped_to_write = deduped
-
-        written, failed = write_trades(sb, deduped_to_write) if sb else (0, 0)
-        grand_total += written
-        summary = {"year": year, "filings": len(filings), "status": dict(status_count),
-                   "rows_parsed": len(rows), "rows_unique": len(deduped),
-                   "same_day_lots_folded": lots_folded, "lots_dropped_other_asset_type": lots_dropped,
-                   "collapsed_cross_doc_refiled": collapsed_cross_doc,
-                   "skipped_stored_from_later_filing": superseded,
-                   "filings_with_unmatched_member": unmatched, "written": written, "write_failed": failed,
-                   "no_ticker_transactions": sum(r.get("stats", {}).get("no_ticker", 0) for r in done.values()),
-                   "txn_lines": sum(r.get("stats", {}).get("txn_lines", 0) for r in done.values()),
-                   "parser": PARSER_VERSION}
-        with open(os.path.join(cache_dir, f"{year}-summary.json"), "w", encoding="utf-8") as sf:
-            json.dump(summary, sf, indent=1)
-        print(f"{year}: {json.dumps(summary)}")
-
     pool.shutdown()
     fetch_pool.shutdown()
+    if check_only:
+        return 0
+    grand_total = build_all(cache_dir, matcher, ids, sb, prune)
     print(f"\n=== DONE: {grand_total} House trades written ===")
     return 0
 
@@ -750,11 +913,16 @@ def main():
     ap.add_argument("--cache-dir", help="per-year JSONL checkpoint directory (default: temp dir)")
     ap.add_argument("--no-write", action="store_true", help="parse and checkpoint only; no database writes")
     ap.add_argument("--deadline-min", type=float, help="stop (checkpointed) after this many minutes")
+    ap.add_argument("--prune", action="store_true",
+                    help="after writing, delete House_Clerk rows this run did not write (rows of the old, lossy key)")
+    ap.add_argument("--recapture-stale", action="store_true",
+                    help="R6c: first re-read the filings holding stale_2y rows (1 req/s) so the notification dates are cached")
     args = ap.parse_args()
 
     years = list(range(2016, 2027)) if args.all else (args.years or [2024])
     return run(years, check_only=args.check, limit=args.limit, cache_dir=args.cache_dir,
-               no_write=args.no_write, deadline_min=args.deadline_min)
+               no_write=args.no_write, deadline_min=args.deadline_min, prune=args.prune,
+               recapture=args.recapture_stale)
 
 
 if __name__ == "__main__":

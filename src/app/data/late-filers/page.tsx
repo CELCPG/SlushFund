@@ -13,6 +13,7 @@ import SourceBar from '@/components/v2/SourceBar';
 import { partyLetter } from '@/components/v2/TradesTable';
 import { getDatasetStatuses } from '@/lib/v2/datasets';
 import { buildHref, one, type SP } from '@/lib/v2/explorer';
+import { LATENESS_BASIS_WORDING } from '@/lib/v2/date-flags';
 import { lateFilersEnabled } from '@/lib/v2/flags';
 import { fmtCount, fmtDateShort, fmtPct } from '@/lib/v2/format';
 import {
@@ -27,6 +28,11 @@ export const metadata: Metadata = {
 };
 
 const MEMBERS_SHOWN = 20;
+
+/** "below the $1,000 reporting threshold" from the shared lateness_basis sentence (one wording source). */
+function basisReason(basis: string): string {
+  return (LATENESS_BASIS_WORDING[basis] ?? 'other reasons').replace(/^Lateness not computed: /, '').replace(/\.$/, '');
+}
 const field = 'h-11 w-full min-w-0 rounded-xl border border-line bg-page px-3 text-[15px] text-ink focus:border-trades focus:outline-none';
 const label = 'mb-1 block text-[12px] font-semibold uppercase tracking-[0.05em] text-muted';
 
@@ -52,13 +58,13 @@ export default async function LateFilersPage({ searchParams }: { searchParams: P
 
   const memberColumns: DataTableColumn[] = [
     { key: 'member', header: 'Member', mobile: 'title', sortable: false },
+    { key: 'reports', header: `Reports with a trade over ${STOCK_ACT_DAYS} days`, numeric: true, sortable: false },
+    { key: 'over', header: 'Transactions in them', numeric: true, sortable: false },
     { key: 'gap', header: 'Longest gap', numeric: true, sortable: false },
-    { key: 'over', header: `Trades over ${STOCK_ACT_DAYS} days`, numeric: true, sortable: false },
-    { key: 'reports', header: 'In how many reports', numeric: true, sortable: false },
   ];
   const memberRows: DataTableRow[] = shownMembers.map((m) => ({
     id: m.key,
-    values: { member: m.name, gap: m.maxDays, over: m.over, reports: m.reports },
+    values: { member: m.name, reports: m.reports, over: m.over, gap: m.maxDays },
     cells: {
       member: (
         <span className="block min-w-0">
@@ -73,12 +79,13 @@ export default async function LateFilersPage({ searchParams }: { searchParams: P
           <FilingLink href={m.maxUrl} className="font-sans" />
         </span>
       ),
-      over: <span>{fmtCount(m.over)} <span className="font-sans text-[12px] text-muted">of {fmtCount(m.computed)}</span></span>,
-      reports: <span>{fmtCount(m.reports)}</span>,
+      reports: <b className="font-mono text-[15px] font-semibold">{fmtCount(m.reports)}</b>,
+      over: <span className="text-muted">{fmtCount(m.over)} <span className="font-sans text-[12px]">of {fmtCount(m.computed)}</span></span>,
     },
   }));
 
   const notComputed = summary ? summary.totalRows - summary.computed : null;
+  const reasons = summary?.notComputed ?? [];
 
   return (
     <div data-v2>
@@ -105,25 +112,29 @@ export default async function LateFilersPage({ searchParams }: { searchParams: P
                 <b className="text-ink">The gap</b> is the number of days from the trade date to the day the first report holding it was filed. An amended report does not reset it.
               </li>
               <li>
-                <b className="text-ink">The STOCK Act asks for {STOCK_ACT_DAYS} days.</b> The count can start when the member learns of the trade, which a filing does not show, so a gap over {STOCK_ACT_DAYS} days
-                is a measured fact about two dates, not a finding about the filer.
+                <b className="text-ink">The STOCK Act sets a {STOCK_ACT_DAYS}-day limit.</b> The count can start when the member learns of the trade, which a filing does not always show, so a gap over {STOCK_ACT_DAYS} days
+                is a measured fact about two dates, not a finding about the filer. Dates are as the member filed them; see the House Clerk or Senate eFD record linked on each row.
               </li>
               <li>
                 <b className="text-ink">Grouped by report.</b> One report can hold hundreds of trades, so the trade list has one row per report, each opening to its trades. Members are ranked by the longest single
-                gap and, separately, by how many reports hold a trade over {STOCK_ACT_DAYS} days.
+                gap or by how many reports hold a trade over {STOCK_ACT_DAYS} days, never by the number of transactions.
               </li>
               <li>
                 <b className="text-ink">What is left out.</b>{' '}
                 {notComputed != null && summary
-                  ? <>{fmtCount(notComputed)} of {fmtCount(summary.totalRows)} trade rows have no gap here: the report&rsquo;s own dates disagree or don&rsquo;t fit together, or the first report is not in our records. </>
+                  ? <>
+                      Lateness is not computed for {fmtCount(notComputed)} of {fmtCount(summary.totalRows)} trade rows
+                      {reasons.length > 0 && <>: {reasons.map((r, i) => <span key={i}>{i ? '; ' : ''}{fmtCount(r.count)} ({basisReason(r.basis)})</span>)}</>}.
+                      {' '}They are left off this page and are never counted either way.{' '}
+                    </>
                   : null}
-                Scanned House reports and paper Senate reports have not been read, so a trade in one of them is missing, not on time. Senate filings are loaded from 2024 and House filings from 2021.
+                Scanned House reports and paper Senate reports have not been read, so a trade in one of them is missing here and nothing is said about its timing. Senate filings are loaded from 2024 and House filings from 2021.
               </li>
             </ul>
             {summary && (
               <p className="mt-4 rounded-2xl bg-page px-4 py-3 text-[14px]">
-                <b>{fmtCount(summary.over)}</b> of the <b>{fmtCount(summary.computed)}</b> trades with a gap were reported more than {STOCK_ACT_DAYS} days after the trade ({fmtPct(summary.over / summary.computed)}),
-                by <b>{fmtCount(summary.members.length)}</b> members, in <b>{fmtCount(summary.reports.length)}</b> reports.
+                <b>{fmtCount(summary.over)}</b> transactions in <b>{fmtCount(summary.reports.length)}</b> reports were filed more than {STOCK_ACT_DAYS} days after the trade, by <b>{fmtCount(summary.members.length)}</b> members.
+                That is {fmtPct(summary.over / summary.computed)} of the {fmtCount(summary.computed)} trades whose lateness we compute.
               </p>
             )}
           </Card>
@@ -157,8 +168,8 @@ export default async function LateFilersPage({ searchParams }: { searchParams: P
               <DataTable
                 columns={memberColumns}
                 rows={memberRows}
-                caption="Members ranked by the gap between a trade and its first report"
-                footer={<span>&ldquo;Trades over {STOCK_ACT_DAYS} days&rdquo; counts rows; &ldquo;of N&rdquo; is all of the member&rsquo;s trades with a computed gap.</span>}
+                caption="Members ranked by the gap between a trade and its first report, or by reports"
+                footer={<span>A report is one first report holding at least one trade filed more than {STOCK_ACT_DAYS} days after the trade. &ldquo;Transactions in them&rdquo; is the secondary count; &ldquo;of N&rdquo; is all of the member&rsquo;s trades whose lateness we compute.</span>}
               />
               {ranked.length > MEMBERS_SHOWN && (
                 <p className="mt-3 text-[13.5px]">

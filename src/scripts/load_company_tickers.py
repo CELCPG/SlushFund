@@ -90,6 +90,9 @@ SUPABASE_URL = os.environ.get("NEXT_PUBLIC_SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 
 MAX_TICKERS_PER_CIK = 6
+# Tickers that are not an ownership line of the company (audit A7 T2): GSCE is an index-linked product of
+# Goldman Sachs. Never linked, so a re-run of `match --prune` does not bring it back.
+DROP_TICKERS = {"GSCE"}
 NONCOMPETED = ("B", "C", "G", "NDO")
 STATUS_RANK = {"auto_confirmed": 0, "manual_confirmed": 0, "needs_review": 1, "rejected": 2}
 
@@ -247,7 +250,7 @@ def load_sec():
     out, seen = [], set()
     for order, v in enumerate(base.values()):           # file order = SEC's own ranking, primary listing first
         cik, tk = int(v["cik_str"]), ascii_up(v["ticker"]).strip()
-        if (cik, tk) in seen or not tk:
+        if (cik, tk) in seen or not tk or tk in DROP_TICKERS:
             continue
         seen.add((cik, tk))
         out.append({"cik": f"{cik:010d}", "ticker": tk, "name": v["title"].strip(),

@@ -46,7 +46,10 @@ export interface PublicTrade {
   filed_date: string | null;
   source_system: string;
   signal_type: string | null;
-  has_federal_contract: boolean;
+  /** Listed-award signal (A7b F6): NULL means not computed, never "no". */
+  has_federal_contract: boolean | null;
+  contract_basis: string | null;
+  lateness_basis: string | null;
 }
 
 const CSV_HEADERS = [
@@ -63,6 +66,8 @@ const CSV_HEADERS = [
   'source_system',
   'signal_type',
   'has_federal_contract',
+  'contract_basis',
+  'lateness_basis',
 ];
 
 function tradeToRow(t: PublicTrade): string {
@@ -79,7 +84,9 @@ function tradeToRow(t: PublicTrade): string {
     t.transaction_date ?? '',
     t.source_system,
     t.signal_type ?? '',
-    t.has_federal_contract ? 'true' : 'false',
+    t.has_federal_contract == null ? '' : String(t.has_federal_contract),
+    t.contract_basis ?? '',
+    t.lateness_basis ?? '',
   ];
   return fields.join(',');
 }
@@ -135,7 +142,7 @@ export async function GET(request: NextRequest) {
       `member_name, member_chamber, member_party, member_state, ticker,
        company_name, transaction_type, asset_type, amount_min, amount_max,
        amount_range, transaction_date, filed_date, source_system, flags,
-       signal_type, has_federal_contract`,
+       signal_type, has_federal_contract, contract_basis, lateness_basis`,
       { count: 'exact' }
     )
     .range(offset, offset + limit - 1);
@@ -165,19 +172,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Compute signal_type from flags if not present
-  const trades: PublicTrade[] = (data ?? []).map((row: any) => {
-    const flags: string[] = row.flags ?? [];
-    let signalType = row.signal_type;
-    if (!signalType) {
-      if (flags.includes('pre_award_buy')) {
-        signalType = 'insider_trading';
-      } else if (row.has_federal_contract && row.amount_max != null && row.amount_max >= 1_000_000) {
-        signalType = 'suspicious';
-      } else {
-        signalType = 'routine';
-      }
-    }
+  // signal_type is passed through as stored. D8a removed the derived labels this route used to invent
+  // for empty values (A7b: no verdict words anywhere a reader can see).
+  const trades: PublicTrade[] = ((data ?? []) as PublicTrade[]).map((row) => {
+    const signalType = row.signal_type ?? null;
     return {
       member_name: row.member_name,
       member_chamber: row.member_chamber,
@@ -194,7 +192,9 @@ export async function GET(request: NextRequest) {
       filed_date: row.filed_date,
       source_system: row.source_system,
       signal_type: signalType,
-      has_federal_contract: row.has_federal_contract,
+      has_federal_contract: row.has_federal_contract ?? null,
+      contract_basis: row.contract_basis ?? null,
+      lateness_basis: row.lateness_basis ?? null,
     };
   });
 

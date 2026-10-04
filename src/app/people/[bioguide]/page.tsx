@@ -293,7 +293,7 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
             ) : all.length === 0 ? (
               <EmptyState title="No disclosed trades in our records" icon="∅" statuses={member.chamber === 'Senate' ? [senate] : [house]}>
                 {member.name} has no stock transactions in the filings we hold. Our filings cover House Clerk reports {house.coverage ?? '2021–2026'} and Senate eFD reports {senate.coverage ?? '2024–2026'}, and only lines with a stock ticker.
-                {unread ? ' Some of this member’s reports are scanned or paper filings we have not read (see the note above), so this is a gap, not a clean record.' : ' No trades here is not proof of no trading outside that window.'}
+                {unread ? ' Some of this member’s reports are scanned or paper filings we have not read (see the note above), so this is a gap in our data, not proof of no trading.' : ' No trades here is not proof of no trading outside that window.'}
               </EmptyState>
             ) : (
               <>
@@ -371,7 +371,7 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
               </ul>
             )}
             <p className="mt-3 text-[12.5px] text-muted">
-              Source: <a href="https://github.com/unitedstates/congress-legislators" target="_blank" rel="noopener noreferrer" className="underline">unitedstates/congress-legislators</a> (committee-membership-current), loaded {fmtDate(roster.lastUpdated) ?? 'on an unknown date'}.
+              Source: <a href="https://github.com/unitedstates/congress-legislators" target="_blank" rel="noopener noreferrer" className="underline">unitedstates/congress-legislators</a> (committee-membership-current): seats per the congress-legislators record of {fmtDate(roster.lastUpdated) ?? 'an unknown date'}.
             </p>
           </Card>
         </section>

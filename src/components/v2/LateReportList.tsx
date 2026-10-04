@@ -61,10 +61,10 @@ export default function LateReportList({ items, over }: { items: ReportWithTrade
               <div className="border-t border-line p-4">
                 <p className="mb-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[13.5px]">
                   {r.bioguide
-                    ? <Link href={`/people/${r.bioguide}`} className="font-semibold text-trades-ink hover:underline">{r.name}&rsquo;s page →</Link>
+                    ? <Link href={`/people/${r.bioguide}`} className="inline-flex min-h-6 items-center font-semibold text-trades-ink hover:underline">{r.name}&rsquo;s page →</Link>
                     : null}
                   <FilingLink href={r.url} source={sourceName} />
-                  {exploreHref && <Link href={exploreHref} className="font-semibold text-trades-ink hover:underline">All of this member&rsquo;s trades first reported that day →</Link>}
+                  {exploreHref && <Link href={exploreHref} className="inline-flex min-h-6 items-center font-semibold text-trades-ink hover:underline">All of this member&rsquo;s trades first reported that day →</Link>}
                 </p>
                 {trades === null ? (
                   <p className="rounded-2xl bg-page px-4 py-4 text-[14px] text-muted">The trades in this report are unavailable right now. The report&rsquo;s own filing is linked above.</p>

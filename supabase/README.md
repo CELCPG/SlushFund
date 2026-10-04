@@ -1,10 +1,23 @@
 # Supabase schema
 
-**Apply the files in `migrations/` in name order: `20261003_slushfund_v2.sql`, then `20261004_r5_awards_rule.sql`, then `20261005_r7_company_tickers.sql`.**
+**Apply the files in `migrations/` in name order: `20261003_slushfund_v2.sql`, `20261004_congress_trades_source_doc.sql`, `20261004_r5_awards_rule.sql`, `20261005_congress_trades_owner.sql`, `20261005_r7_company_tickers.sql`, `20261006_r6a_trades.sql`, `20261006_r6a_trades_key.sql`, then `20261006_r6b_ticker_windows.sql` (the two R6a files add option / lot / date-flag / lateness columns to `congress_trades` and replace its upsert key with a lossless one), then `20261007_r6c_notification_date.sql` and `20261007_r6c_conflicts.sql` (R6c: `notification_date` and the `stale_2y_corroborated` flag; committee seat history tables, `committee_basis`, `instrument`, and `member_conflict_scores.late_filing_count`). After the migrations run `load_committee_history.py`, then `compute_conflicts.py`; re-run `compute_conflicts.py` after any trade, ticker-link or committee load.** Then `20261008_r6d_contractor_wording.sql` (R6d: `congress_trades.contract_basis`, comments on `has_federal_contract` and `signal_type`; drops the empty table `insider_trading_signals` and recreates `get_analytics_summary` with `trade_signals` / `total_trade_signals` in place of the old `insider_*` keys; it stops with an error if that table ever has rows).
 Each is idempotent (safe to re-run), runs in one transaction and contains no data. The v2 file replaces every other
 SQL file in this folder (everything else here is history). The R5 file adds the award loader's columns and the
-`contract_spending_summary` table; the R7 file adds `company_tickers` (contractor → SEC ticker link) and the `award_tickers` view.
+`contract_spending_summary` table; the R7 file adds `company_tickers` (contractor → SEC ticker link) and the `award_tickers` view;
+the R6b file adds the instrument class and the validity window (`valid_from`/`valid_to`) to `company_tickers` and makes `award_tickers`
+return only common/ADR/preferred links whose window contains the award's date signed.
 Re-applying v2 drops policies outside its own allowlist, so re-apply R5 and R7 after it.
+
+**R6e (A7b data fixes), after the R6d file:** `20261009_r6e_lateness.sql` (`lateness_basis`; the $1,000 reporting-threshold rule as a CHECK;
+`has_federal_contract` default NULL), `20261009_r6e_conflicts.sql` (`member_conflict_scores` counts that say what they count, score-band
+tiers `score_70_plus` / `score_45_69` / `score_20_44` / `score_under_20`), `20261009_r6e_wording.sql` (no verdict words in anything anon can read
+or run: `not_competed` for `no_bid`, `risk_*` and `flagged_*` gone, `get_covid_fraud_stats` dropped; `agency_spending_summary` is now a
+MATERIALIZED view: `select refresh_agency_spending_summary();` after every awards load, `load_awards.py` does it) and
+`20261010_r6e_committee_snapshot.sql`. **The v2 file is now bootstrap-only: it refuses to run on a database that has the R6e columns.**
+The verdict-word scan is `supabase/tools/scan_verdict_words.mjs` (run it after any migration; it must report 0 binding hits of ours);
+`supabase/tools/apply.mjs` applies one migration file through `pg`. After `20261009_r6e_wording.sql` (it rewrites 26,280 `awards` rows) run
+`vacuum (full, analyze) awards;` outside a transaction: without it the table kept ~130 MB of dead rows and anon reads of `top_vendors` /
+`get_alert_summary` hit the 3 s statement timeout (DB 249 MB before, 99 MB after). Do the same for `congress_trades` after repeated `compute_conflicts.py` runs.
 
 ```
 # from any machine with the DB password (direct host; use the session pooler if IPv6 is unavailable)

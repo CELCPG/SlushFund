@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import Wordmark from '@/components/v2/shell/Wordmark';
 import { HeaderSearchSlot, MobileMenu, NavLinks } from '@/components/v2/shell/HeaderNav';
+import ScrollRegions from '@/components/v2/shell/ScrollRegions';
 import { FOOTER_LINKS } from '@/components/v2/shell/nav';
 
 /**
@@ -23,10 +24,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
           <MobileMenu />
         </div>
       </header>
-      <main id="main" className="legacy-frame flex-1">
+      {/* tabIndex -1: the skip link moves focus here, not just the scroll position. */}
+      <main id="main" tabIndex={-1} className="legacy-frame flex-1">
         {children}
       </main>
       <Footer />
+      <ScrollRegions />
     </div>
   );
 }
@@ -45,7 +48,7 @@ function Footer() {
           <ul className="flex flex-wrap gap-x-5 gap-y-2">
             {FOOTER_LINKS.map((l) => (
               <li key={l.href}>
-                <Link href={l.href} className="font-semibold text-white hover:underline">{l.label}</Link>
+                <Link href={l.href} className="inline-flex min-h-6 items-center font-semibold text-white hover:underline">{l.label}</Link>
               </li>
             ))}
           </ul>

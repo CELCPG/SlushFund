@@ -14,11 +14,12 @@ export interface ConflictLeader {
   member_chamber: string;
   member_state: string;
   total_trades: number;
-  conflicted_trades: number;
-  stock_act_violations: number;
+  signal_trades: number;
+  late_transaction_count: number;
+  late_report_count: number;
   committee_conflicts: number;
   contractor_trades: number;
-  high_conflict_trades: number;
+  high_signal_trades: number;
   estimated_volume: number;
   peak_conflict_score: number;
   avg_conflict_score: number;
@@ -53,9 +54,9 @@ interface ConflictsResponse {
   stats: {
     total_scored: number;
     total_flagged: number;
-    severe: number;
-    high: number;
-    stock_act_violations: number;
+    band_70_plus: number;
+    band_45_69: number;
+    late_transaction_count: number;
     committee_conflicts: number;
   };
 }
@@ -70,7 +71,7 @@ export async function GET(): Promise<NextResponse<ConflictsResponse>> {
   if (!supabaseAdmin) {
     return NextResponse.json({
       leaderboard: [], flagged_trades: [],
-      stats: { total_scored: 0, total_flagged: 0, severe: 0, high: 0, stock_act_violations: 0, committee_conflicts: 0 },
+      stats: { total_scored: 0, total_flagged: 0, band_70_plus: 0, band_45_69: 0, late_transaction_count: 0, committee_conflicts: 0 },
     });
   }
 
@@ -79,19 +80,19 @@ export async function GET(): Promise<NextResponse<ConflictsResponse>> {
 
   const [leaders, flagged, scored, flaggedCount, severe, high, stockAct, committee] = await Promise.all([
     sb.from('member_conflict_scores').select('*')
-      .gt('conflicted_trades', 0)
-      .order('high_conflict_trades', { ascending: false })
-      .order('conflicted_trades', { ascending: false })
+      .gt('signal_trades', 0)
+      .order('high_signal_trades', { ascending: false })
+      .order('signal_trades', { ascending: false })
       .limit(30),
     sb.from('congress_trades').select(FLAGGED_COLS)
-      .in('conflict_tier', ['high', 'severe'])
+      .in('conflict_tier', ['score_45_69', 'score_70_plus'])
       .order('conflict_score', { ascending: false })
       .order('transaction_date', { ascending: false })
       .limit(75),
     sb.from('congress_trades').select('*', countOnly),
     sb.from('congress_trades').select('*', countOnly).gt('conflict_score', 0),
-    sb.from('congress_trades').select('*', countOnly).eq('conflict_tier', 'severe'),
-    sb.from('congress_trades').select('*', countOnly).eq('conflict_tier', 'high'),
+    sb.from('congress_trades').select('*', countOnly).eq('conflict_tier', 'score_70_plus'),
+    sb.from('congress_trades').select('*', countOnly).eq('conflict_tier', 'score_45_69'),
     sb.from('congress_trades').select('*', countOnly).eq('stock_act_late', true),
     sb.from('congress_trades').select('*', countOnly).eq('committee_conflict', true),
   ]);
@@ -102,9 +103,9 @@ export async function GET(): Promise<NextResponse<ConflictsResponse>> {
     stats: {
       total_scored: scored.count ?? 0,
       total_flagged: flaggedCount.count ?? 0,
-      severe: severe.count ?? 0,
-      high: high.count ?? 0,
-      stock_act_violations: stockAct.count ?? 0,
+      band_70_plus: severe.count ?? 0,
+      band_45_69: high.count ?? 0,
+      late_transaction_count: stockAct.count ?? 0,
       committee_conflicts: committee.count ?? 0,
     },
   });

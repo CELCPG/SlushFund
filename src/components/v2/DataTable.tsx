@@ -168,11 +168,13 @@ export default function DataTable({
               <tbody>
                 {sorted.map((r) => (
                   <tr key={r.id} className="hover:bg-page/60">
-                    {visible.map((c) => (
-                      <td key={c.key} className={cn('border-b border-line px-2.5 py-3 align-middle', c.numeric && 'whitespace-nowrap text-right font-mono text-[13.5px]', c.className)}>
-                        {display(r, c)}
-                      </td>
-                    ))}
+                    {visible.map((c) => {
+                      const cls = cn('border-b border-line px-2.5 py-3 align-middle', c.numeric && 'whitespace-nowrap text-right font-mono text-[13.5px]', c.className);
+                      // The title column names the row, so it is the row header (what the phone card uses as its heading).
+                      return c === titleCol
+                        ? <th key={c.key} scope="row" className={cn(cls, 'text-left font-normal')}>{display(r, c)}</th>
+                        : <td key={c.key} className={cls}>{display(r, c)}</td>;
+                    })}
                   </tr>
                 ))}
               </tbody>

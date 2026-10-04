@@ -105,7 +105,7 @@ export const DATASETS: Record<DatasetKey, DatasetDef> = {
     staleAfterDays: 4,
     methodologyHref: `${METHODS}/contracts`,
     latestRecordLabel: 'Latest award',
-    caveat: 'A selection, not all spending: shares like "% no-bid" use the agency totals, not these rows. DoD publishes 90 days late.',
+    caveat: 'A selection, not all spending: shares like "% not competed" use the agency totals, not these rows. DoD publishes 90 days late.',
     gaps: [
       'Fiscal years before FY2024 are not loaded yet.',
       'A selection (rule r5-v1: non-competed awards of $1M+ and any award of $10M+), not all federal spending.',
@@ -162,15 +162,15 @@ export const DATASETS: Record<DatasetKey, DatasetDef> = {
   },
   conflicts: {
     key: 'conflicts',
-    label: 'Conflict signals',
+    label: 'Signal scores',
     moneyType: 'trades',
-    source: { name: 'Computed from the trade, committee and ticker-link datasets', url: '/about/methodology/trades' },
-    scope: 'For every trade: whether the member sat on a committee at the trade date and whether the company holds a federal contract',
+    source: { name: 'Computed from the trade, committee and ticker-link datasets', url: '/about/methodology#signals' },
+    scope: 'For every trade: a signal score from our method (committee seat on the trade date, listed federal contract award, reported late, large position), shown as a score band',
     cadence: 'After any trade, committee or ticker-link load, once automations run',
     staleAfterDays: 4,
     methodologyHref: `${METHODS}/trades`,
     latestRecordLabel: 'Latest filing scored',
-    caveat: 'A signal says two public records overlap, not that anything improper happened. No page shows these scores yet.',
+    caveat: 'Signal score out of 100 from our method: committee seat +45, listed federal contractor +30, reported late +15, large position +10. A score is a prompt to look closer, not a finding. No page shows per-trade scores yet.',
   },
   campaign: {
     key: 'campaign',
@@ -242,13 +242,14 @@ function unreadTotal(field: 'house_scanned' | 'senate_paper'): number {
 async function readTrades(system: 'House_Clerk' | 'Senate_EFD'): Promise<Raw> {
   if (!supabase) return { ...EMPTY, failed: true };
   const t = () => supabase!.from('congress_trades');
-  const [count, newestFiled, oldestFiled, newestRow, flagged, noFirst] = await Promise.all([
+  const [count, newestFiled, oldestFiled, newestRow, flagged, noFirst, belowThreshold] = await Promise.all([
     t().select('id', { count: 'exact', head: true }).eq('source_system', system),
     t().select('filed_date').eq('source_system', system).not('filed_date', 'is', null).order('filed_date', { ascending: false }).limit(1),
     t().select('filed_date').eq('source_system', system).not('filed_date', 'is', null).order('filed_date', { ascending: true }).limit(1),
     t().select('updated_at').eq('source_system', system).order('updated_at', { ascending: false }).limit(1),
     t().select('id', { count: 'exact', head: true }).eq('source_system', system).not('date_flag', 'is', null),
     t().select('id', { count: 'exact', head: true }).eq('source_system', system).is('original_filed_date', null),
+    t().select('id', { count: 'exact', head: true }).eq('source_system', system).eq('lateness_basis', 'below_reporting_threshold'),
   ]);
   if (count.error || newestFiled.error || oldestFiled.error || newestRow.error) return { ...EMPTY, failed: true };
   const latest = first(newestFiled, 'filed_date');
@@ -256,11 +257,12 @@ async function readTrades(system: 'House_Clerk' | 'Senate_EFD'): Promise<Raw> {
   const unread = unreadTotal(system === 'House_Clerk' ? 'house_scanned' : 'senate_paper');
   if (unread > 0) {
     gaps.push(system === 'House_Clerk'
-      ? `${nf(unread)} scanned House filings were not read (images, not text); their trades are missing, not on time.`
-      : `${nf(unread)} paper Senate filings were not read; their trades are missing, not on time.`);
+      ? `${nf(unread)} scanned House filings were not read (images, not text); their trades are missing, and nothing is said about their timing.`
+      : `${nf(unread)} paper Senate filings were not read; their trades are missing, and nothing is said about their timing.`);
   }
-  if (!flagged.error && flagged.count) gaps.push(`${nf(flagged.count)} trades carry a date note (reported over two years after the trade, or report dates that disagree).`);
-  if (!noFirst.error && noFirst.count) gaps.push(`${nf(noFirst.count)} trades have no first-report date in our records, so no delay is computed for them.`);
+  if (!flagged.error && flagged.count) gaps.push(`${nf(flagged.count)} trades carry a date note (the trade is dated more than two years before the report, or the dates as filed look inconsistent).`);
+  if (!noFirst.error && noFirst.count) gaps.push(`${nf(noFirst.count)} trades have no first-report date in our records, so lateness is not computed for them.`);
+  if (!belowThreshold.error && belowThreshold.count) gaps.push(`${nf(belowThreshold.count)} trades are below the $1,000 reporting threshold, so lateness is not computed for them.`);
   return {
     rowCount: count.count ?? null,
     lastUpdated: first(newestRow, 'updated_at'),
@@ -277,7 +279,7 @@ async function readCommitteeHistory(): Promise<Raw> {
   if (!supabase) return { ...EMPTY, failed: true };
   const seats = () => supabase!.from('committee_seats');
   const snaps = () => supabase!.from('committee_snapshots');
-  const [count, snapCount, newestSeat, newestSnap, firstSnap, lastSnap, noCommittee] = await Promise.all([
+  const [count, snapCount, newestSeat, newestSnap, firstSnap, lastSnap, noCommittee, noRoster] = await Promise.all([
     seats().select('id', { count: 'exact', head: true }),
     snaps().select('commit_sha', { count: 'exact', head: true }),
     seats().select('created_at').order('created_at', { ascending: false }).limit(1),
@@ -285,6 +287,7 @@ async function readCommitteeHistory(): Promise<Raw> {
     snaps().select('snapshot_date').order('snapshot_date', { ascending: true }).limit(1),
     snaps().select('snapshot_date').order('snapshot_date', { ascending: false }).limit(1),
     supabase.from('congress_trades').select('id', { count: 'exact', head: true }).is('committee_conflict', null),
+    supabase.from('congress_trades').select('id', { count: 'exact', head: true }).like('committee_basis', 'no_committee_data_since_%'),
   ]);
   if (count.error || newestSeat.error || newestSnap.error || firstSnap.error || lastSnap.error) return { ...EMPTY, failed: true };
   const a = first(newestSeat, 'created_at');
@@ -292,7 +295,12 @@ async function readCommitteeHistory(): Promise<Raw> {
   const latest = first(lastSnap, 'snapshot_date');
   const gaps: string[] = [];
   if (!snapCount.error && snapCount.count) gaps.push(`Built from ${nf(snapCount.count)} snapshots of the file; the gap between two snapshots is days to weeks.`);
-  if (!noCommittee.error && noCommittee.count) gaps.push(`${nf(noCommittee.count)} trades have no committee signal: a new Congress began and no complete snapshot existed yet, or the trade date is unreliable. They are blank, not "no conflict".`);
+  if (!noCommittee.error && noCommittee.count) {
+    const roster = !noRoster.error && noRoster.count != null ? noRoster.count : null;
+    gaps.push(roster != null
+      ? `${nf(noCommittee.count)} trades have no committee signal: for ${nf(roster)}, a new Congress had not yet published committee rosters on the trade date; for ${nf(noCommittee.count - roster)}, the dates as filed look inconsistent or are more than two years before the report. Blank means not computed, never a "no".`
+      : `${nf(noCommittee.count)} trades have no committee signal: a new Congress had not yet published committee rosters, or the dates as filed look inconsistent. Blank means not computed, never a "no".`);
+  }
   return {
     rowCount: count.count ?? null,
     lastUpdated: a && b ? (a > b ? a : b) : (a ?? b),
@@ -305,20 +313,37 @@ async function readCommitteeHistory(): Promise<Raw> {
   };
 }
 
+/** congress_trades.conflict_tier values (R6e score bands), shown as bands, never as verdict words. */
+export const SCORE_BANDS = [
+  { tier: 'score_70_plus', label: '70 and up' },
+  { tier: 'score_45_69', label: '45–69' },
+  { tier: 'score_20_44', label: '20–44' },
+  { tier: 'score_under_20', label: 'under 20' },
+] as const;
+
 async function readConflicts(): Promise<Raw> {
   if (!supabase) return { ...EMPTY, failed: true };
   const t = () => supabase!.from('congress_trades');
-  const [count, newestRow, oldestFiled, newestFiled, noContract] = await Promise.all([
+  const [count, newestRow, oldestFiled, newestFiled, noContract, beforeAwards, ...bands] = await Promise.all([
     t().select('id', { count: 'exact', head: true }).not('conflict_tier', 'is', null),
     t().select('updated_at').not('conflict_tier', 'is', null).order('updated_at', { ascending: false }).limit(1),
     t().select('filed_date').not('conflict_tier', 'is', null).not('filed_date', 'is', null).order('filed_date', { ascending: true }).limit(1),
     t().select('filed_date').not('conflict_tier', 'is', null).not('filed_date', 'is', null).order('filed_date', { ascending: false }).limit(1),
     t().select('id', { count: 'exact', head: true }).is('has_federal_contract', null),
+    t().select('id', { count: 'exact', head: true }).eq('contract_basis', 'not_computed_trade_before_2023-10-01'),
+    ...SCORE_BANDS.map((b) => t().select('id', { count: 'exact', head: true }).eq('conflict_tier', b.tier)),
   ]);
   if (count.error || newestRow.error || oldestFiled.error || newestFiled.error) return { ...EMPTY, failed: true };
   const latest = first(newestFiled, 'filed_date');
   const gaps = ['There is no separate scored-at time: this is the newest updated_at among the scored trade rows, which a trade load moves too.'];
-  if (!noContract.error && noContract.count) gaps.push(`${nf(noContract.count)} trades have no contractor signal: it was not computed for them. They are blank, not "no conflict".`);
+  if (!bands.some((b) => b.error)) gaps.push(`Score bands: ${SCORE_BANDS.map((b, i) => `${b.label} ${nf(bands[i].count ?? 0)}`).join(' · ')}.`);
+  if (!noContract.error && noContract.count) {
+    const before = !beforeAwards.error && beforeAwards.count != null ? beforeAwards.count : null;
+    gaps.push(before != null
+      ? `${nf(noContract.count)} trades have no contractor signal: ${nf(before)} are before 2023-10-01, where our listed awards start, and for ${nf(noContract.count - before)} the dates as filed look inconsistent. Blank means not computed, never a "no".`
+      : `${nf(noContract.count)} trades have no contractor signal: it was not computed for them. Blank means not computed, never a "no".`);
+  }
+  gaps.push('A "no" on the contractor signal means no award in our listed set (not competed and at least $1 million, or any contract of at least $10 million, signed from 2023-10-01) was signed on or before the trade; the company may hold other contracts.');
   return {
     rowCount: count.count ?? null,
     lastUpdated: first(newestRow, 'updated_at'),

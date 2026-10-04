@@ -137,7 +137,7 @@ export default async function CompaniesPage({ searchParams }: { searchParams: Pr
         <p className="mt-1.5 max-w-[860px] text-[14.5px] text-muted">
           The awards behind it are every prime contract award signed in FY2024–26 that is <b className="text-ink">non-competed and $1 million or more</b>, plus any
           award of <b className="text-ink">$10 million or more</b>{' '}(rule r5-v1). It is a selection, not a company&rsquo;s total federal business, so no
-          company&rsquo;s “share” of no-bid work can be read from it. “Obligated to date” is the total the government has committed on awards signed in the
+          company&rsquo;s “share” of not-competed work can be read from it. “Obligated to date” is the total the government has committed on awards signed in the
           period, including later modifications; it is not spending in that fiscal year. Agency-level shares are on the{' '}
           <Link href="/agencies" className="font-semibold text-contracts-ink hover:underline">agencies page</Link>. Companies are grouped by USAspending&rsquo;s parent-company
           field, which has errors: the same company can appear under more than one parent record.

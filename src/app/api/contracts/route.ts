@@ -25,7 +25,9 @@ export async function GET(request: NextRequest): Promise<NextResponse<AwardsResp
   // Filters
   const connection = searchParams.get('connection');
   const category = searchParams.get('category'); // contract | grant | loan | direct_payment
-  const flag = searchParams.get('flag');
+  // R6e renamed the 'no_bid' flag to 'not_competed'; an old link still filters the same awards.
+  const flagParam = searchParams.get('flag');
+  const flag = flagParam === 'no_bid' ? 'not_competed' : flagParam;
   const search = searchParams.get('search');
   // When set, the search matches against recipient_name ONLY. The vendor
   // profile pages pass this; the global search bar (dashboard, tech page,
@@ -37,8 +39,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<AwardsResp
   const agency = searchParams.get('agency');
   const sortKey = searchParams.get('sort') ?? 'dollar_amount';
   const sortDir = searchParams.get('dir') ?? 'desc';
-  const riskMin = searchParams.get('risk_min');
-  const riskMax = searchParams.get('risk_max');
+  // risk_min / risk_max are ignored: awards.risk_score was dropped in R6e (it was 0 on every row).
 
   // count: 'estimated' uses Postgres statistics instead of a full count.
   // For a 17k-row table, the difference is 10-50x faster on paginated
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<AwardsResp
   // Trim SELECT to just the columns the UI actually displays. The award
   // row has 59 columns; the dashboard list view only uses ~11. Less data
   // over the wire = faster response, smaller memory in Vercel edge.
-  const LIST_COLS = 'id, recipient_name, description, awarding_agency, awarding_agency_code, award_category, contract_type, naics_code, dollar_amount, risk_score, competition_status, connection_type, flags, posted_date, performance_start, performance_end, base_obligation_date, pop_state, pop_city, recipient_parent_name, price_premium_pct';
+  const LIST_COLS = 'id, recipient_name, description, awarding_agency, awarding_agency_code, award_category, contract_type, naics_code, dollar_amount, competition_status, connection_type, flags, posted_date, performance_start, performance_end, base_obligation_date, pop_state, pop_city, recipient_parent_name, price_premium_pct';
 
   let query = supabase
     .from('awards')
@@ -147,18 +148,11 @@ export async function GET(request: NextRequest): Promise<NextResponse<AwardsResp
     query = query.eq('awarding_agency', agency);
   }
 
-  if (riskMin) {
-    query = query.gte('risk_score', parseInt(riskMin));
-  }
-
-  if (riskMax) {
-    query = query.lte('risk_score', parseInt(riskMax));
-  }
 
   const { data, error, count } = await query;
 
   if (error) {
-    return NextResponse.json({ error: error.message } as any, { status: 500 });
+    return NextResponse.json({ error: error.message } as unknown as AwardsResponse, { status: 500 });
   }
 
   return NextResponse.json({

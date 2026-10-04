@@ -103,11 +103,11 @@ export default async function AgencyPage({
                 <caption className="sr-only">Contract obligations, non-competed and competed, by fiscal year</caption>
                 <thead>
                   <tr className="text-left text-xs font-semibold uppercase tracking-[0.05em] text-muted">
-                    <th className="border-b border-line px-2.5 py-2">Fiscal year</th>
-                    <th className="border-b border-line px-2.5 py-2 text-right">All contract obligations</th>
-                    <th className="border-b border-line px-2.5 py-2 text-right">Not competed</th>
-                    <th className="border-b border-line px-2.5 py-2 text-right">Competed</th>
-                    <th className="border-b border-line px-2.5 py-2 text-right">Share not competed</th>
+                    <th scope="col" className="border-b border-line px-2.5 py-2">Fiscal year</th>
+                    <th scope="col" className="border-b border-line px-2.5 py-2 text-right">All contract obligations</th>
+                    <th scope="col" className="border-b border-line px-2.5 py-2 text-right">Not competed</th>
+                    <th scope="col" className="border-b border-line px-2.5 py-2 text-right">Competed</th>
+                    <th scope="col" className="border-b border-line px-2.5 py-2 text-right">Share not competed</th>
                   </tr>
                 </thead>
                 <tbody>

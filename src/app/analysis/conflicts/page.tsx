@@ -13,18 +13,18 @@ interface ConflictsData {
   stats: {
     total_scored: number;
     total_flagged: number;
-    severe: number;
-    high: number;
-    stock_act_violations: number;
+    band_70_plus: number;
+    band_45_69: number;
+    late_transaction_count: number;
     committee_conflicts: number;
   };
 }
 
 const TIER: Record<string, { label: string; cls: string; dot: string }> = {
-  severe: { label: 'SEVERE', cls: 'bg-red-950/60 text-red-300 border-red-800', dot: 'bg-red-500' },
-  high: { label: 'HIGH', cls: 'bg-orange-950/50 text-orange-300 border-orange-800', dot: 'bg-orange-500' },
-  elevated: { label: 'ELEVATED', cls: 'bg-amber-950/40 text-amber-300 border-amber-800', dot: 'bg-amber-500' },
-  routine: { label: 'ROUTINE', cls: 'bg-slate-800 text-slate-400 border-slate-700', dot: 'bg-slate-600' },
+  score_70_plus: { label: 'SCORE 70-100', cls: 'bg-red-950/60 text-red-300 border-red-800', dot: 'bg-red-500' },
+  score_45_69: { label: 'SCORE 45-69', cls: 'bg-orange-950/50 text-orange-300 border-orange-800', dot: 'bg-orange-500' },
+  score_20_44: { label: 'SCORE 20-44', cls: 'bg-amber-950/40 text-amber-300 border-amber-800', dot: 'bg-amber-500' },
+  score_under_20: { label: 'SCORE 0-19', cls: 'bg-slate-800 text-slate-400 border-slate-700', dot: 'bg-slate-600' },
 };
 
 const SOURCE_URL: Record<string, string> = {
@@ -49,7 +49,7 @@ function partyColor(p: string): string {
 export default function ConflictsPage() {
   const [data, setData] = useState<ConflictsData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tierFilter, setTierFilter] = useState<'all' | 'severe' | 'high'>('all');
+  const [tierFilter, setTierFilter] = useState<'all' | 'score_70_plus' | 'score_45_69'>('all');
 
   useEffect(() => {
     fetch('/api/conflicts')
@@ -62,7 +62,7 @@ export default function ConflictsPage() {
   const flagged = (data?.flagged_trades ?? []).filter(
     (t) => tierFilter === 'all' || t.conflict_tier === tierFilter,
   );
-  const maxConflicted = Math.max(1, ...(data?.leaderboard ?? []).map((m) => m.conflicted_trades));
+  const maxConflicted = Math.max(1, ...(data?.leaderboard ?? []).map((m) => m.signal_trades));
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -98,9 +98,9 @@ export default function ConflictsPage() {
             {/* stat cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
               {[
-                { icon: <AlertTriangle size={15} />, label: 'Flagged trades', value: data.stats.total_flagged.toLocaleString(), sub: `of ${data.stats.total_scored.toLocaleString()} scored`, color: 'text-amber-400' },
-                { icon: <Scale size={15} />, label: 'Severe + high conflict', value: (data.stats.severe + data.stats.high).toLocaleString(), sub: `${data.stats.severe} severe`, color: 'text-red-400' },
-                { icon: <Clock size={15} />, label: 'STOCK Act violations', value: data.stats.stock_act_violations.toLocaleString(), sub: 'filed past the 45-day limit', color: 'text-orange-400' },
+                { icon: <AlertTriangle size={15} />, label: 'Trades with any signal', value: data.stats.total_flagged.toLocaleString(), sub: `of ${data.stats.total_scored.toLocaleString()} scored`, color: 'text-amber-400' },
+                { icon: <Scale size={15} />, label: 'Score 45 and up', value: (data.stats.band_70_plus + data.stats.band_45_69).toLocaleString(), sub: `${data.stats.band_70_plus} at 70 and up`, color: 'text-red-400' },
+                { icon: <Clock size={15} />, label: 'Filed late', value: data.stats.late_transaction_count.toLocaleString(), sub: 'transactions filed more than 45 days after the trade', color: 'text-orange-400' },
                 { icon: <Landmark size={15} />, label: 'Committee conflicts', value: data.stats.committee_conflicts.toLocaleString(), sub: 'traded a stock they oversee', color: 'text-red-400' },
               ].map((s) => (
                 <div key={s.label} className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3">
@@ -115,7 +115,7 @@ export default function ConflictsPage() {
             {/* leaderboard */}
             <h2 className="text-lg font-bold mb-1">Most Conflicted Members</h2>
             <p className="text-slate-500 text-xs mb-3">
-              Ranked by trades scored high or severe. {data.leaderboard.length} members shown.
+              Ranked by trades scoring 45 or more. {data.leaderboard.length} members shown.
             </p>
             <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden mb-10">
               <div className="overflow-x-auto">
@@ -124,10 +124,10 @@ export default function ConflictsPage() {
                     <tr className="text-slate-500 text-xs uppercase tracking-widest border-b border-slate-800">
                       <th className="text-left py-2.5 px-3 w-8">#</th>
                       <th className="text-left py-2.5 px-3">Member</th>
-                      <th className="text-right py-2.5 px-3">Conflicted</th>
-                      <th className="text-right py-2.5 px-3 hidden sm:table-cell">STOCK Act</th>
+                      <th className="text-right py-2.5 px-3">Trades with a signal</th>
+                      <th className="text-right py-2.5 px-3 hidden sm:table-cell">Late reports</th>
                       <th className="text-right py-2.5 px-3 hidden sm:table-cell">Committee</th>
-                      <th className="text-right py-2.5 px-3">High/Severe</th>
+                      <th className="text-right py-2.5 px-3">Score 45+</th>
                       <th className="text-right py-2.5 px-3">Peak</th>
                     </tr>
                   </thead>
@@ -144,14 +144,14 @@ export default function ConflictsPage() {
                         <td className="py-2.5 px-3 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <div className="hidden md:block w-20 h-1.5 bg-slate-800 rounded">
-                              <div className="h-full bg-amber-500 rounded" style={{ width: `${(m.conflicted_trades / maxConflicted) * 100}%` }} />
+                              <div className="h-full bg-amber-500 rounded" style={{ width: `${(m.signal_trades / maxConflicted) * 100}%` }} />
                             </div>
-                            <span className="font-mono text-slate-200 w-10 text-right">{m.conflicted_trades}</span>
+                            <span className="font-mono text-slate-200 w-10 text-right">{m.signal_trades}</span>
                           </div>
                         </td>
-                        <td className="py-2.5 px-3 text-right font-mono text-orange-400 hidden sm:table-cell">{m.stock_act_violations}</td>
+                        <td className="py-2.5 px-3 text-right font-mono text-orange-400 hidden sm:table-cell">{m.late_report_count}</td>
                         <td className="py-2.5 px-3 text-right font-mono text-red-400 hidden sm:table-cell">{m.committee_conflicts}</td>
-                        <td className="py-2.5 px-3 text-right font-mono font-bold text-red-300">{m.high_conflict_trades}</td>
+                        <td className="py-2.5 px-3 text-right font-mono font-bold text-red-300">{m.high_signal_trades}</td>
                         <td className="py-2.5 px-3 text-right">
                           <span className="font-mono font-black text-white">{m.peak_conflict_score}</span>
                         </td>
@@ -166,7 +166,7 @@ export default function ConflictsPage() {
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-bold">Highest-Scoring Flagged Trades</h2>
               <div className="flex gap-1">
-                {(['all', 'severe', 'high'] as const).map((t) => (
+                {(['all', 'score_70_plus', 'score_45_69'] as const).map((t) => (
                   <button
                     key={t}
                     onClick={() => setTierFilter(t)}
@@ -181,7 +181,7 @@ export default function ConflictsPage() {
             </div>
             <div className="space-y-2 mb-10">
               {flagged.map((t) => {
-                const tier = TIER[t.conflict_tier] ?? TIER.routine;
+                const tier = TIER[t.conflict_tier] ?? TIER.score_under_20;
                 return (
                   <div key={t.id} className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3">
                     <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -232,15 +232,16 @@ export default function ConflictsPage() {
                 <Building2 size={14} /> How the score is built
               </div>
               <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5 text-xs text-slate-400">
-                <p><span className="text-red-300 font-mono">+45</span> Committee jurisdiction member sits on a committee overseeing the traded company&apos;s sector (current assignments).</p>
+                <p><span className="text-red-300 font-mono">+45</span> Committee jurisdiction member sits on a committee overseeing the traded company&apos;s sector (seats as listed on the trade date).</p>
                 <p><span className="text-red-300 font-mono">+30</span> Federal contractor the company holds federal contracts, verified against USAspending award records.</p>
-                <p><span className="text-red-300 font-mono">+15</span> STOCK Act violation disclosed more than 45 days after the trade.</p>
+                <p><span className="text-red-300 font-mono">+15</span> Filed late: disclosed more than 45 days after the trade (the STOCK Act sets 45).</p>
                 <p><span className="text-red-300 font-mono">+10</span> Large position disclosed amount range tops $250,000.</p>
               </div>
               <p className="text-slate-600 text-xs mt-3 leading-relaxed">
-                Tiers: severe ≥ 70, high ≥ 45, elevated ≥ 20. Committee conflicts are scored
-                against present-day committee assignments, so older trades reflect the
-                member&apos;s current jurisdiction. Every signal links back to a primary
+                Score bands: 70-100, 45-69, 20-44, under 20. Committee conflicts are scored
+                against the committee seats listed on the trade date (snapshots of
+                unitedstates/congress-legislators; where none is complete, no committee
+                signal is computed). Every signal links back to a primary
                 source; a conflict score documents timing and overlap it is not an
                 allegation of a crime.
               </p>

@@ -22,7 +22,8 @@ import {
 } from '../src/lib/v2/redirect-map.ts';
 import { LEGACY_AGENCIES, LEGACY_PEOPLE, LEGACY_VENDORS } from '../src/lib/v2/legacy-map.generated.ts';
 import { lateFilersEnabled } from '../src/lib/v2/flags.ts';
-import { DATE_FLAG_FALLBACK, DATE_FLAG_WORDING, dateFlagNote } from '../src/lib/v2/date-flags.ts';
+import { DATE_FLAG_FALLBACK, DATE_FLAG_WORDING, LATENESS_BASIS_WORDING, dateFlagNote, latenessNote } from '../src/lib/v2/date-flags.ts';
+import { ALLOWED_VERBATIM, FORBIDDEN_PHRASES } from '../src/lib/v2/forbidden-words.ts';
 
 const ROOT = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
 const APP = join(ROOT, 'src', 'app');
@@ -234,7 +235,7 @@ await hit('/data/contracts?parent=ZFN2JJXBLZT3', 200, { body: 'Only awards to th
 await hit('/data/contracts/export?fy=2026&agency=097&amt=1b', 200, { ctype: 'text/csv', startsWith: 'PIID,Parent IDV PIID', bodyAll: ['https://www.usaspending.gov/award/', 'Obligated to date (USD)'], group: 'explorers (D4) csv' });
 await hit('/data/contracts/export?fy=2030&agency=%27', 200, { ctype: 'text/csv', startsWith: 'PIID,Parent IDV PIID', group: 'explorers (D4) csv' });
 // Late filers: factual wording only (no verdict words), the STOCK Act's 45 days named, the filing linked.
-await hit('/data/late-filers', 200, { bodyAll: ['the STOCK Act asks for 45', 'View filing', 'Preview only'], noindex: true, notBody: ['violation', 'illegal', 'broke the law', 'guilty', 'crime', 'stock_act_late'], group: 'late filers (D4)' });
+await hit('/data/late-filers', 200, { bodyAll: ['the STOCK Act sets a 45-day limit', 'View filing', 'Preview only'], noindex: true, notBody: ['violation', 'illegal', 'broke the law', 'guilty', 'crime', 'stock_act_late'], group: 'late filers (D4)' });
 await hit('/data/late-filers?chamber=Senate&over=365&msort=reports&members=all', 200, { notBody: ['unavailable right now'], group: 'late filers (D4)' });
 await hit('/data/late-filers?over=abc&chamber=x&page=-1&msort=zz', 200, { notBody: ['unavailable right now'], group: 'late filers (D4)' });
 // The flag: ON in dev and preview, OFF on the production deployment (VERCEL_ENV === 'production').
@@ -277,7 +278,7 @@ async function visibleClean(path) {
 }
 for (const p of ['/data/status', '/latest', '/latest?type=awards', '/data/late-filers']) await visibleClean(p);
 await hit('/data/status', 200, {
-  bodyAll: ['House stock trades', 'Senate stock trades', 'Contract awards', 'Ticker links', 'Committee history', 'Conflict signals', 'Known gaps', 'Last loaded', 'scanned House filings were not read', 'from the newest'],
+  bodyAll: ['House stock trades', 'Senate stock trades', 'Contract awards', 'Ticker links', 'Committee history', 'Signal scores', 'Score bands:', 'a prompt to look closer, not a finding', 'below the $1,000 reporting threshold', 'Known gaps', 'Last loaded', 'scanned House filings were not read', 'from the newest'],
   notBody: ['being rebuilt'],
   group: 'status and latest (D6b)',
 });
@@ -301,7 +302,7 @@ for (const [flag, url] of FLAG_ROWS) {
 }
 for (const [flag, want] of [
   ['stale_2y_corroborated', "Reported more than two years after the trade. The report's own dates agree with each other."],
-  ['stale_2y', "The report's own dates disagree, so we don't compute a delay."],
+  ['stale_2y', 'Trade dated more than two years before this report; lateness not computed.'],
   [null, null], ['', null], ['made_up_token_x', DATE_FLAG_FALLBACK],
 ]) {
   const got = dateFlagNote(flag);
@@ -313,6 +314,12 @@ if (lateFilersEnabled()) {
   await hit('/data/late-filers', 200, { bodyAll: ['Trades, by report', 'Report filed', 'Largest gap', DATE_FLAG_WORDING.stale_2y_corroborated, '<details'], notBody: ['stale_2y', 'stale 2y', 'Date flag in our data', 'unavailable right now'], group: 'late filers by report (D6b)' });
   await hit('/data/late-filers?chamber=Senate&over=90&rsort=recent', 200, { body: 'Report filed', notBody: ['unavailable right now'], group: 'late filers by report (D6b)' });
   await hit('/data/late-filers?rsort=trades&over=365&page=2', 200, { notBody: ['unavailable right now'], group: 'late filers by report (D6b)' });
+  // D8a: reports first, transactions second; ranked by reports or days only; every NULL has its lateness_basis reason.
+  await hit('/data/late-filers', 200, {
+    bodyAll: ['Reports with a trade over 45 days', 'Transactions in them', 'transactions in', 'Lateness is not computed for', 'below the $1,000 reporting threshold', 'Dates are as the member filed them', 'sets a 45-day limit'],
+    notBody: ['Most trades over', 'In how many reports', 'unavailable right now'],
+    group: 'late filers semantics (D8a)',
+  });
   await hit('/data/late-filers?rsort=zz&page=99999&over=7', 200, { notBody: ['unavailable right now'], group: 'late filers by report (D6b) junk input' });
 }
 await hit('/sitemap.xml', 200, { bodyAll: ['/latest', '/data/status'], notBody: '/about/data-status', group: 'status and latest (D6b)' });
@@ -334,6 +341,92 @@ await hit('/no-such-page-d5', 404, { body: 'find that page', notBody: 'live trad
 await hit('/feed.xml', 200, { notBody: '<item>', group: 'keep (v2)' });
 await hit('/sitemap.xml', 200, { notBody: '/dashboard', group: 'keep (v2)' });
 await hit('/sitemap.xml', 200, { notBody: '/vendor/', group: 'keep (v2)' });
+
+// D8a: lateness_basis wording, one sentence per value and never a raw token.
+for (const [basis, want] of [
+  ...Object.entries(LATENESS_BASIS_WORDING),
+  ['computed', null], [null, null], ['made_up_basis_x', 'Lateness not computed for this trade.'],
+]) {
+  const got = latenessNote(basis);
+  const ok = got === want && (got == null || (/^Lateness not computed/.test(got) && !/[a-z]+_[a-z0-9_]+/.test(got)));
+  if (!ok) failed++;
+  rows.push({ path: `latenessNote(${JSON.stringify(basis)})`, status: String(got), expect: String(want), ok, note: '', group: 'lateness basis wording (D8a)' });
+}
+// D8a: kept APIs read the R6e columns (risk_score dropped; no invented verdict labels).
+await hit('/api/contracts?limit=2&flag=no_bid&risk_min=50', 200, { body: '"competition_status"', notBody: ['risk_score', 'column', 'suspicious'], group: 'kept api semantics (D8a)' });
+{
+  // /api/v1/trades reads with the service key; an anon-only run gets its own 503 "Database not configured".
+  const r = await fetch(base + '/api/v1/trades?limit=25');
+  const b = await r.text();
+  const noKey = r.status === 503 && b.includes('Database not configured');
+  const ok = noKey || (r.status === 200 && b.includes('"contract_basis"') && b.includes('"lateness_basis"') && !/insider_trading|suspicious/i.test(b));
+  if (!ok) failed++;
+  rows.push({ path: '/api/v1/trades?limit=25', status: r.status, expect: '200 with R6e columns (503 without a service key)', ok, note: noKey ? 'skipped: no service key in this run' : '', group: 'kept api semantics (D8a)' });
+}
+
+// D8a wording gate: every sitemap URL plus the dynamic samples and the views a reader reaches from
+// them, tags stripped, must carry none of A7b's forbidden phrases (src/lib/v2/forbidden-words.ts),
+// case-insensitive. Verbatim source names pass (ALLOWED_VERBATIM, or all-capital recipient names as
+// USAspending prints them) and are listed in the note.
+const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', rsquo: '’', lsquo: '‘', ldquo: '“', rdquo: '”', ndash: '–', mdash: '—', hellip: '…' };
+function visibleText(html) {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<style[\s\S]*?<\/style>/g, ' ').replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
+    .replace(/&([a-z]+);/gi, (m, n) => ENTITIES[n.toLowerCase()] ?? m)
+    .replace(/\s+/g, ' ');
+}
+function verbatimSource(text, start, end) {
+  for (const a of ALLOWED_VERBATIM) {
+    for (let i = text.indexOf(a); i !== -1; i = text.indexOf(a, i + 1)) if (i <= start && end <= i + a.length) return a;
+  }
+  const word = text.slice(start, end);
+  if (word !== word.toUpperCase()) return null;
+  // The all-capital run around the hit (letters, digits, & . , ' - and spaces): two or more words.
+  let a = start; while (a > 0 && /[A-Z0-9&.,'\- ]/.test(text[a - 1])) a--;
+  let b = end; while (b < text.length && /[A-Z0-9&.,'\- ]/.test(text[b])) b++;
+  const run = text.slice(a, b).trim();
+  return run.split(/\s+/).filter((w) => /[A-Z]{2,}/.test(w)).length >= 2 ? run : null;
+}
+const WORDING_RES = FORBIDDEN_PHRASES.map((p) => ({ ...p, rx: new RegExp(p.re, 'gi') }));
+async function wordingGate(path) {
+  let res;
+  try { res = await fetch(base + path); } catch { res = null; }
+  const status = res ? res.status : 'error';
+  const text = res && res.ok ? visibleText(await res.text()) : '';
+  const hits = [];
+  const allowed = new Set();
+  for (const p of WORDING_RES) {
+    for (const m of text.matchAll(p.rx)) {
+      const v = verbatimSource(text, m.index, m.index + m[0].length);
+      if (v) { allowed.add(v.slice(0, 60)); continue; }
+      hits.push(`"${m[0]}" (${p.from}) in "…${text.slice(Math.max(0, m.index - 50), m.index + m[0].length + 30).trim()}…"`);
+    }
+  }
+  const ok = status === 200 && text.length > 0 && hits.length === 0;
+  if (!ok) failed++;
+  rows.push({
+    path, status: 'wording', expect: '0 forbidden phrases', ok,
+    note: (status !== 200 ? `HTTP ${status} ` : '') + hits.slice(0, 4).join(' · ') + (hits.length > 4 ? ` · +${hits.length - 4} more` : '') + (allowed.size ? ` verbatim source text allowed: ${[...allowed].join(' | ')}` : ''),
+    group: 'wording gate (D8a)',
+  });
+}
+const sitemapXml = await (await fetch(base + '/sitemap.xml')).text();
+const sitemapPaths = [...sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname || '/');
+const WORDING_PATHS = [...new Set([
+  ...sitemapPaths,
+  ...KEEP_DYNAMIC.values(),
+  '/people/S001201', '/people/A000383', '/people/M001186',
+  '/agencies', '/investigations', '/rebuilding', '/search?q=Warren', '/latest.xml',
+  '/latest?type=awards', '/latest?chamber=Senate', '/data/trades?instrument=option', '/data/contracts?fy=2026',
+  ...FLAG_ROWS.map(([, u]) => u),
+  '/analysis/conflicts',
+  ...(lateFilersEnabled() ? ['/data/late-filers?chamber=Senate&over=365&members=all', '/data/late-filers?msort=reports&rsort=recent&page=2'] : []),
+])];
+if (sitemapPaths.length < 10) { failed++; rows.push({ path: '/sitemap.xml', status: sitemapPaths.length, expect: '>= 10 URLs', ok: false, note: 'sitemap read for the wording gate', group: 'wording gate (D8a)' }); }
+for (const p of WORDING_PATHS) await wordingGate(p);
 
 const byGroup = {};
 for (const r of rows) (byGroup[r.group] ??= []).push(r);

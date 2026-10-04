@@ -9,6 +9,7 @@ import { Card, PageBand, SectionHead, Wrap } from '@/components/v2/PageBand';
 import { SourceBarView, worstState } from '@/components/v2/SourceBarView';
 import { fmtCount } from '@/lib/v2/format';
 import { getHomeFigures, getLatestFilings } from '@/lib/v2/home';
+import { HOME_HEADLINE, MEMBERS_TILE_COPY, MEMBERS_TILE_LEAD } from '@/lib/v2/home-copy';
 import { MONEY_TYPE_ORDER } from '@/lib/v2/money';
 
 // Homepage (D6a, Direction C): what SlushFund tracks, what's new, and three ways in. Every figure is
@@ -57,10 +58,13 @@ export default async function Home() {
   const fyHi = nc?.byFy[nc.byFy.length - 1]?.fy;
   const fySpan = fyLo == null ? '' : fyLo === fyHi ? `FY${fyLo}` : `FY${fyLo}–FY${fyHi}`;
 
+  // The lead number and the headline live in lib/v2/home-copy.ts (D8a); the note carries the other counts.
+  const memberLead = fig.members ? fig.members[MEMBERS_TILE_LEAD] : null;
   const memberNote = fig.members
     ? [
-        fig.members.inOffice != null ? `${fmtCount(fig.members.inOffice)} in office now.` : null,
-        fig.members.withTrades != null ? `${fmtCount(fig.members.withTrades)} have stock trades on file.` : null,
+        MEMBERS_TILE_LEAD !== 'total' ? `${fmtCount(fig.members.total)} served from 2016 to today.` : null,
+        MEMBERS_TILE_LEAD !== 'inOffice' && fig.members.inOffice != null ? `${fmtCount(fig.members.inOffice)} in office now.` : null,
+        MEMBERS_TILE_LEAD !== 'withTrades' && fig.members.withTrades != null ? `${fmtCount(fig.members.withTrades)} have stock trades on file.` : null,
       ].filter(Boolean).join(' ') || undefined
     : undefined;
 
@@ -68,8 +72,8 @@ export default async function Home() {
     <div data-v2>
       <PageBand overlap>
         <h1 className="mb-3.5 mt-[46px] max-w-[880px] font-display text-[56px] font-extrabold leading-[1.04] tracking-[-1.2px] max-md:mt-6 max-md:text-[34px]">
-          See where public money goes, and{' '}
-          <em className="bg-[linear-gradient(transparent_62%,rgba(255,90,110,.55)_62%)] not-italic">who&rsquo;s on both ends</em> of it.
+          {HOME_HEADLINE.lead}{' '}
+          <em className="bg-[linear-gradient(transparent_62%,rgba(255,90,110,.55)_62%)] not-italic">{HOME_HEADLINE.emphasis}</em>{HOME_HEADLINE.tail}
         </h1>
         <p className="mb-[26px] max-w-[720px] text-[19px] text-on-deep max-md:mb-5 max-md:text-base">
           The stock trades members of Congress disclose and the federal contracts agencies award, from the official filings. Every number shows its source and when it was last updated.
@@ -87,13 +91,13 @@ export default async function Home() {
       <Wrap>
         <div className="-mt-20 grid grid-cols-3 gap-4 max-lg:gap-3 max-md:mt-4 max-md:grid-cols-1 max-md:gap-2.5">
           <KpiTile
-            label="Members tracked"
-            value={fmtCount(fig.members?.total)}
-            caption="members of Congress who served from 2016 to today"
+            label={MEMBERS_TILE_COPY[MEMBERS_TILE_LEAD].label}
+            value={fmtCount(memberLead)}
+            caption={MEMBERS_TILE_COPY[MEMBERS_TILE_LEAD].caption}
             source={mStatus.source.name}
             sourceHref={mStatus.source.url}
             asOf={mStatus.lastUpdated}
-            state={mStatus.state}
+            state={memberLead == null ? 'unavailable' : mStatus.state}
             note={memberNote}
           />
           <KpiTile

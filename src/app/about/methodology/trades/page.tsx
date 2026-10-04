@@ -84,7 +84,7 @@ export default function TradesMethodology() {
             Committee membership comes from the current roster. It may not match the seats a member held on the day of a past trade.
           </Caveat>
           <Caveat lead="Filings contain typos.">
-            We show dates as filed. A date that cannot be right (for example one in the future) is flagged for review instead of corrected silently.
+            We show dates as filed. A date that cannot be right (for example one in the future) gets a plain date note on the row instead of being corrected silently, and no lateness is computed for it.
           </Caveat>
         </ul>
         <WorthALookNote />

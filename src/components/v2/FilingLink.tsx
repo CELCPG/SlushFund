@@ -26,7 +26,7 @@ export default function FilingLink({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`${label}${source ? ` (${source})` : ''}, opens the official document in a new tab`}
-      className={cn('inline-flex items-center gap-1 whitespace-nowrap text-[13.5px] font-semibold text-trades-ink underline-offset-2 hover:underline', className)}
+      className={cn('inline-flex min-h-6 items-center gap-1 whitespace-nowrap text-[13.5px] font-semibold text-trades-ink underline-offset-2 hover:underline', className)}
     >
       {label}
       <span aria-hidden className="text-[12px]">↗</span>

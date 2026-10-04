@@ -67,16 +67,17 @@ export interface TradeRow {
 export const TRADE_COLS =
   'id, member_name, member_chamber, member_party, member_state, bio_guide_id, ticker, company_name, transaction_type, asset_type, amount_min, amount_max, amount_range, transaction_date, filed_date, disclosure_url, source_system, owner, option_type, strike, expiry, lot_count, date_flag, original_filed_date';
 
-/** Most recently filed trades (newest filing first). */
+/** Most recently reported trades, newest first report first (original_filed_date, as /latest and the homepage order them). */
 export const getLatestTrades = cache(async (limit = 10): Promise<TradeRow[] | null> => {
   if (!supabase) return null;
   const { data, error } = await supabase
     .from('congress_trades')
     .select(TRADE_COLS)
-    .not('filed_date', 'is', null)
+    .not('original_filed_date', 'is', null)
     // A row whose dates look wrong in the filing (R6a date_flag) never leads a "latest" list.
     .is('date_flag', null)
-    .order('filed_date', { ascending: false })
+    // filed_date is an amendment's date when one replaced the row, so an old trade could lead (D6b issue 5).
+    .order('original_filed_date', { ascending: false })
     .order('transaction_date', { ascending: false })
     .limit(limit);
   if (error || !data) return null;

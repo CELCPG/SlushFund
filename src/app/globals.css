@@ -97,12 +97,24 @@ body {
     var(--color-deep);
 }
 
-/* Visible keyboard focus everywhere */
-:where(a, button, input, select, summary, [tabindex]):focus-visible {
-  outline: 3px solid var(--color-highlight);
-  outline-offset: 2px;
-  border-radius: 6px;
+/* Placeholder text: Tailwind's default is currentcolor at 50% (3.4:1 on white, below AA). In the base layer, so a
+   `placeholder:text-*` utility (the header search on indigo) still wins. */
+@layer base {
+  input::placeholder, textarea::placeholder { color: var(--color-muted); opacity: 1; }
 }
+
+/* Visible keyboard focus everywhere. A two-tone ring (3px ink inside, 3px highlighter outside) keeps
+   3:1 against white cards, the page tint and the indigo bands alike (WCAG 2.4.7, 1.4.11); the old
+   highlighter-only ring was 1.2:1 on white. This rule is unlayered, so it also beats `focus:outline-none`. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible,
+/* Date and time fields hand keyboard focus to a segment inside the field, so the field itself never matches :focus-visible. */
+input:is([type='date'], [type='time'], [type='month'], [type='week'], [type='datetime-local']):focus-within {
+  outline: 3px solid var(--color-ink);
+  outline-offset: 0;
+  box-shadow: 0 0 0 6px var(--color-highlight);
+}
+/* The skip link focuses <main>; ringing the whole page would only be noise. */
+main#main:focus { outline: none; box-shadow: none; }
 
 /* ─── Legacy frame ───
    Pages that have not been rebuilt yet were designed dark. Until D2-D6

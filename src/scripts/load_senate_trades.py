@@ -46,7 +46,7 @@ import subprocess
 import sys
 import time
 import urllib.request
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -58,6 +58,7 @@ try:
     activate()
 except Exception:
     pass
+from trade_fields import date_flag, date_typo_twin, lateness_detail, parse_option
 
 BASE = 'https://efdsearch.senate.gov'
 UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -584,14 +585,18 @@ def amend_no(label):
 
 def pick_versions(recs):
     """An amendment restates the whole report (same rows, corrections applied), so the newest amendment
-    supersedes the original and earlier amendments. -> (kept [(rec, first_filed_date)], superseded [rec])."""
+    supersedes the original and earlier amendments.
+    -> (kept [(rec, original_filed_date)], superseded [rec]). original_filed_date is the filing date of the
+    group's original report (amendment 0) when the listing has it, else None (only amendments are listed:
+    the first version's date is unknown, and the amendment's own date is not a substitute)."""
     groups = {}
     for rec in recs:
         groups.setdefault(base_label(rec['listing']['label']), []).append(rec)
     kept, superseded = [], []
     for v in groups.values():
         v.sort(key=lambda r: (amend_no(r['listing']['label']), parse_date(r['listing']['filed']) or date.min, r['report_id']))
-        first = min(parse_date(r['listing']['filed']) or date.max for r in v)
+        originals = [parse_date(r['listing']['filed']) for r in v if amend_no(r['listing']['label']) == 0]
+        first = min((d for d in originals if d), default=None)
         if amend_no(v[-1]['listing']['label']) == 0:      # no amendment: every report stands on its own
             kept += [(r, parse_date(r['listing']['filed'])) for r in v]
         else:
@@ -606,18 +611,32 @@ def fold_owner(owners):
     return ', '.join(ordered) or None
 
 
-def build_rows(rec, filed_first, r, acct):
-    """congress_trades rows for one parsed report.
+def option_fields(asset, asset_type, detail):
+    """(option_type, strike, expiry) for an eFD line, None x3 when it is not an option (R6a).
+    An option is a 'Stock Option' line (the detail reads 'Option Type: Put Strike price: $145.00 Expires: 09/20/2024')
+    or a stock line whose name ends CALL / PUT ('SMCI CALL': the filer gave no strike or expiry)."""
+    if asset_type == 'Stock Option':
+        return parse_option(detail or '', True)
+    inst = instrument(asset) if asset_type == 'Stock' else ''
+    if inst:
+        return inst.lower(), None, None
+    return None, None, None
+
+
+def build_rows(rec, r, acct):
+    """congress_trades rows for one parsed report (without the lateness columns: those need the identity
+    resolved across reports first).
 
     Source rows that cannot be stored faithfully are counted in `acct` and listed, never guessed:
-      unticked   eFD gave no ticker (bonds, funds, private stock...): the table needs a ticker and its
-                 unique key cannot tell two unticked assets apart (the House loader skips them too)
+      unticked   eFD gave no ticker (bonds, funds, private stock...): the table needs a ticker
+                 (the House loader skips them too)
       bad        unknown type / date / no asset name
-    Same-day lots (same senator, ticker, date, direction) share the table's unique key, so within a
-    report they are folded into one row whose band is the sum of the lots' bands, with the lots listed in
-    amount_range ('... (2 lots)').
+    Same-day lots of one instrument and owner (same senator, ticker, date, direction, asset type, owner,
+    call/put, strike, expiry) are folded into one row: the band is the sum of the lots' bands, lot_count
+    says how many, and amount_range lists every band ('... (2 lots)'). Different owners and different
+    options are different rows.
     """
-    groups, out = {}, []
+    groups = {}
     for row in rec['rows']:
         n = row.get('n', row.get(''))
         ref = {'report_id': rec['report_id'], 'senator': r['name'], 'row': n, 'owner': row.get('owner'),
@@ -626,11 +645,12 @@ def build_rows(rec, filed_first, r, acct):
         t = tx_type(row.get('type'))
         d = parse_date(row.get('transaction_date'))
         asset = (row.get('asset_name') or '').strip()
+        atype = (row.get('asset_type') or '').strip() or 'Unknown'
         # ticker column as filed ('-- AMCR' = a stray dashes chunk beside the symbol; 'LSXMK SIRI' = an exchange, kept)
         ticker = ' '.join(x for x in (row.get('ticker') or '').split() if x not in ('--', 'N/A'))
         if not ticker:
             # the filer left the Ticker column blank but wrote the symbol in the asset name
-            ticker, rule = ticker_from_name(asset, (row.get('asset_type') or '').strip())
+            ticker, rule = ticker_from_name(asset, atype)
             if ticker:
                 acct['ticker_from_name'].append(dict(ref, rule=rule, stored_ticker=ticker))
         why = (f"unknown transaction type {row.get('type')!r}" if t is None else
@@ -643,32 +663,30 @@ def build_rows(rec, filed_first, r, acct):
             acct['unticked'].append(ref)
             continue
         amin, amax = parse_amount(row.get('amount'))
-        groups.setdefault((ticker, d.isoformat(), t), []).append(
-            {'ref': ref, 'asset': asset, 'asset_type': (row.get('asset_type') or '').strip() or 'Unknown',
-             'inst': instrument(asset), 'amin': amin, 'amax': amax, 'band': row.get('amount') or '', 'owner': row.get('owner')})
-    for (ticker, d, t), lots in groups.items():
-        # one row per key: prefer the plain stock, then a lone asset type / call / put; the rest cannot share the row
-        kind = 'Stock' if any(x['asset_type'] == 'Stock' for x in lots) else lots[0]['asset_type']
-        of_kind = [x for x in lots if x['asset_type'] == kind]
-        inst = '' if any(x['inst'] == '' for x in of_kind) else of_kind[0]['inst']
-        same = [x for x in of_kind if x['inst'] == inst]
-        for x in lots:
-            if x not in same:                       # e.g. an option and the stock, or a put and a call, on one key
-                acct['dropped'].append(dict(x['ref'], why='another asset type or call/put holds this senator/ticker/date/direction key'))
-        if len(same) > 1:
-            acct['folded'].extend(dict(x['ref'], into=same[0]['ref']['row']) for x in same[1:])
-        mins, maxs = [x['amin'] for x in same], [x['amax'] for x in same]
+        opt, strike, expiry = option_fields(asset, atype, row.get('asset_detail'))
+        if opt == 'unknown':
+            acct['option_unreadable'].append(dict(ref, detail=row.get('asset_detail')))
+        owner = (row.get('owner') or '').strip() or None
+        groups.setdefault((ticker, d.isoformat(), t, owner, atype, opt, strike, expiry.isoformat() if expiry else None), []).append(
+            {'ref': ref, 'asset': asset, 'amin': amin, 'amax': amax, 'band': row.get('amount') or ''})
+    out = []
+    for (ticker, d, t, owner, atype, opt, strike, expiry), lots in groups.items():
+        if len(lots) > 1:
+            acct['folded'].extend(dict(x['ref'], into=lots[0]['ref']['row']) for x in lots[1:])
+        mins, maxs = [x['amin'] for x in lots], [x['amax'] for x in lots]
         out.append({
             'member_id': r['member_id'], 'member_name': r['name'], 'member_chamber': 'Senate',
             'member_party': r['party'], 'member_state': r['state'], 'bio_guide_id': r['bioguide_id'],
-            'ticker': ticker, 'company_name': same[0]['asset'],
-            'transaction_type': t, 'asset_type': kind,
+            'ticker': ticker, 'company_name': lots[0]['asset'],
+            'transaction_type': t, 'asset_type': atype,
             'amount_min': sum(mins) if all(v is not None for v in mins) else None,
             'amount_max': sum(maxs) if all(v is not None for v in maxs) else None,
-            'amount_range': (same[0]['band'] or None) if len(same) == 1 else ' + '.join(x['band'] for x in same) + f' ({len(same)} lots)',
-            'owner': fold_owner(x['owner'] for x in same),
+            'amount_range': (lots[0]['band'] or None) if len(lots) == 1 else ' + '.join(x['band'] for x in lots) + f' ({len(lots)} lots)',
+            'lot_count': len(lots),
+            'owner': owner,
+            'option_type': opt, 'strike': strike, 'expiry': expiry,
             'transaction_date': d,
-            'filed_date': filed_first.isoformat() if filed_first else None, 'disclosure_year': rec['year'],
+            'disclosure_year': rec['year'],
             'source_system': 'Senate_EFD', 'disclosure_url': rec['url'], 'source_doc_id': rec['report_id'],
         })
     return out
@@ -676,16 +694,28 @@ def build_rows(rec, filed_first, r, acct):
 
 # ── load ─────────────────────────────────────────────────────────────────────
 
-NATURAL_KEY = ('member_name', 'ticker', 'transaction_date', 'transaction_type')
+# R6a lossless key: owner and instrument are part of it (migration 20261006_r6a_trades_key.sql)
+NATURAL_KEY = ('member_name', 'ticker', 'transaction_date', 'transaction_type', 'owner', 'asset_type',
+               'option_type', 'strike', 'expiry')
+
+
+def identity(row, txn_date=None):
+    """One disclosed transaction, whatever lots / owners / asset-type label a later filing restates it with.
+    txn_date overrides the row's own date for a row whose year was mistyped (R6e twin rule, stage_load)."""
+    return (row['ticker'], txn_date or row['transaction_date'], row['transaction_type'],
+            row['option_type'], row['strike'], row['expiry'])
 
 
 def stage_load(args):
+    today = date.today()
+    run_ts = datetime.now(timezone.utc).isoformat()
     roster = jload(CK / 'roster.json')
     roster_by_bio = {r['bioguide_id']: r for r in roster}
     matched = jload(CK / 'matched.json') or []
     state = jload(CK / 'loaded.json', {})
     sb = None if args.dry_run else supabase_client()
-    acct = {'bad': [], 'unticked': [], 'folded': [], 'dropped': [], 'superseded': [], 'cross_report': [], 'ticker_from_name': []}
+    acct = {'bad': [], 'unticked': [], 'folded': [], 'superseded': [], 'cross_report': [], 'ticker_from_name': [],
+            'option_unreadable': []}
     src_rows = 0
     by_sen = {}
     for f in matched:
@@ -697,25 +727,67 @@ def stage_load(args):
         by_sen.setdefault(f['bioguide_id'], []).append(rec)
     # versions are resolved across all years, so a 2026 amendment of a 2025 report supersedes it
     pending = {}                       # (bioguide, filing year) -> {natural key: row}
+    replaced_lines = 0
     for bio, recs in by_sen.items():
         r = roster_by_bio[bio]
         kept, superseded = pick_versions(recs)
         for rec in superseded:
             acct['superseded'].append({'report_id': rec['report_id'], 'senator': r['name'], 'label': rec['listing']['label'],
                                        'filed': rec['listing']['filed'], 'rows': len(rec['rows'])})
-        seen = {}
+        seen = {}                      # identity -> {'doc', 'rows', 'orig'}
+        built = []
         for rec, first in sorted(kept, key=lambda kr: (parse_date(kr[0]['listing']['filed']) or date.min, kr[0]['report_id'])):
-            for row in build_rows(rec, first, r, acct):
-                k = tuple(row[c] for c in NATURAL_KEY)
-                if k in seen:              # same key in two different filings: the later filing wins
-                    old = seen[k]
-                    acct['cross_report'].append({'senator': r['name'], 'ticker': row['ticker'], 'date': row['transaction_date'],
-                                                 'type': row['transaction_type'], 'kept_report': row['source_doc_id'],
-                                                 'dropped_report': old['source_doc_id'], 'kept_amount': row['amount_range'],
-                                                 'dropped_amount': old['amount_range']})
-                seen[k] = row
-        for k, row in seen.items():
-            pending.setdefault((bio, row['disclosure_year']), {})[k] = row
+            filed = parse_date(rec['listing']['filed'])
+            rows_ = build_rows(rec, r, acct)
+            for row in rows_:
+                row['filed_date'] = filed.isoformat() if filed else None
+            built.append((rec, first, rows_))
+        # R6e (A7b F1): a row whose date cannot be right (after its own filing / in the future) that a LATER report
+        # restates with a month/day twin (a mistyped year) is the same transaction: key it on the twin's date, so the
+        # later report restates it and the earliest report stays the original (trade_fields.date_typo_twin).
+        def _sig(row):
+            return (row['ticker'], row['transaction_type'], row['owner'], row['option_type'], row['strike'], row['expiry'])
+        by_sig = {}
+        for i, (_rec, _first, rows_) in enumerate(built):
+            for row in rows_:
+                by_sig.setdefault(_sig(row), []).append((i, row['transaction_date']))
+        twin_date = {}
+        for i, (_rec, _first, rows_) in enumerate(built):
+            for row in rows_:
+                cands = [d for (j, d) in by_sig[_sig(row)] if j > i]
+                twin = date_typo_twin(row['transaction_date'], row['filed_date'], today, cands) if cands else None
+                if twin:
+                    twin_date[id(row)] = twin.isoformat()
+                    acct.setdefault('date_typo_twins', []).append(
+                        {'senator': r['name'], 'ticker': row['ticker'], 'typo_date': row['transaction_date'], 'twin_date': twin.isoformat()})
+        for rec, first, rows_ in built:
+            new = {}
+            for row in rows_:
+                new.setdefault(identity(row, twin_date.get(id(row))), []).append(row)
+            for ident, rows in new.items():
+                orig = first
+                old = seen.get(ident)
+                if old and old['doc'] != rec['report_id']:
+                    # the same transaction in a later filing: the later filing restates it and wins
+                    lines = sum(x['lot_count'] for x in old['rows'])
+                    replaced_lines += lines
+                    acct['cross_report'].append({'senator': r['name'], 'ticker': ident[0], 'date': ident[1], 'type': ident[2],
+                                                 'kept_report': rec['report_id'], 'dropped_report': old['doc'],
+                                                 'kept_rows': [[x['owner'], x['amount_range']] for x in rows],
+                                                 'dropped_rows': [[x['owner'], x['amount_range']] for x in old['rows']]})
+                    known = [d for d in (old['orig'], first) if d]
+                    orig = min(known) if known else None
+                for row in rows:
+                    row['original_filed_date'] = orig.isoformat() if orig else None
+                seen[ident] = {'doc': rec['report_id'], 'rows': rows, 'orig': orig}
+        for entry in seen.values():
+            for row in entry['rows']:
+                flag = date_flag(row['transaction_date'], row['original_filed_date'], row['filed_date'], today)
+                row['date_flag'] = flag
+                row['days_to_file'], row['stock_act_late'], row['lateness_basis'] = lateness_detail(
+                    row['transaction_date'], row['original_filed_date'], flag, row.get('amount_max'))
+                row['updated_at'] = run_ts
+                pending.setdefault((bio, row['disclosure_year']), {})[tuple(row[c] for c in NATURAL_KEY)] = row
     years = set(args.years)
     total = 0
     for (bio, year), rows_by_key in sorted(pending.items(), key=lambda kv: (-kv[0][1], roster_by_bio[kv[0][0]]['name'])):
@@ -734,9 +806,24 @@ def stage_load(args):
         if not args.dry_run:
             jsave(CK / 'loaded.json', state)
         total += len(rows)
-    # reconciliation: every source row is accounted for exactly once
+    # rows of the old key shape (folded across owners / asset types) are not overwritten by the new ones:
+    # after a full refresh, remove this source's rows that this run did not write
+    pruned = None
+    if sb and args.refresh:
+        stale = (sb.table('congress_trades').select('id', count='exact').eq('source_system', 'Senate_EFD')
+                 .in_('disclosure_year', sorted(years)).lt('updated_at', run_ts).execute())
+        pruned = stale.count
+        if args.prune and pruned:
+            sb.table('congress_trades').delete().eq('source_system', 'Senate_EFD').in_('disclosure_year', sorted(years)).lt('updated_at', run_ts).execute()
+    # reconciliation: every source line is accounted for exactly once
     rows_out = sum(len(v) for v in pending.values())
+    lines_in_rows = sum(r['lot_count'] for v in pending.values() for r in v.values())
     sup_rows = sum(x['rows'] for x in acct['superseded'])
+    opts = {}
+    for v in pending.values():
+        for r_ in v.values():
+            if r_['option_type']:
+                opts[r_['option_type']] = opts.get(r_['option_type'], 0) + 1
     summary = {
         'source_rows_in_fetched_reports': src_rows,
         'electronic_reports': len(matched),
@@ -745,15 +832,15 @@ def stage_load(args):
         'rows_without_ticker_not_loaded': len(acct['unticked']),
         'rows_whose_ticker_came_from_the_asset_name': len(acct['ticker_from_name']),
         'rows_unparseable': len(acct['bad']),
-        'lots_folded_into_same_day_rows': len(acct['folded']),
-        'rows_dropped_other_asset_type_on_key': len(acct['dropped']),
-        'rows_replaced_by_later_filing_same_key': len(acct['cross_report']),
+        'lines_replaced_by_a_later_filing': replaced_lines,
         'rows_for_database': rows_out,
+        'source_lines_in_those_rows': lines_in_rows,
+        'lots_folded_into_same_day_rows': lines_in_rows - rows_out,
+        'option_rows_by_type': opts,
+        'option_lines_unreadable': len(acct['option_unreadable']),
+        'stale_old_shape_rows_found': pruned,
     }
-    accounted = (len(acct['unticked']) + len(acct['bad']) + len(acct['folded']) + len(acct['dropped'])
-                 + sup_rows + rows_out)
-    # a cross-report replacement removes a built row, so it is already inside rows_out's complement
-    accounted += len(acct['cross_report'])
+    accounted = len(acct['unticked']) + len(acct['bad']) + sup_rows + replaced_lines + lines_in_rows
     summary['accounted_for'] = accounted
     summary['reconcile_gap'] = src_rows - accounted
     jsave(CK / 'load-summary.json', summary)
@@ -769,6 +856,7 @@ def main():
     ap.add_argument('--limit', type=int, default=0, help='fetch: stop after N reports')
     ap.add_argument('--refresh', action='store_true', help='ignore checkpoints for this stage')
     ap.add_argument('--dry-run', action='store_true', help='load: build rows, write nothing')
+    ap.add_argument('--prune', action='store_true', help='load --refresh: delete this source\'s rows of the loaded years that this run did not write (old key shape)')
     args = ap.parse_args()
     CK.mkdir(parents=True, exist_ok=True)
     REPORTS.mkdir(parents=True, exist_ok=True)

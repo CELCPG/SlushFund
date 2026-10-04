@@ -22,7 +22,7 @@ import { TRADE_COLS, type TradeRow } from '@/lib/v2/queries';
  * What the awards table can and cannot say: it holds only rule r5-v1 rows
  * (non-competed awards of $1M+ plus any award of $10M+). Sums of
  * obligated_amount are "obligated to date on awards signed in that FY", never
- * "spending in FY", and no no-bid share is ever computed from these rows.
+ * "spending in FY", and no not-competed share is ever computed from these rows.
  */
 
 export const FISCAL_YEARS = [2024, 2025, 2026] as const;
@@ -206,7 +206,7 @@ export const getEntityIndex = memo(async (): Promise<EntityIndex | null> => {
     if (r.recipient_uei) e.recips.add(r.recipient_uei);
     const s = (e.fy[r.fiscal_year] ??= emptyFy());
     const amt = Number(r.obligated_amount);
-    if (r.competition_status === 'no_bid') {
+    if (r.competition_status === 'not_competed') {
       s.nc += 1;
       s.ncObl += amt;
     } else {
@@ -420,7 +420,7 @@ export type AgencyAward = AwardRow;
 /** Largest non-competed awards in the r5-v1 set for one agency (obligated to date). */
 export const getAgencyTopAwards = cache(async (code: string, fy: number | null, limit = 25): Promise<AgencyAward[] | null> => {
   if (!supabase || !/^[A-Za-z0-9]{1,8}$/.test(code)) return null;
-  let q = supabase.from('awards').select(AWARD_COLS).eq('awarding_agency_code', code).eq('competition_status', 'no_bid');
+  let q = supabase.from('awards').select(AWARD_COLS).eq('awarding_agency_code', code).eq('competition_status', 'not_competed');
   if (fy) q = q.eq('fiscal_year', fy);
   const { data, error } = await q.order('obligated_amount', { ascending: false }).limit(limit);
   if (error || !data) return null;

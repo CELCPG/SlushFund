@@ -41,6 +41,15 @@ _Last reviewed: 2026-05-21_
 - **Refresh:** `python src/scripts/load_company_tickers.py match --prune` after each awards load (about 2 minutes,
   SEC and USAspending requests are rate-limited and cached). Method, coverage, verification and the review queue:
   `openclaw-shared/projects/slushfund/r7-tickers.md`.
+- **Instrument class and validity window (R6b, audit A7 T1–T3):** every row carries `instrument_class`
+  (common / adr / preferred / note / etn / warrant / unit / other, read from the security's registered title on the
+  registrant's 12(b) cover page), `valid_from` / `valid_to` (the registrant's listing window and, for a subsidiary,
+  the acquisition window; NULL = open), `window_status` (`same_entity` / `checked` / `unchecked`) and `window_source`
+  (the EDGAR filing that proves the date). A "member traded a contractor" claim is allowed only for
+  `instrument_class` in common/adr/preferred, only when the trade date (or the award's date signed) lies inside
+  `[valid_from, valid_to]` and is on or after 2020-10-01, and never from an `unchecked` link. `award_tickers`
+  already applies the class and date rules. Loader: `src/scripts/load_ticker_windows.py` (re-run `apply` after
+  every `match`). Method, counts and the exact join rule: `openclaw-shared/projects/slushfund/r6b-tickers.md`.
 
 ### 2. Congressional stock trades
 - **Store:** Supabase `congress_trades` table (~25,100 rows, spanning 2016–2026).
@@ -151,9 +160,19 @@ It is data, not opinion — every flag is a verifiable fact.
 - **Loaded by:** `load_committees.py` (committee assignments), then `compute_conflicts.py`
   (scoring — must run after trades, members, committees, and awards are all loaded).
 - **Feeds:** `/analysis/conflicts`, `GET /api/conflicts`.
-- **Scoring:** committee jurisdiction +45, federal contractor +30, STOCK Act violation
-  +15, large position (>$250K) +10. Tiers: severe ≥70, high ≥45, elevated ≥20.
-- **Caveat:** committee conflicts are scored against *current* committee assignments
-  (historical rosters aren't cleanly published), so older trades reflect present-day
-  jurisdiction. The sector/ticker and federal-contractor maps in `compute_conflicts.py`
-  are curated — extend them as coverage needs grow.
+- **Scoring:** committee jurisdiction +45 (seat held on the trade date), federal contractor +30
+  (a linked company had an award signed on or before the trade date), filed late +15 (more than
+  45 days after the trade), large position (>$250K) +10. `conflict_tier` stores the score band (`score_70_plus`, `score_45_69`, `score_20_44`, `score_under_20`): show the band, never a word. A score is a prompt to look closer, not a finding.
+- **Contractor signal (R6d):** the `awards` table only holds awards signed from 2023-10-01
+  (`AWARDS_COVERAGE_START` in `compute_conflicts.py`, one constant). A trade dated before that cannot
+  be answered from it: `has_federal_contract` is NULL (not computed), never false. `contract_basis`
+  says which case a row is in (`awards_signed_from_2023-10-01`, `not_computed_trade_before_2023-10-01`,
+  `not_computed_date_<flag>`). NULL means "not computed", not "no". `has_federal_contract = false` means no award in the listed set
+  (contracts not competed of at least $1M, or any of at least $10M, signed from 2023-10-01) was signed on or before the trade, not "no federal contracts".
+- **Late filing (R6e):** `lateness_basis` says why `days_to_file` / `stock_act_late` are set or NULL (`computed`, `below_reporting_threshold` when
+  `amount_max` <= 1,000, `original_filing_unknown`, `not_computed_date_<flag>`). Rank late filers by `member_conflict_scores.late_report_count`
+  (distinct reports), never by `late_transaction_count`.
+- **Caveat:** committee seats come from the seat history (`committee_seats`, built from the git
+  history of `unitedstates/congress-legislators`); `committee_basis` names the snapshot used and a
+  trade with no complete snapshot has `committee_conflict` NULL. The sector/ticker maps in
+  `compute_conflicts.py` are curated — extend them as coverage needs grow.

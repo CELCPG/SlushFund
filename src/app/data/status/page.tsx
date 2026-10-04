@@ -42,7 +42,7 @@ export default async function DataStatusPage() {
         </p>
 
         <section className="pt-4" aria-labelledby="ds-main">
-          <SectionHead as="h2" title={<span id="ds-main">Datasets behind the explorers</span>} sub="Trades, awards, ticker links, committee history and conflict signals." />
+          <SectionHead as="h2" title={<span id="ds-main">Datasets behind the explorers</span>} sub="Trades, awards, ticker links, committee history and signal scores." />
           <DataStatusBoard statuses={main} label="Datasets behind the explorers" />
         </section>
 

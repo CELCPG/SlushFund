@@ -11,6 +11,29 @@ export default function QuarterChart({ buckets, label }: { buckets: QuarterBucke
   const h = (n: number) => (n ? Math.max(4, Math.round((n / max) * H)) : 0);
   const anyOther = buckets.some((b) => b.other);
   return (
+    <>
+    {/* Text alternative: the same counts as a table for screen readers (the bars are drawn, not read). */}
+    <table className="sr-only">
+      <caption>Disclosed transactions per quarter</caption>
+      <thead>
+        <tr>
+          <th scope="col">Quarter</th>
+          <th scope="col">Stock purchases</th>
+          <th scope="col">Stock sales</th>
+          {anyOther && <th scope="col">Other</th>}
+        </tr>
+      </thead>
+      <tbody>
+        {buckets.map((b) => (
+          <tr key={b.key}>
+            <th scope="row">Q{b.q} {b.year}</th>
+            <td>{b.buys}</td>
+            <td>{b.sells}</td>
+            {anyOther && <td>{b.other}</td>}
+          </tr>
+        ))}
+      </tbody>
+    </table>
     <div className="overflow-x-auto pb-1">
       <div role="img" aria-label={label} className="inline-flex min-w-full items-stretch gap-1.5">
         <div aria-hidden className="flex w-[54px] shrink-0 flex-col text-[11.5px] font-semibold text-muted">
@@ -38,5 +61,6 @@ export default function QuarterChart({ buckets, label }: { buckets: QuarterBucke
         ))}
       </div>
     </div>
+    </>
   );
 }

@@ -10,7 +10,7 @@ import { cleanQuery } from '@/lib/v2/queries';
  *
  * Rule r5-v1 loads (a) every award the agency coded "not competed" (extent-competed B, C, G or NDO)
  * with $1M or more obligated, and (b) any award of $10M or more. This explorer lists group (a):
- * competition_status = 'no_bid', which the loader derives from those codes alone. Dollar amounts are
+ * competition_status = 'not_competed' (R6e; was 'no_bid'), which the loader derives from those codes alone. Dollar amounts are
  * "obligated to date" on awards signed in the fiscal year (A7 §f), never spending in a year, and no
  * share is computed from these rows.
  */
@@ -85,7 +85,7 @@ type AwardQuery = ReturnType<typeof sample>;
 
 function applyFilters(q: AwardQuery, f: ContractFilters): AwardQuery {
   // Rule r5-v1, non-competed group: the loader's competition_status comes from codes B, C, G, NDO.
-  q = q.eq('selection_rule', SELECTION_RULE).eq('competition_status', 'no_bid');
+  q = q.eq('selection_rule', SELECTION_RULE).eq('competition_status', 'not_competed');
   if (f.fy) q = q.eq('fiscal_year', Number(f.fy));
   if (f.agency) q = q.eq('awarding_agency_code', f.agency);
   if (f.parent) q = q.or(`recipient_parent_uei.eq.${f.parent},and(recipient_parent_uei.is.null,recipient_uei.eq.${f.parent})`);

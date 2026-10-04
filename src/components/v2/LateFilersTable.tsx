@@ -45,7 +45,7 @@ export default function LateFilersTable({ trades, caption, hideMember = false }:
         member: (
           <span className="block min-w-0">
             {t.bio_guide_id
-              ? <Link href={`/people/${t.bio_guide_id}`} className="font-semibold hover:underline">{t.member_name}</Link>
+              ? <Link href={`/people/${t.bio_guide_id}`} className="inline-flex min-h-6 items-center font-semibold hover:underline">{t.member_name}</Link>
               : <b className="font-semibold">{t.member_name}</b>}
             <span className="block text-[12.5px] font-normal text-muted">{partyLetter(t.member_party)} · {t.member_state} · {t.member_chamber}{owner ? ` · owner: ${owner}` : ''}</span>
           </span>
@@ -61,7 +61,7 @@ export default function LateFilersTable({ trades, caption, hideMember = false }:
         gap: (
           <span className="block">
             <b className="font-mono text-[15px] font-semibold">{t.days_to_file.toLocaleString('en-US')} days</b>
-            <span className="block font-sans text-[12px] font-normal text-muted">after the trade; the STOCK Act asks for {STOCK_ACT_DAYS}</span>
+            <span className="block font-sans text-[12px] font-normal text-muted">after the trade date shown in the filing; the STOCK Act sets a {STOCK_ACT_DAYS}-day limit</span>
           </span>
         ),
         dates: (

@@ -63,7 +63,7 @@ export function SourceBarView({
         {statuses.filter((s, i, all) => all.findIndex((x) => x.source.name === s.source.name) === i).map((s, i) => (
           <span key={s.key}>
             {i > 0 && ' · '}
-            <a href={s.source.url} target="_blank" rel="noopener noreferrer" className="underline decoration-current/30 underline-offset-2 hover:decoration-current">
+            <a href={s.source.url} target="_blank" rel="noopener noreferrer" className="py-[5px] underline decoration-current/30 underline-offset-2 hover:decoration-current">
               {s.source.name}
             </a>
           </span>
@@ -89,7 +89,7 @@ export function SourceBarView({
           </span>
         </>
       )}
-      <Link href={methods} className="ml-auto whitespace-nowrap font-semibold text-trades-ink hover:underline">
+      <Link href={methods} className="-my-1.5 ml-auto whitespace-nowrap py-1.5 font-semibold text-trades-ink hover:underline">
         Methodology →
       </Link>
     </div>

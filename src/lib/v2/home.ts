@@ -28,12 +28,12 @@ async function headCount(build: () => PromiseLike<HeadResult>): Promise<number |
 
 async function readNoncompeted(): Promise<HomeFigures['noncompeted']> {
   if (!supabase) return null;
-  const nb = () => supabase!.from('awards').select('id', { count: 'exact', head: true }).eq('competition_status', 'no_bid');
+  const nb = () => supabase!.from('awards').select('id', { count: 'exact', head: true }).eq('competition_status', 'not_competed');
   // The fiscal years on file come from the rows, so a new year shows up without a code change.
   const [total, lo, hi, totals] = await Promise.all([
     headCount(nb),
-    supabase.from('awards').select('fiscal_year').eq('competition_status', 'no_bid').not('fiscal_year', 'is', null).order('fiscal_year', { ascending: true }).limit(1),
-    supabase.from('awards').select('fiscal_year').eq('competition_status', 'no_bid').not('fiscal_year', 'is', null).order('fiscal_year', { ascending: false }).limit(1),
+    supabase.from('awards').select('fiscal_year').eq('competition_status', 'not_competed').not('fiscal_year', 'is', null).order('fiscal_year', { ascending: true }).limit(1),
+    supabase.from('awards').select('fiscal_year').eq('competition_status', 'not_competed').not('fiscal_year', 'is', null).order('fiscal_year', { ascending: false }).limit(1),
     getContractTotals(),
   ]);
   const a = Number(lo.data?.[0]?.fiscal_year);
@@ -87,8 +87,10 @@ export interface LatestFiling {
 }
 
 /**
- * The newest reports by first-report date, one entry per report, so a single 48-trade filing can't
- * fill the module. Rows with a date flag or an unknown first report never lead it.
+ * The newest reports by first-report date (original_filed_date, as /latest orders them), one entry per
+ * report, so a single 48-trade filing can't fill the module. A report is a filing URL plus its
+ * first-report date: an amended filing that also carries older trades shows only the trades first
+ * reported that day. Rows with a date flag or an unknown first report never lead it.
  */
 export const getLatestFilings = cache(async (reports = 6, perReport = 3): Promise<LatestFiling[] | null> => {
   if (!supabase) return null;
@@ -114,11 +116,12 @@ export const getLatestFilings = cache(async (reports = 6, perReport = 3): Promis
           .from('congress_trades')
           .select(TRADE_COLS)
           .eq('disclosure_url', p.url)
+          .eq('original_filed_date', p.firstReport)
           .is('date_flag', null)
           .order('transaction_date', { ascending: false })
           .order('id', { ascending: true })
           .limit(perReport),
-        headCount(() => supabase!.from('congress_trades').select('id', { count: 'exact', head: true }).eq('disclosure_url', p.url)),
+        headCount(() => supabase!.from('congress_trades').select('id', { count: 'exact', head: true }).eq('disclosure_url', p.url).eq('original_filed_date', p.firstReport)),
       ]);
       if (rows.error || !rows.data?.length || n == null) return null;
       const t = rows.data[0] as TradeRow;

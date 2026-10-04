@@ -16,7 +16,7 @@ export default function BigSearch({ defaultValue }: { defaultValue?: string }) {
           defaultValue={defaultValue}
           placeholder="Look up a member of Congress, company or ticker"
           autoComplete="off"
-          className="min-w-0 flex-1 bg-transparent text-lg text-ink placeholder:text-muted focus:outline-none max-md:text-[15px]"
+          className="min-w-0 flex-1 self-stretch bg-transparent text-lg text-ink placeholder:text-muted focus:outline-none max-md:text-[15px]"
         />
         <button type="submit" className="rounded-xl bg-brand px-[22px] py-3.5 text-base font-bold text-white hover:bg-[#B5172F] max-md:px-3.5 max-md:py-3 max-md:text-sm">
           Search

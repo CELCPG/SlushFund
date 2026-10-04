@@ -276,7 +276,7 @@ def rule_reasons(r):
 def competition_status(code):
     """Display label derived ONLY from the official extent-competed code."""
     if code in NONCOMPETED_CODES:
-        return "no_bid"
+        return "not_competed"                      # R6e (A7b F4): the agency's own coding, not "no_bid"
     if code in ("A", "CDO"):
         return "open_competition"
     if code in ("D", "E", "F"):
@@ -298,7 +298,7 @@ def to_row(r, reasons, seen_at):
     iija_o, iija_out = dec(r.get("obligated_amount_from_IIJA_supplemental")), dec(r.get("outlayed_amount_from_IIJA_supplemental"))
     comp_flags = []
     if ec in NONCOMPETED_CODES:
-        comp_flags.append("no_bid")
+        comp_flags.append("not_competed")
     if blank(r.get("solicitation_procedures_code")) == "SSS":
         comp_flags.append("sole_source")
     struct_flags = []
@@ -416,6 +416,15 @@ def collect(windows, date_type, min_fy=None, max_fy=None):
     return out, stats
 
 
+def refresh_summary():
+    """R6e (A7b F10): agency_spending_summary is a materialized view; refresh it after every awards change."""
+    try:
+        sb().rpc("refresh_agency_spending_summary").execute()
+        print("  agency_spending_summary refreshed", flush=True)
+    except Exception as e:
+        print(f"  WARNING: agency_spending_summary NOT refreshed ({str(e)[:200]}); run: select refresh_agency_spending_summary();", flush=True)
+
+
 def upsert(rows):
     """Batched upsert on the primary key (= USAspending generated unique award id)."""
     done, errors = 0, []
@@ -470,6 +479,8 @@ def cmd_load(a):
             res = (sb().table("awards").delete(count="exact").eq("fiscal_year", a.fy)
                    .lt("last_seen_at", seen_at).execute())
             pruned = res.count or 0
+        if not errors:
+            refresh_summary()
         status = "complete" if not errors else "failed"
         log_end(log_id, status, done, errors, t0)
         print(json.dumps({"fy": a.fy, "status": status, "upserted": done, "pruned": pruned,
@@ -509,6 +520,8 @@ def cmd_incremental(a):
         rows = [to_row(r, reasons, seen_at) for r, reasons in got.values()]
         print(f"  rule rows {len(rows)}; {json.dumps(stats)}", flush=True)
         done, errors = upsert(rows)
+        if not errors:
+            refresh_summary()
         by_fy = {}
         for r in rows:
             by_fy[r["fiscal_year"]] = by_fy.get(r["fiscal_year"], 0) + 1

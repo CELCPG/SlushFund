@@ -91,7 +91,7 @@ export default async function CompanyPage({
   const st = Object.fromEntries(statuses.map((s) => [s.key, s]));
 
   // --- award aggregates (obligated to date on awards signed in the FY)
-  const isNc = (a: AwardRow) => a.competition_status === 'no_bid';
+  const isNc = (a: AwardRow) => a.competition_status === 'not_competed';
   const ncAwards = awards.filter(isNc);
   const otherAwards = awards.filter((a) => !isNc(a));
   const sumObl = (xs: AwardRow[]) => xs.reduce((n, a) => n + (a.obligated_amount ?? 0), 0);
@@ -199,7 +199,7 @@ export default async function CompanyPage({
             sourceHref="https://www.usaspending.gov/search"
             asOf={contracts.lastUpdated}
             state={contracts.state}
-            note="Obligated to date, not spending in a year. Selected awards only (rule r5-v1): not this company's no-bid share."
+            note="Obligated to date, not spending in a year. Selected awards only (rule r5-v1): not this company's not-competed share."
           />
           <KpiTile
             label="Awards in our records"
@@ -245,8 +245,8 @@ export default async function CompanyPage({
             />
             <p className="mb-4 max-w-[860px] rounded-2xl bg-neutral-tint px-4 py-3 text-[13.5px] text-muted">
               <b className="text-ink">What this table covers:</b>{' '}every award signed in FY2024–26 that the agency coded “not competed” and that is $1 million or more, plus any award of
-              $10 million or more (rule r5-v1). Smaller competed awards are not in it, so it is not this company&rsquo;s total federal business and it cannot show a no-bid
-              share. “Obligated to date” is the total committed on the award so far, including later modifications.
+              $10 million or more (rule r5-v1). Smaller competed awards are not in it, so it is not this company&rsquo;s total federal business and it cannot show a not-competed
+              share. “Obligated to date” is the total committed on the award so far, including later modifications (USAspending, as of {fmtDate(contracts.lastUpdated) ?? 'the last load'}), not the amount at any earlier date.
             </p>
 
             <div className="mb-5 overflow-x-auto">
@@ -254,11 +254,11 @@ export default async function CompanyPage({
                 <caption className="pb-2 text-left text-[13px] text-muted">Awards by fiscal year signed (obligated to date, not spending in the year)</caption>
                 <thead>
                   <tr className="text-left text-xs font-semibold uppercase tracking-[0.05em] text-muted">
-                    <th className="border-b border-line px-2.5 py-2">Signed in</th>
-                    <th className="border-b border-line px-2.5 py-2 text-right">Non-competed awards</th>
-                    <th className="border-b border-line px-2.5 py-2 text-right">Obligated to date</th>
-                    <th className="border-b border-line px-2.5 py-2 text-right">Other awards $10M+</th>
-                    <th className="border-b border-line px-2.5 py-2 text-right">Obligated to date</th>
+                    <th scope="col" className="border-b border-line px-2.5 py-2">Signed in</th>
+                    <th scope="col" className="border-b border-line px-2.5 py-2 text-right">Non-competed awards</th>
+                    <th scope="col" className="border-b border-line px-2.5 py-2 text-right">Obligated to date</th>
+                    <th scope="col" className="border-b border-line px-2.5 py-2 text-right">Other awards $10M+</th>
+                    <th scope="col" className="border-b border-line px-2.5 py-2 text-right">Obligated to date</th>
                   </tr>
                 </thead>
                 <tbody>

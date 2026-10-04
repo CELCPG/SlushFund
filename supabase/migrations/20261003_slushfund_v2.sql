@@ -12,9 +12,23 @@
 -- Security model (section 10): RLS on every table; anon/authenticated are SELECT-only
 -- on public data and have no access at all to subscriber data or the sync log;
 -- every write goes through the service role (Next.js server routes, loaders).
+--
+-- R6e: this file is the BOOTSTRAP for an EMPTY database. The migrations after it (20261004 .. 20261009) rename and drop
+-- objects it creates (awards.risk_score, the 'no_bid' label, the flagged_* / risk_* view and RPC keys, the old tier names,
+-- get_covid_fraud_stats ...). Re-applying it over a migrated database would bring those names back, so it refuses
+-- (marker: congress_trades.lateness_basis, added by 20261009_r6e_lateness.sql). On an empty database run it first, then
+-- every later migration in file-name order.
 
 begin;
 set local search_path = public;
+
+do $$
+begin
+  if exists (select 1 from information_schema.columns
+             where table_schema = 'public' and table_name = 'congress_trades' and column_name = 'lateness_basis') then
+    raise exception 'v2 bootstrap: this database already has the R6e migrations; re-applying v2 would restore removed names. Apply only newer migrations.';
+  end if;
+end $$;
 
 -- =============================================================================
 -- 1. awards (USAspending). Primary record for contracts/grants/loans.
@@ -264,7 +278,7 @@ create table if not exists congress_trades (
 
   -- Signals
   flags text[] default '{}',
-  signal_type text,                          -- routine | suspicious | insider_like
+  signal_type text,                          -- routine | NULL (no label); see the column comment (R6d)
   related_contracts jsonb default '[]',
   has_federal_contract boolean default false,
 
@@ -305,8 +319,16 @@ alter table congress_trades add column if not exists days_to_file int;
 
 -- G5: every trade loader upserts with on_conflict=member_name,ticker,transaction_date,transaction_type.
 -- Postgres needs a matching unique index or the upsert fails (42P10).
-create unique index if not exists congress_trades_natural_key
-  on congress_trades (member_name, ticker, transaction_date, transaction_type);
+-- R6a replaced this key with the lossless congress_trades_lossless_key (20261006_r6a_trades_key.sql). Once that
+-- exists, re-applying this file must not bring the old, lossy index back (it would reject rows that differ
+-- only by owner or option contract).
+do $$
+begin
+  if not exists (select 1 from pg_indexes where schemaname = 'public' and indexname = 'congress_trades_lossless_key') then
+    create unique index if not exists congress_trades_natural_key
+      on congress_trades (member_name, ticker, transaction_date, transaction_type);
+  end if;
+end $$;
 
 create index if not exists congress_trades_ticker_date_idx on congress_trades(ticker, transaction_date desc);
 create index if not exists congress_trades_chamber_idx on congress_trades(member_chamber);
@@ -360,27 +382,6 @@ create table if not exists cost_overruns (
   political_connection text,
   source_url text,
   notes text,
-  created_at timestamptz default now()
-);
-
-create table if not exists insider_trading_signals (
-  id text primary key,
-  company_ticker text not null,
-  company_name text not null,
-  politician_name text not null,
-  filing_date date,
-  transaction_type text,
-  shares_estimate bigint,
-  estimated_value bigint,
-  sector text,
-  confidence text,
-  analysis_notes text,
-  source_url text,
-  related_contract_id text,
-  related_contract_amount bigint,
-  related_contract_agency text,
-  related_contract_description text,
-  related_contract_date date,
   created_at timestamptz default now()
 );
 
@@ -585,9 +586,6 @@ create index if not exists tax_exp_risk_idx on tax_expenditures(risk_score);
 create index if not exists cost_overruns_agency_idx on cost_overruns (agency);
 create index if not exists cost_overruns_overrun_pct_idx on cost_overruns (overrun_pct desc);
 create index if not exists cost_overruns_category_idx on cost_overruns (category);
-create index if not exists its_company_ticker_idx on insider_trading_signals (company_ticker);
-create index if not exists its_confidence_idx on insider_trading_signals (confidence);
-create index if not exists its_value_idx on insider_trading_signals (estimated_value desc);
 create index if not exists stock_holdings_ticker_idx on stock_holdings (ticker);
 create index if not exists stock_holdings_value_idx on stock_holdings (estimated_value_high desc);
 create index if not exists stock_holdings_sector_idx on stock_holdings (sector);
@@ -749,6 +747,8 @@ group by member_party, member_chamber;
 -- columns compute_conflicts.py writes on congress_trades (nothing is stored twice).
 -- Member identity is the name; party/chamber/state ignore the 'Unknown' placeholder
 -- the Quiver loaders write so one member does not split into two rows.
+-- R6c: the late-filing column is late_filing_count (was stock_act_violations: verdict wording); the same
+-- column list as 20261007_r6c_conflicts.sql, so re-running this file over a migrated database still works.
 create or replace view member_conflict_scores with (security_invoker = true) as
 select
   ct.member_name,
@@ -757,7 +757,7 @@ select
   coalesce(max(nullif(ct.member_state, 'Unknown')), 'Unknown')   as member_state,
   count(*)                                                        as total_trades,
   count(*) filter (where ct.conflict_score > 0)                   as conflicted_trades,
-  count(*) filter (where ct.stock_act_late)                       as stock_act_violations,
+  count(*) filter (where ct.stock_act_late)                       as late_filing_count,
   count(*) filter (where ct.committee_conflict)                   as committee_conflicts,
   count(*) filter (where ct.has_federal_contract)                 as contractor_trades,
   count(*) filter (where ct.conflict_tier in ('high', 'severe'))  as high_conflict_trades,
@@ -1147,10 +1147,7 @@ begin
       select jsonb_agg(row_to_json(s) order by s.estimated_value_high desc)
       from stock_holdings s
     ), '[]'::jsonb),
-    'insider_signals', coalesce((
-      select jsonb_agg(row_to_json(i) order by i.estimated_value desc)
-      from insider_trading_signals i
-    ), '[]'::jsonb),
+    'trade_signals', '[]'::jsonb,
     'summary', (
       select jsonb_build_object(
         'total_overrun_projects', count(*)::int,
@@ -1160,13 +1157,10 @@ begin
         'avg_overrun_pct', coalesce(round(avg(overrun_pct))::int, 0),
         'total_stock_holdings', (select count(*)::int from stock_holdings),
         'total_stock_value_high', coalesce((select sum(estimated_value_high) from stock_holdings), 0)::bigint,
-        'total_insider_signals', (select count(*)::int from insider_trading_signals),
-        'total_signal_value', coalesce((select sum(estimated_value) from insider_trading_signals), 0)::bigint,
-        'total_contract_value_linked', coalesce((
-          select sum(related_contract_amount) from insider_trading_signals
-          where confidence = 'high'
-        ), 0)::bigint,
-        'high_confidence_signals', (select count(*)::int from insider_trading_signals where confidence = 'high')
+        'total_trade_signals', 0,
+        'total_signal_value', 0::bigint,
+        'total_contract_value_linked', 0::bigint,
+        'high_confidence_signals', 0
       )
       from cost_overruns
     ),
@@ -1199,15 +1193,7 @@ begin
         order by sum(estimated_value_high) desc
       ) s
     ), '[]'::jsonb),
-    'top_signals', coalesce((
-      select jsonb_agg(row_to_json(t))
-      from (
-        select * from insider_trading_signals
-        where confidence = 'high'
-        order by estimated_value desc
-        limit 10
-      ) t
-    ), '[]'::jsonb)
+    'top_signals', '[]'::jsonb
   ) into v_result;
 
   return v_result;
@@ -1763,7 +1749,7 @@ declare
   public_tables text[] := array[
     'awards', 'era_snapshots', 'covid_spending_summary', 'political_entities',
     'tax_expenditures', 'congress_members', 'congress_trades',
-    'cost_overruns', 'insider_trading_signals', 'stock_holdings',
+    'cost_overruns', 'stock_holdings',
     'senators', 'senator_scores', 'senator_trades', 'senator_votes',
     'lobbyist_trips', 'senator_bills', 'senator_attendance'
   ];

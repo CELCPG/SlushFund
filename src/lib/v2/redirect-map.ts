@@ -124,7 +124,7 @@ export const GATED_PAGES: GatedPage[] = [
   { path: '/covid', label: 'COVID spending', home: 'A re-verified COVID spending report', why: 'figures from RPCs that were never audited' },
   { path: '/doge', label: 'DOGE tracker', home: 'A re-verified DOGE report', why: 'static figures, no source links, dated 2026-05-20' },
   { path: '/analysis/cost-overruns', label: 'Cost overruns', home: 'A re-verified cost-overruns report', why: 'static table with no sources' },
-  { path: '/analysis/conflicts', label: 'Conflict engine', home: 'Trades explorer, conflicts view', why: 'scores built on sums of folded same-day lots' },
+  { path: '/analysis/conflicts', label: 'Trade signal engine', home: 'Trades explorer, signals view', why: 'D8a: reads pre-R6e semantics (signal counts shown as verdicts, tier words, late transactions shown as filings); no v2 page needs it' },
   { path: '/analysis/history', label: 'Ten-year trading history', home: 'Trades explorer, trends view', why: 'aggregates unaudited' },
   { path: '/analysis/companies', label: 'Company deep dives', home: 'Company pages', why: 'unaudited overlaps' },
   { path: '/analysis', label: 'Analysis', why: 'estimates presented as data' },
@@ -147,9 +147,9 @@ export const GATED_PAGES: GatedPage[] = [
 /** Legacy API and feed routes that serve derived, hand-entered or unaudited data. */
 export const GATED_APIS: { path: string; why: string }[] = [
   { path: '/api/alerts', why: 'contract KPIs from RPCs that were never audited' },
-  { path: '/api/analytics', why: 'derived summary' },
-  { path: '/api/conflicts', why: 'conflict scores' },
-  { path: '/api/congress/trades', why: 'carries old conflict scores; also /summary (totals built on folded same-day lots) and /trump (hand-entered trades)' },
+  { path: '/api/analytics', why: 'derived summary from RPCs that were never audited; no v2 page reads it (D8a)' },
+  { path: '/api/conflicts', why: 'D8a: pre-R6e member counts and tier words; no v2 page reads it' },
+  { path: '/api/congress/trades', why: 'D8a: reads has_federal_contract as a yes/no (NULL means not computed since R6e) and old tier words; carries old conflict scores; also /summary (totals built on folded same-day lots) and /trump (hand-entered trades)' },
   { path: '/api/v1/members', why: 'total_volume sums the top of each disclosed band' },
   { path: '/api/covid-fraud', why: 'derived figures' },
   { path: '/api/covid-stats', why: 'derived figures' },

@@ -11,7 +11,7 @@ export const revalidate = 600;
 const TOC = [
   { id: 'source', label: 'Official source' },
   { id: 'loaded', label: "What's loaded" },
-  { id: 'shares', label: 'Percent no-bid' },
+  { id: 'shares', label: 'Percent not competed' },
   { id: 'trace', label: 'Tracing a row' },
   { id: 'caveats', label: 'Caveats' },
   { id: 'checks', label: 'How we check' },
@@ -44,8 +44,8 @@ export default function ContractsMethodology() {
         <p><b>We never choose awards by who received them.</b> Political connections play no part in the selection. Any tag that links a company to a person or a stock is added later by a separate, sourced step, and appears only with its source.</p>
       </MethodSection>
 
-      <MethodSection id="shares" title="Where &ldquo;percent no-bid&rdquo; comes from">
-        <p>Our award rows hold every large non-competed award, but competed awards only from $10 million up. A share worked out from those rows would overstate the no-bid share. So &ldquo;percent no-bid&rdquo; always comes from a separate table of <b>agency totals</b>: all prime contract obligations for each agency and fiscal year, and the non-competed part of them, taken from USAspending&rsquo;s agency figures.</p>
+      <MethodSection id="shares" title="Where &ldquo;percent not competed&rdquo; comes from">
+        <p>Our award rows hold every large non-competed award, but competed awards only from $10 million up. A share worked out from those rows would overstate the not-competed share. So &ldquo;percent not competed&rdquo; always comes from a separate table of <b>agency totals</b>: all prime contract obligations for each agency and fiscal year, and the non-competed part of them, taken from USAspending&rsquo;s agency figures.</p>
       </MethodSection>
 
       <MethodSection id="trace" title="How a row traces to its source">
