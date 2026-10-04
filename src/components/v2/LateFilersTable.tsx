@@ -26,7 +26,11 @@ const COLUMNS: DataTableColumn[] = [
 export default function LateFilersTable({ trades, caption, hideMember = false }: { trades: LateTrade[]; caption: string; hideMember?: boolean }) {
   const rows: DataTableRow[] = trades.map((t) => {
     const first = t.original_filed_date ?? t.filed_date;
-    const amended = t.original_filed_date && t.filed_date && t.filed_date !== t.original_filed_date ? t.filed_date : null;
+    // D8c (A7c B2): the row links the FIRST report; a later filing that restated it is named beside it.
+    const restated = t.original_source_doc_id && t.source_doc_id && t.original_source_doc_id !== t.source_doc_id
+      ? { url: t.disclosure_url, filed: t.filed_date }
+      : null;
+    const firstUrl = t.original_disclosure_url ?? t.disclosure_url;
     const range = fmtRange(t.amount_min, t.amount_max, t.amount_range);
     const owner = ownerLabel(t.owner);
     const kind = instrumentKind(t);
@@ -39,7 +43,7 @@ export default function LateFilersTable({ trades, caption, hideMember = false }:
         dates: t.transaction_date,
         type: typeLabel(t),
         amount: t.amount_range ?? range,
-        filing: t.disclosure_url,
+        filing: firstUrl,
       },
       cells: {
         member: (
@@ -70,7 +74,7 @@ export default function LateFilersTable({ trades, caption, hideMember = false }:
               <span className="block"><span className="text-[11.5px] text-muted">Traded</span> {fmtDate(t.transaction_date)}</span>
               <span className="block"><span className="text-[11.5px] text-muted">First report</span> {fmtDate(first) ?? '—'}</span>
             </span>
-            {amended && <span className="mt-0.5 block font-sans text-[12px] text-muted">amended {fmtDate(amended)}</span>}
+            {restated?.filed && <span className="mt-0.5 block font-sans text-[12px] text-muted">restated {fmtDate(restated.filed)}</span>}
             {t.date_flag && (
               <span className="mt-0.5 block font-sans text-[12px]">
                 <span className="rounded-md bg-stale-tint px-1.5 py-0.5 text-stale-ink">{dateFlagNote(t.date_flag)}</span>
@@ -86,8 +90,13 @@ export default function LateFilersTable({ trades, caption, hideMember = false }:
           : <span className="text-muted">Not disclosed</span>,
         filing: (
           <span className="block">
-            <FilingLink href={t.disclosure_url} source={t.source_system === 'House_Clerk' ? 'House Clerk PTR' : t.source_system === 'Senate_EFD' ? 'Senate eFD report' : t.source_system} />
-            {amended && <span className="block text-[11.5px] text-muted">opens the amended report</span>}
+            <FilingLink href={firstUrl} source={t.source_system === 'House_Clerk' ? 'House Clerk PTR' : t.source_system === 'Senate_EFD' ? 'Senate eFD report' : t.source_system} />
+            {restated && (
+              <span className="block max-w-[120px] whitespace-normal text-[11.5px] leading-snug text-muted">
+                first report; restated in{' '}
+                <FilingLink href={restated.url} label={restated.filed ? `${fmtDate(restated.filed)}` : 'a later filing'} source="House or Senate filing that restated it" className="text-[11.5px]" />
+              </span>
+            )}
           </span>
         ),
       },

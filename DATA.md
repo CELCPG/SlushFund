@@ -172,6 +172,11 @@ It is data, not opinion — every flag is a verifiable fact.
 - **Late filing (R6e):** `lateness_basis` says why `days_to_file` / `stock_act_late` are set or NULL (`computed`, `below_reporting_threshold` when
   `amount_max` <= 1,000, `original_filing_unknown`, `not_computed_date_<flag>`). Rank late filers by `member_conflict_scores.late_report_count`
   (distinct reports), never by `late_transaction_count`.
+- **First report (R6f):** `original_source_doc_id` / `original_disclosure_url` name the first report that listed the transaction (the filing
+  `original_filed_date` is the date of); `source_doc_id` / `disclosure_url` are the filing the row is stored under, which is a later filing when one
+  restates it (`original_source_basis` = `first_report_earlier_filing`). NULL together, with `first_report_not_identified`, when the earliest filing seen is
+  an amendment and the original is not in the index (229 House rows, none late). `late_report_count` = distinct `original_source_doc_id` over the
+  late rows; count reports that way, never with `source_doc_id`.
 - **Caveat:** committee seats come from the seat history (`committee_seats`, built from the git
   history of `unitedstates/congress-legislators`); `committee_basis` names the snapshot used and a
   trade with no complete snapshot has `committee_conflict` NULL. The sector/ticker maps in

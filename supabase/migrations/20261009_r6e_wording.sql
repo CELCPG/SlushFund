@@ -105,6 +105,13 @@ group by recipient_name, recipient_uei, connection_type
 order by total_dollars desc
 limit 100;
 
+-- R6f: monthly_spending_trend is a MATERIALIZED view from 20261012_r6f_counts_and_access.sql on, so a re-run must drop that first
+do $$
+begin
+  if (select relkind from pg_class where oid = to_regclass('public.monthly_spending_trend')) = 'm' then
+    drop materialized view public.monthly_spending_trend;
+  end if;
+end $$;
 create or replace view monthly_spending_trend with (security_invoker = true) as
 select
   to_char(posted_date, 'YYYY-MM') as month,

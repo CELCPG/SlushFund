@@ -6,7 +6,7 @@
 // The lists come from src/lib/v2/redirect-map.ts (Node strips the types on import). Every route
 // found under src/app must be classified here; an unclassified route fails the run, so a new
 // legacy page cannot slip into a preview deploy unnoticed.
-import { readdirSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import {
   GATED_APIS,
@@ -126,6 +126,39 @@ if (!base || base === 'inventory') {
 const sample = (p) => p.replace(':id', 'abc123').replace(':code', '097').replace(':slug', 'spacex').replace(':name', 'Pelosi').replace(':c', 'House');
 const rows = [];
 let failed = 0;
+
+// D8c (A7c B1, B2): the late-filers board is checked against the database with the same anon key the pages use.
+function anonCreds() {
+  let url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  let key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) {
+    try {
+      for (const l of readFileSync(join(ROOT, '.env.local'), 'utf8').split(/\r?\n/)) {
+        const m = l.match(/^(NEXT_PUBLIC_SUPABASE_URL|NEXT_PUBLIC_SUPABASE_ANON_KEY)=(.*)$/);
+        if (m) { if (m[1].endsWith('URL')) url ||= m[2].replace(/^["']|["']$/g, ''); else key ||= m[2].replace(/^["']|["']$/g, ''); }
+      }
+    } catch { /* no .env.local */ }
+  }
+  return { url, key };
+}
+async function restAll(path) {
+  const { url, key } = anonCreds();
+  if (!url || !key) throw new Error('no anon credentials (NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY)');
+  const out = [];
+  for (let from = 0; ; from += 1000) {
+    const res = await fetch(`${url}/rest/v1/${path}`, { headers: { apikey: key, Authorization: `Bearer ${key}`, Range: `${from}-${from + 999}`, 'Range-Unit': 'items' } });
+    if (!res.ok) throw new Error(`${path.split('?')[0]} -> ${res.status}`);
+    const page = await res.json();
+    out.push(...page);
+    if (page.length < 1000) return out;
+  }
+}
+function gateRow(path, ok, note, group) {
+  if (!ok) failed++;
+  rows.push({ path, status: ok ? 200 : 0, expect: 200, ok, note, group });
+}
+const num = (t) => Number(String(t).replace(/,/g, ''));
+
 async function hit(path, expect, extra = {}) {
   const res = await fetch(base + path, { redirect: 'manual', method: extra.method ?? 'GET' });
   // React puts <!-- --> between text and interpolated values; strip them so phrases match as a reader sees them.
@@ -141,7 +174,17 @@ async function hit(path, expect, extra = {}) {
   if (ok && extra.startsWith) ok = body.startsWith(extra.startsWith);
   if (ok && extra.bodyAll) ok = extra.bodyAll.every((w) => body.includes(w));
   if (!ok) failed++;
-  rows.push({ path, status: res.status, expect, ok, note: loc ? `→ ${loc}` : robots ? `robots: ${robots}` : '', group: extra.group });
+  // D8c: a failed row says which check failed (a flaky read looked like a wording failure before).
+  let why = '';
+  if (!ok) {
+    const all = [...(extra.bodyAll ?? []), ...(extra.body ? [extra.body] : [])];
+    const bad = [].concat(extra.notBody ?? []).find((w) => body.toLowerCase().includes(String(w).toLowerCase()));
+    if (res.status !== expect) why = `status ${res.status}`;
+    else if (all.some((w) => !body.includes(w))) why = `missing "${all.find((w) => !body.includes(w))}"`;
+    else if (bad) why = `contains "${bad}"`;
+    else if (extra.noindex) why = 'noindex missing';
+  }
+  rows.push({ path, status: res.status, expect, ok, note: why || (loc ? `→ ${loc}` : robots ? `robots: ${robots}` : ''), group: extra.group });
 }
 
 // 1. Withdrawn stories
@@ -321,7 +364,54 @@ if (lateFilersEnabled()) {
     group: 'late filers semantics (D8a)',
   });
   await hit('/data/late-filers?rsort=zz&page=99999&over=7', 200, { notBody: ['unavailable right now'], group: 'late filers by report (D6b) junk input' });
+  await lateBoardGates();
 }
+// D8c. B1: no row below the $1,000 reporting threshold on the board, and the board counts only stock_act_late rows.
+// B2: reports are first reports: the page's totals equal the database's own roll-up (member_conflict_scores), and every
+// member's report count on the page equals late_report_count. A restated first report must say where it was restated.
+async function lateBoardGates() {
+  const G = 'late filers first reports (D8c)';
+  try {
+    const late = await restAll('congress_trades?select=id,member_name,amount_max,stock_act_late,lateness_basis,source_doc_id,original_source_doc_id,original_disclosure_url&lateness_basis=eq.computed&order=id');
+    const small = late.filter((r) => r.amount_max != null && r.amount_max <= 1000);
+    gateRow('board pool: rows with amount_max <= 1000', small.length === 0, `${small.length} of ${late.length} computed rows (the board's pool)`, G);
+    const lateRows = late.filter((r) => r.stock_act_late === true);
+    gateRow('board pool: every over-limit row has a first report', lateRows.every((r) => r.original_source_doc_id && r.original_disclosure_url), `${lateRows.length} rows`, G);
+    const roll = await restAll('member_conflict_scores?select=member_name,late_transaction_count,late_report_count&order=member_name');
+    const dbReports = roll.reduce((n, m) => n + m.late_report_count, 0);
+    const dbTx = roll.reduce((n, m) => n + m.late_transaction_count, 0);
+    const dbMembers = roll.filter((m) => m.late_report_count > 0).length;
+    const mine = new Map();
+    for (const r of lateRows) { const s = mine.get(r.member_name) ?? new Set(); s.add(r.original_source_doc_id); mine.set(r.member_name, s); }
+    const rollMismatch = roll.filter((m) => (mine.get(m.member_name)?.size ?? 0) !== m.late_report_count);
+    gateRow('member_conflict_scores.late_report_count = distinct first reports of the late rows', rollMismatch.length === 0 && dbTx === lateRows.length, `${roll.length} members; ${rollMismatch.length} differ; ${dbTx} transactions vs ${lateRows.length}`, G);
+    const res = await fetch(`${base}/data/late-filers?members=all`);
+    const html = (await res.text()).replace(/<!-- -->/g, '');
+    const m = html.match(/<b>([\d,]+)<\/b> transactions in <b>([\d,]+)<\/b> reports were filed more than 45 days after the trade, by <b>([\d,]+)<\/b> members/);
+    gateRow('board headline = database roll-up (transactions, first reports, members)', !!m && num(m[1]) === dbTx && num(m[2]) === dbReports && num(m[3]) === dbMembers,
+      m ? `page ${m[1]} / ${m[2]} / ${m[3]}; database ${dbTx} / ${dbReports} / ${dbMembers}` : 'summary sentence not found (no summary rendered?)', G);
+    // per member: the row on the page (name, then the report count cell) equals late_report_count
+    const bad = [];
+    let seen = 0;
+    for (const mem of roll.filter((x) => x.late_report_count > 0)) {
+      const esc = mem.member_name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '(?:\'|&#x27;)');
+      const row = html.match(new RegExp(`${esc}</(?:a|b)>[\\s\\S]{0,900}?font-mono text-\\[15px\\] font-semibold">([\\d,]+)</b>`));
+      if (!row) { bad.push(`${mem.member_name}: not on the page`); continue; }
+      seen++;
+      if (num(row[1]) !== mem.late_report_count) bad.push(`${mem.member_name}: page ${row[1]}, database ${mem.late_report_count}`);
+    }
+    gateRow('every member row on the page = late_report_count', bad.length === 0, bad.length ? bad.slice(0, 6).join('; ') : `${seen} member rows compared`, G);
+    // Meijer's sub-$1,000 sales (B1) are not on the board: the three late rows above $1,000 are, in one report
+    const mj = roll.find((x) => x.member_name === 'Peter Meijer');
+    gateRow('Peter Meijer: 3 late transactions in 1 report (the 11 sub-$1,000 rows are not counted)', !!mj && mj.late_transaction_count === 3 && mj.late_report_count === 1, mj ? `${mj.late_transaction_count} / ${mj.late_report_count}` : 'member not found', G);
+    // first report named, restated filing named: a Suozzi report (restated by a 2022 filing) shows both
+    const restated = lateRows.filter((r) => r.source_doc_id !== r.original_source_doc_id).length;
+    gateRow('restated rows exist and the page names the first report and the restating filing', restated > 0 && /restated in/.test(html) && /View first report/.test(html), `${restated} late rows are stored under a later filing`, G);
+  } catch (e) {
+    gateRow('late-filers first-report gates', false, `could not run: ${String(e.message).slice(0, 160)}`, G);
+  }
+}
+
 await hit('/sitemap.xml', 200, { bodyAll: ['/latest', '/data/status'], notBody: '/about/data-status', group: 'status and latest (D6b)' });
 
 // 6. Kept v2 pages

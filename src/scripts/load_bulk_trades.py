@@ -55,7 +55,7 @@ _activate_venv()
 
 import pdfplumber
 from supabase import create_client
-from trade_fields import STRONG_OPTION, date_flag, date_typo_twin, lateness_detail, parse_option
+from trade_fields import STRONG_OPTION, date_flag, date_typo_twin, first_report_basis, lateness_detail, parse_option
 
 SUPABASE_URL = os.environ.get("NEXT_PUBLIC_SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
@@ -649,7 +649,8 @@ def build_all(cache_dir, matcher, ids, sb, prune):
     direction, option type / strike / expiry) filed again (an amendment or re-filing) is restated by the LATER
     filing, which replaces the earlier filing's rows for it. original_filed_date is the earliest filing that
     held the transaction; when that earliest filing is itself marked Amended and no earlier filing is cached,
-    the original is unknown (NULL). Date flags and lateness: trade_fields.py."""
+    the original is unknown (NULL). R6f: original_source_doc_id / original_disclosure_url / original_source_basis
+    say which filing that earliest one was (NULL with the date when unknown). Date flags and lateness: trade_fields.py."""
     today = date.today()
     run_ts = datetime.now(timezone.utc).isoformat()
     acct = Counter()
@@ -728,7 +729,7 @@ def build_all(cache_dir, matcher, ids, sb, prune):
                                     "owner": r["owner"], "typo_date": r["transaction_date"], "twin_date": twin.isoformat(),
                                     "typo_doc": doc, "typo_filed": r["filed_date"]})
     acct["date_typo_twins"] = len(twin_report)
-    seen = {}                                   # identity -> {"doc", "rows", "orig", "orig_known"}
+    seen = {}                                   # identity -> {"doc", "rows", "orig", "orig_known", "orig_doc", "orig_url"}
     replaced = []
     for _rank, doc, rows in per_filing:
         groups = {}
@@ -744,16 +745,24 @@ def build_all(cache_dir, matcher, ids, sb, prune):
                                  "kept": [[x["owner"], x["amount_range"]] for x in rs],
                                  "dropped": [[x["owner"], x["amount_range"]] for x in old["rows"]]})
                 orig, known = old["orig"], old["orig_known"]      # the earliest filing stays the original
+                orig_doc, orig_url = old["orig_doc"], old["orig_url"]
             else:
                 amended = any(x["_amended"] for x in rs)
                 orig, known = (None, False) if amended else (rs[0]["filed_date"], True)
-            seen[ident] = {"doc": doc, "rows": rs, "orig": orig, "orig_known": known}
+                # R6f (A7c G1): the first report is the earliest filing that held the transaction, by filing date
+                # then DocID. Its id and link are stored with its date; NULL together when the original is unknown.
+                orig_doc, orig_url = (None, None) if amended else (doc, rs[0]["disclosure_url"])
+            seen[ident] = {"doc": doc, "rows": rs, "orig": orig, "orig_known": known,
+                           "orig_doc": orig_doc, "orig_url": orig_url}
 
     final, keys = [], set()
     for entry in seen.values():
         for r in entry["rows"]:
             r = {k: v for k, v in r.items() if k != "_amended"}
             r["original_filed_date"] = entry["orig"]
+            r["original_source_doc_id"] = entry["orig_doc"]
+            r["original_disclosure_url"] = entry["orig_url"]
+            r["original_source_basis"] = first_report_basis(r["source_doc_id"], entry["orig_doc"])
             r.setdefault("notification_date", None)
             flag = date_flag(r["transaction_date"], entry["orig"], r["filed_date"], today, r["notification_date"])
             r["date_flag"] = flag
@@ -771,6 +780,8 @@ def build_all(cache_dir, matcher, ids, sb, prune):
     acct["option_rows"] = sum(1 for r in final if r["option_type"])
     acct["option_rows_unknown"] = sum(1 for r in final if r["option_type"] == "unknown")
     acct["original_unknown_rows"] = sum(1 for r in final if r["original_filed_date"] is None)
+    for b in ("first_report_this_filing", "first_report_earlier_filing", "first_report_not_identified"):
+        acct[b] = sum(1 for r in final if r["original_source_basis"] == b)
     acct["flag_" + "_".join(["none"])] = sum(1 for r in final if r["date_flag"] is None)
     for fl in ("after_filing", "future", "stale_2y_corroborated", "stale_2y"):
         acct["flag_" + fl] = sum(1 for r in final if r["date_flag"] == fl)

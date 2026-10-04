@@ -5,9 +5,9 @@ import EmptyState from '@/components/v2/EmptyState';
 import { Card } from '@/components/v2/PageBand';
 import SimplePage from '@/components/v2/SimplePage';
 import SourceBar from '@/components/v2/SourceBar';
-import { getDatasetStatuses } from '@/lib/v2/datasets';
+import { getDatasetStatus, getDatasetStatuses } from '@/lib/v2/datasets';
 import { FISCAL_YEARS, getEntityIndex, ncTotals, otherCount, type EntitySummary } from '@/lib/v2/companies';
-import { fmtCount, fmtUsd, fmtUsdCompact } from '@/lib/v2/format';
+import { fmtCount, fmtDate, fmtUsd, fmtUsdCompact } from '@/lib/v2/format';
 import { cleanQuery } from '@/lib/v2/queries';
 
 export const metadata: Metadata = {
@@ -37,7 +37,9 @@ export default async function CompaniesPage({ searchParams }: { searchParams: Pr
   const fy = (FISCAL_YEARS as readonly number[]).includes(fyRaw) ? fyRaw : null;
   const page = Math.max(1, Math.floor(Number(one(sp.page))) || 1);
 
-  const index = await getEntityIndex();
+  const [index, contractsStatus] = await Promise.all([getEntityIndex(), getDatasetStatus('contracts')]);
+  // D8c: the actual as-of date of the awards load, never "as of the last load" (only when the load time is unknown).
+  const asOf = fmtDate(contractsStatus.lastUpdated) ?? 'the last load';
   const sourceBar = <SourceBar datasets={['contracts', 'company_tickers']} />;
   const head = {
     eyebrow: 'Companies',
@@ -138,7 +140,7 @@ export default async function CompaniesPage({ searchParams }: { searchParams: Pr
           The awards behind it are every prime contract award signed in FY2024–26 that is <b className="text-ink">non-competed and $1 million or more</b>, plus any
           award of <b className="text-ink">$10 million or more</b>{' '}(rule r5-v1). It is a selection, not a company&rsquo;s total federal business, so no
           company&rsquo;s “share” of not-competed work can be read from it. “Obligated to date” is the total the government has committed on awards signed in the
-          period, including later modifications; it is not spending in that fiscal year. Agency-level shares are on the{' '}
+          period, including later modifications (USAspending, as of {asOf}); it is not spending in that fiscal year. Agency-level shares are on the{' '}
           <Link href="/agencies" className="font-semibold text-contracts-ink hover:underline">agencies page</Link>. Companies are grouped by USAspending&rsquo;s parent-company
           field, which has errors: the same company can appear under more than one parent record.
         </p>

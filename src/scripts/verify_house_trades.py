@@ -51,7 +51,8 @@ UA = "slushfund-bulk-loader/1.0"
 OWN = {"SP": "Spouse", "JT": "Joint", "DC": "Child"}
 COLS = ("id,member_name,company_name,member_state,district,ticker,transaction_type,transaction_date,amount_range,"
         "owner,disclosure_year,disclosure_url,source_doc_id,asset_type,lot_count,option_type,strike,expiry,"
-        "filed_date,original_filed_date,date_flag,days_to_file,stock_act_late,amount_max,lateness_basis")
+        "filed_date,original_filed_date,date_flag,days_to_file,stock_act_late,amount_max,lateness_basis,"
+        "original_source_doc_id,original_disclosure_url,original_source_basis")
 DATE_PAIR = re.compile(r"\d{1,2}/\d{1,2}/\d{4}\s+\d{1,2}/\d{1,2}/\d{4}")
 # the table header repeated at the top of every page; it sits between a band that wraps over a page break
 HEADER = re.compile(r"^\s*(?:ID\s+Owner\s+Asset|Type\s+Date\s+Gains|\$200\?\s*$)", re.I)
@@ -66,10 +67,10 @@ def num(s):
     return int(s.replace(",", ""))
 
 
-def sample_rows(sb, per_year, n, seed, options, late, amended, late_board=False):
+def sample_rows(sb, per_year, n, seed, options, late, amended, late_board=False, first_report=False):
     ids, start = [], 0
     while True:
-        rows = (sb.table("congress_trades").select("id,disclosure_year,option_type,days_to_file,filed_date,original_filed_date,stock_act_late")
+        rows = (sb.table("congress_trades").select("id,disclosure_year,option_type,days_to_file,filed_date,original_filed_date,stock_act_late,source_doc_id,original_source_doc_id")
                 .eq("source_system", "House_Clerk").order("id").range(start, start + 999).execute().data)
         ids += rows
         if len(rows) < 1000:
@@ -83,6 +84,8 @@ def sample_rows(sb, per_year, n, seed, options, late, amended, late_board=False)
         ids = [r for r in ids if r["stock_act_late"] is True]
     if amended:
         ids = [r for r in ids if r["original_filed_date"] and r["filed_date"] != r["original_filed_date"]]
+    if first_report:     # R6f: rows whose first report is another filing than the one they are stored under (also same-day filings)
+        ids = [r for r in ids if r["original_source_doc_id"] and r["original_source_doc_id"] != r["source_doc_id"]]
     print(f"{len(ids)} House rows in the sampling pool")
     rng = random.Random(seed)
     if n:
@@ -232,6 +235,16 @@ def check(r, lines, cache, idx_cache, orig_scan):
         orig_ok = o["found_original"] == r["original_filed_date"] or (o["found_original"] is None and r["original_filed_date"] is None)
         o["original_ok"] = orig_ok
         checks.append("original_ok")
+        # R6f (A7c G1): the stored first report is the earliest filing (date, then DocID) that holds the transaction,
+        # its link points at that document, and the basis agrees
+        doc, url = r["original_source_doc_id"], r["original_disclosure_url"]
+        o["original_doc"] = doc
+        o["original_doc_ok"] = (o["found_original_doc"] == doc and (url or "").endswith(f"/{doc}.pdf")) if doc else (
+            o["found_original_doc"] is None and url is None)
+        o["original_basis_ok"] = r["original_source_basis"] == (
+            "first_report_not_identified" if doc is None else
+            "first_report_this_filing" if str(doc) == str(r["source_doc_id"]) else "first_report_earlier_filing")
+        checks += ["original_doc_ok", "original_basis_ok"]
         if r["date_flag"] in (None, "stale_2y_corroborated") and r["original_filed_date"]:   # R6c: a corroborated stale row has lateness
             days = (date.fromisoformat(r["original_filed_date"]) - date.fromisoformat(r["transaction_date"])).days
             # R6e: a row at or under the $1,000 reporting threshold was never due: stock_act_late must be NULL
@@ -273,6 +286,7 @@ def find_original(r, want, cache, idx_cache):
         if held:       # the loader's rule: the same ticker / date / direction in an earlier filing is the same transaction, whoever the owner
             holders.append((fd, doc, any(c["owner"] == r["owner"] for c in held)))
     return {"found_original": holders[0][0] if holders else None, "holder_docs": [d for _, d, _ in holders],
+            "found_original_doc": holders[0][1] if holders else None,
             "original_lists_a_different_owner": bool(holders) and not holders[0][2],
             "filings_scanned_in_window": len(cand), "unreadable_in_window": unreadable}
 
@@ -286,14 +300,15 @@ def main():
     ap.add_argument("--options", action="store_true", help="sample only option rows (option_type set)")
     ap.add_argument("--late", action="store_true", help="sample only rows with days_to_file computed; also re-derives the original filing")
     ap.add_argument("--amended", action="store_true", help="sample only rows restated by a later filing (filed_date != original_filed_date)")
+    ap.add_argument("--first-report", action="store_true", help="R6f: sample only rows whose first report is a different filing than the one they are stored under (use with --late-board)")
     ap.add_argument("--late-board", action="store_true", help="R6e: sample only rows the late-filers board would show (stock_act_late = true); also re-derives the original filing")
     ap.add_argument("--cache", default=os.path.join(os.environ.get("TEMP", "/tmp"), "slushfund-verify-pdfs"))
     args = ap.parse_args()
     os.makedirs(args.cache, exist_ok=True)
     sb = create_client(os.environ["NEXT_PUBLIC_SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
-    rows = sample_rows(sb, args.per_year, args.n, args.seed, args.options, args.late, args.amended, args.late_board)
+    rows = sample_rows(sb, args.per_year, args.n, args.seed, args.options, args.late, args.amended, args.late_board, args.first_report)
     idx_cache = {}
-    orig_scan = args.late or args.amended or args.late_board
+    orig_scan = args.late or args.amended or args.late_board or args.first_report
     results = [check(r, pdf_lines(r["disclosure_url"], args.cache), args.cache, idx_cache, orig_scan) for r in rows]
     with open(args.out, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=1)

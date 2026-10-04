@@ -169,7 +169,7 @@ export default async function LateFilersPage({ searchParams }: { searchParams: P
                 columns={memberColumns}
                 rows={memberRows}
                 caption="Members ranked by the gap between a trade and its first report, or by reports"
-                footer={<span>A report is one first report holding at least one trade filed more than {STOCK_ACT_DAYS} days after the trade. &ldquo;Transactions in them&rdquo; is the secondary count; &ldquo;of N&rdquo; is all of the member&rsquo;s trades whose lateness we compute.</span>}
+                footer={<span>A report is one first report holding at least one trade filed more than {STOCK_ACT_DAYS} days after the trade; restated filings are not counted again, and each member&rsquo;s count matches the late-report count in our database. &ldquo;Transactions in them&rdquo; is the secondary count; &ldquo;of N&rdquo; is all of the member&rsquo;s trades whose lateness we compute.</span>}
               />
               {ranked.length > MEMBERS_SHOWN && (
                 <p className="mt-3 text-[13.5px]">
@@ -236,7 +236,7 @@ export default async function LateFilersPage({ searchParams }: { searchParams: P
 
         <p className="mt-6 max-w-[860px] text-[13px] text-muted">
           Gaps are computed by our loader from two dates in the filings (the trade date and the first report&rsquo;s filing date) and can be checked by hand from the linked filing.
-          Where an amendment replaced a row, the link opens the amended report and the first report&rsquo;s date is shown beside it.
+          Each report links to the first report that listed the trades. Where a later filing restated them, that filing is named beside it (&ldquo;restated in&rdquo;) and linked; it never replaces the first report&rsquo;s date.
           See <Link href="/about/methodology/trades" className="font-semibold text-trades-ink hover:underline">how trades are collected</Link>.
         </p>
       </Wrap>

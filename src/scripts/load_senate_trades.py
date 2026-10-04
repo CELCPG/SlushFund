@@ -58,7 +58,7 @@ try:
     activate()
 except Exception:
     pass
-from trade_fields import date_flag, date_typo_twin, lateness_detail, parse_option
+from trade_fields import date_flag, date_typo_twin, first_report_basis, lateness_detail, parse_option
 
 BASE = 'https://efdsearch.senate.gov'
 UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -586,21 +586,23 @@ def amend_no(label):
 def pick_versions(recs):
     """An amendment restates the whole report (same rows, corrections applied), so the newest amendment
     supersedes the original and earlier amendments.
-    -> (kept [(rec, original_filed_date)], superseded [rec]). original_filed_date is the filing date of the
-    group's original report (amendment 0) when the listing has it, else None (only amendments are listed:
-    the first version's date is unknown, and the amendment's own date is not a substitute)."""
+    -> (kept [(rec, original_filed_date, original_rec)], superseded [rec]). original_filed_date is the filing date of
+    the group's original report (amendment 0) when the listing has it, else None (only amendments are listed:
+    the first version's date is unknown, and the amendment's own date is not a substitute). original_rec is that
+    original report (R6f, A7c G1: its report id and url are stored as the row's first report), else None."""
     groups = {}
     for rec in recs:
         groups.setdefault(base_label(rec['listing']['label']), []).append(rec)
     kept, superseded = [], []
     for v in groups.values():
         v.sort(key=lambda r: (amend_no(r['listing']['label']), parse_date(r['listing']['filed']) or date.min, r['report_id']))
-        originals = [parse_date(r['listing']['filed']) for r in v if amend_no(r['listing']['label']) == 0]
-        first = min((d for d in originals if d), default=None)
+        originals = [(parse_date(r['listing']['filed']), r) for r in v if amend_no(r['listing']['label']) == 0]
+        first, first_rec = min(((d, r) for d, r in originals if d), key=lambda x: (x[0], x[1]['report_id']),
+                               default=(None, None))
         if amend_no(v[-1]['listing']['label']) == 0:      # no amendment: every report stands on its own
-            kept += [(r, parse_date(r['listing']['filed'])) for r in v]
+            kept += [(r, parse_date(r['listing']['filed']), r) for r in v]
         else:
-            kept.append((v[-1], first))
+            kept.append((v[-1], first, first_rec))
             superseded += v[:-1]
     return kept, superseded
 
@@ -734,25 +736,25 @@ def stage_load(args):
         for rec in superseded:
             acct['superseded'].append({'report_id': rec['report_id'], 'senator': r['name'], 'label': rec['listing']['label'],
                                        'filed': rec['listing']['filed'], 'rows': len(rec['rows'])})
-        seen = {}                      # identity -> {'doc', 'rows', 'orig'}
+        seen = {}                      # identity -> {'doc', 'rows', 'orig' = (date, report) or None}
         built = []
-        for rec, first in sorted(kept, key=lambda kr: (parse_date(kr[0]['listing']['filed']) or date.min, kr[0]['report_id'])):
+        for rec, first, first_rec in sorted(kept, key=lambda kr: (parse_date(kr[0]['listing']['filed']) or date.min, kr[0]['report_id'])):
             filed = parse_date(rec['listing']['filed'])
             rows_ = build_rows(rec, r, acct)
             for row in rows_:
                 row['filed_date'] = filed.isoformat() if filed else None
-            built.append((rec, first, rows_))
+            built.append((rec, first, first_rec, rows_))
         # R6e (A7b F1): a row whose date cannot be right (after its own filing / in the future) that a LATER report
         # restates with a month/day twin (a mistyped year) is the same transaction: key it on the twin's date, so the
         # later report restates it and the earliest report stays the original (trade_fields.date_typo_twin).
         def _sig(row):
             return (row['ticker'], row['transaction_type'], row['owner'], row['option_type'], row['strike'], row['expiry'])
         by_sig = {}
-        for i, (_rec, _first, rows_) in enumerate(built):
+        for i, (_rec, _first, _first_rec, rows_) in enumerate(built):
             for row in rows_:
                 by_sig.setdefault(_sig(row), []).append((i, row['transaction_date']))
         twin_date = {}
-        for i, (_rec, _first, rows_) in enumerate(built):
+        for i, (_rec, _first, _first_rec, rows_) in enumerate(built):
             for row in rows_:
                 cands = [d for (j, d) in by_sig[_sig(row)] if j > i]
                 twin = date_typo_twin(row['transaction_date'], row['filed_date'], today, cands) if cands else None
@@ -760,12 +762,12 @@ def stage_load(args):
                     twin_date[id(row)] = twin.isoformat()
                     acct.setdefault('date_typo_twins', []).append(
                         {'senator': r['name'], 'ticker': row['ticker'], 'typo_date': row['transaction_date'], 'twin_date': twin.isoformat()})
-        for rec, first, rows_ in built:
+        for rec, first, first_rec, rows_ in built:
             new = {}
             for row in rows_:
                 new.setdefault(identity(row, twin_date.get(id(row))), []).append(row)
             for ident, rows in new.items():
-                orig = first
+                orig = (first, first_rec) if first else None
                 old = seen.get(ident)
                 if old and old['doc'] != rec['report_id']:
                     # the same transaction in a later filing: the later filing restates it and wins
@@ -775,10 +777,14 @@ def stage_load(args):
                                                  'kept_report': rec['report_id'], 'dropped_report': old['doc'],
                                                  'kept_rows': [[x['owner'], x['amount_range']] for x in rows],
                                                  'dropped_rows': [[x['owner'], x['amount_range']] for x in old['rows']]})
-                    known = [d for d in (old['orig'], first) if d]
-                    orig = min(known) if known else None
+                    known = [x for x in (old['orig'], orig) if x]
+                    orig = min(known, key=lambda x: (x[0], x[1]['report_id'])) if known else None
                 for row in rows:
-                    row['original_filed_date'] = orig.isoformat() if orig else None
+                    row['original_filed_date'] = orig[0].isoformat() if orig else None
+                    # R6f (A7c G1): the first report the original date came from (NULL together when unknown)
+                    row['original_source_doc_id'] = orig[1]['report_id'] if orig else None
+                    row['original_disclosure_url'] = orig[1]['url'] if orig else None
+                    row['original_source_basis'] = first_report_basis(row['source_doc_id'], row['original_source_doc_id'])
                 seen[ident] = {'doc': rec['report_id'], 'rows': rows, 'orig': orig}
         for entry in seen.values():
             for row in entry['rows']:

@@ -15,9 +15,20 @@ import { TRADE_COLS, type TradeRow } from '@/lib/v2/queries';
  * The STOCK Act asks for 45 days; nothing here says a filing broke any rule. Members and reports are
  * ranked by reports or by days, never by transaction counts (A7b).
  *
- * A "report" is one first report: a filing URL plus the date of the first report. One report can hold
- * hundreds of trades, so the trade list is grouped by report (one row each, expandable).
+ * A "report" is one FIRST report (D8c, A7c B2): the filing that first listed a trade, by
+ * original_source_doc_id, never the later filing a restated row is stored under. A report is counted,
+ * grouped and linked by that document, so the board agrees with member_conflict_scores.late_report_count
+ * (count(distinct original_source_doc_id) over the rows with stock_act_late = true; LATE_REPORT_DEFINITION).
+ * Where a later filing restated the trades, the report says "restated in" and links that filing too.
+ * One report can hold hundreds of trades, so the trade list is grouped by report (one row each, expandable).
+ *
+ * Over the limit means stock_act_late = true and nothing else (A7c B1); the pool is lateness_basis =
+ * 'computed', so a row below the $1,000 reporting threshold, or with no computable lateness, is never
+ * ranked, filtered or counted here (scripts/verify-gates.mjs checks that no such row appears).
  */
+
+/** The one definition of a late report, shared with the database (member_conflict_scores.late_report_count). */
+export const LATE_REPORT_DEFINITION = 'a first report (distinct original_source_doc_id) that holds at least one transaction with stock_act_late = true';
 
 export const STOCK_ACT_DAYS = 45;
 export const OVER_OPTIONS = [45, 90, 180, 365] as const;
@@ -27,6 +38,10 @@ export const REPORT_TRADES_SHOWN = 25;
 
 export interface LateTrade extends TradeRow {
   days_to_file: number;
+  /** The filing the row is stored under, and the first report that listed the trade (D8c). */
+  source_doc_id: string | null;
+  original_source_doc_id: string | null;
+  original_disclosure_url: string | null;
 }
 
 export type ReportSort = 'gap' | 'recent';
@@ -53,15 +68,24 @@ export function parseLateFilters(sp: SP): LateFilters {
   };
 }
 
-const COLS = `${TRADE_COLS}, days_to_file`;
+const COLS = `${TRADE_COLS}, days_to_file, source_doc_id, original_source_doc_id, original_disclosure_url`;
 
 // ---------------------------------------------------------------- reports
 
+/** A later filing that restated trades of a first report. */
+export interface RestatedIn {
+  docId: string;
+  url: string | null;
+  filed: string | null;
+}
+
 export interface LateReport {
   key: string;
-  /** The filing the rows link to (for an amended row, the amended report). */
+  /** The FIRST report (A7c B2): the filing that first listed these trades. */
   url: string | null;
-  /** Used to find the rows when there is no URL. */
+  /** original_source_doc_id; the rows are found by it. */
+  firstDocId: string | null;
+  /** Used to find the rows when there is no first-report id. */
   firstId: string;
   bioguide: string | null;
   memberKey: string;
@@ -71,6 +95,8 @@ export interface LateReport {
   state: string;
   /** Date of the first report holding these trades. */
   reportDate: string | null;
+  /** Later filings that restated trades of this report over the limit, oldest first (empty when none). */
+  restated: RestatedIn[];
   /** Trades in this report with a computed gap. */
   computed: number;
   /** Gaps over 45 days, longest first. */
@@ -125,7 +151,13 @@ export const NOT_COMPUTED_BASES = [
   'below_reporting_threshold', 'original_filing_unknown', 'not_computed_date_stale_2y', 'not_computed_date_after_filing', 'not_computed_date_future',
 ] as const;
 
-type Slim = Pick<TradeRow, 'id' | 'bio_guide_id' | 'member_name' | 'member_chamber' | 'member_party' | 'member_state' | 'disclosure_url' | 'ticker' | 'transaction_date' | 'original_filed_date' | 'date_flag'> & { days_to_file: number };
+type Slim = Pick<TradeRow, 'id' | 'bio_guide_id' | 'member_name' | 'member_chamber' | 'member_party' | 'member_state' | 'disclosure_url' | 'ticker' | 'transaction_date' | 'filed_date' | 'original_filed_date' | 'date_flag'> & {
+  days_to_file: number;
+  stock_act_late: boolean | null;
+  source_doc_id: string | null;
+  original_source_doc_id: string | null;
+  original_disclosure_url: string | null;
+};
 
 /** Per-member and per-report gaps over every trade with a computed gap. Memoized 30 min (~25 requests cold). */
 export const getLateSummary = memo(async (): Promise<LateSummary | null> => {
@@ -134,8 +166,8 @@ export const getLateSummary = memo(async (): Promise<LateSummary | null> => {
     readAll<Slim>((from, to) =>
       supabase!
         .from('congress_trades')
-        .select('id, bio_guide_id, member_name, member_chamber, member_party, member_state, disclosure_url, ticker, transaction_date, original_filed_date, date_flag, days_to_file', { count: 'exact' })
-        .not('stock_act_late', 'is', null)
+        .select('id, bio_guide_id, member_name, member_chamber, member_party, member_state, disclosure_url, ticker, transaction_date, filed_date, original_filed_date, date_flag, days_to_file, stock_act_late, source_doc_id, original_source_doc_id, original_disclosure_url', from === 0 ? { count: 'exact' } : {})
+        .eq('lateness_basis', 'computed')
         .order('id', { ascending: true })
         .range(from, to),
     ),
@@ -150,7 +182,9 @@ export const getLateSummary = memo(async (): Promise<LateSummary | null> => {
   for (const r of rows) {
     const days = Number(r.days_to_file);
     const memberKey = r.bio_guide_id || r.member_name;
-    const reportKey = `${r.disclosure_url ?? `row:${r.id}`}|${r.original_filed_date ?? ''}`;
+    const late = r.stock_act_late === true;
+    // A7c B2: one report = one first report (the document that first listed the trade), whichever later filing the row is stored under.
+    const reportKey = r.original_source_doc_id ?? `row:${r.id}`;
     let m = by.get(memberKey);
     if (!m) {
       m = {
@@ -162,23 +196,28 @@ export const getLateSummary = memo(async (): Promise<LateSummary | null> => {
     let rep = reports.get(reportKey);
     if (!rep) {
       rep = {
-        key: reportKey, url: r.disclosure_url, firstId: r.id, bioguide: r.bio_guide_id, memberKey, name: r.member_name, chamber: r.member_chamber,
-        party: r.member_party, state: r.member_state, reportDate: r.original_filed_date ?? null, computed: 0, gaps: [], flagged: 0, maxDays: -1, maxTicker: '', maxTraded: '',
+        key: reportKey, url: r.original_disclosure_url ?? r.disclosure_url, firstDocId: r.original_source_doc_id, firstId: r.id, bioguide: r.bio_guide_id, memberKey, name: r.member_name,
+        chamber: r.member_chamber, party: r.member_party, state: r.member_state, reportDate: r.original_filed_date ?? null, restated: [], computed: 0, gaps: [], flagged: 0, maxDays: -1,
+        maxTicker: '', maxTraded: '',
       };
       reports.set(reportKey, rep);
     }
     m.computed += 1;
     rep.computed += 1;
     if (r.date_flag) rep.flagged += 1;
-    if (days > STOCK_ACT_DAYS) {
+    if (late) {
       over += 1;
       m.over += 1;
       m.keys.add(reportKey);
       rep.gaps.push(days);
+      // A later filing that restated this trade is named beside the first report ("restated in").
+      if (r.source_doc_id && r.source_doc_id !== r.original_source_doc_id && !rep.restated.some((x) => x.docId === r.source_doc_id)) {
+        rep.restated.push({ docId: r.source_doc_id, url: r.disclosure_url, filed: r.filed_date });
+      }
     }
     if (days > m.maxDays || (days === m.maxDays && r.transaction_date < m.maxTraded)) {
       m.maxDays = days;
-      m.maxUrl = r.disclosure_url;
+      m.maxUrl = r.original_disclosure_url ?? r.disclosure_url;
       m.maxTicker = r.ticker;
       m.maxTraded = r.transaction_date;
     }
@@ -191,8 +230,10 @@ export const getLateSummary = memo(async (): Promise<LateSummary | null> => {
   const members = [...by.values()]
     .filter((m) => m.over > 0)
     .map(({ keys, ...m }) => ({ ...m, reports: keys.size }));
-  const late = [...reports.values()].filter((r) => r.gaps.length > 0).map((r) => ({ ...r, gaps: r.gaps.sort((a, b) => b - a) }));
-  return { members, reports: late, computed: rows.length, over, totalRows: all.count, notComputed };
+  const lateReports = [...reports.values()]
+    .filter((r) => r.gaps.length > 0)
+    .map((r) => ({ ...r, gaps: r.gaps.sort((a, b) => b - a), restated: r.restated.sort((a, b) => (a.filed ?? '').localeCompare(b.filed ?? '') || a.docId.localeCompare(b.docId)) }));
+  return { members, reports: lateReports, computed: rows.length, over, totalRows: all.count, notComputed };
 });
 
 export interface ReportPage {
@@ -232,8 +273,7 @@ export function pageReports(summary: LateSummary, f: LateFilters, pageParam: str
 export async function getReportTrades(r: LateReport, over: number, limit = REPORT_TRADES_SHOWN): Promise<LateTrade[] | null> {
   if (!supabase) return null;
   let q = supabase.from('congress_trades').select(COLS).eq('stock_act_late', true).gt('days_to_file', over);
-  q = r.url ? q.eq('disclosure_url', r.url) : q.eq('id', r.firstId);
-  q = r.reportDate ? q.eq('original_filed_date', r.reportDate) : q.is('original_filed_date', null);
+  q = r.firstDocId ? q.eq('original_source_doc_id', r.firstDocId) : q.eq('id', r.firstId);
   const { data, error } = await q
     .order('days_to_file', { ascending: false })
     .order('transaction_date', { ascending: true })

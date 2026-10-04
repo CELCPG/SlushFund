@@ -438,6 +438,13 @@ def main():
         sb.table("congress_trades").upsert(updates[i:i + 500], on_conflict=",".join(KEY_COLS)).execute()
         print(f"  updated {min(i + 500, len(updates))}/{len(updates)}")
 
+    # R6f (A7c G5): member_conflict_scores is materialized; it reads the columns written here and by the trade loaders
+    try:
+        sb.rpc("refresh_member_conflict_scores").execute()
+        print("  member_conflict_scores refreshed")
+    except Exception as e:  # noqa: BLE001
+        print(f"  WARNING: member_conflict_scores NOT refreshed ({str(e)[:200]}); run: select refresh_member_conflict_scores();")
+
     print(f"\nScored {len(updates)} trades:")
     for tier in TIER_BANDS:
         print(f"  {tier:9} {stats['tier'][tier]}")

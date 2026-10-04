@@ -14,7 +14,7 @@ import {
 } from '@/lib/v2/contracts-explorer';
 import { getDatasetStatuses } from '@/lib/v2/datasets';
 import { EXPORT_ROW_CAP, PAGE_SIZE, buildHref, hasAny, type SP } from '@/lib/v2/explorer';
-import { fmtCount } from '@/lib/v2/format';
+import { fmtCount, fmtDate } from '@/lib/v2/format';
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<SP> }): Promise<Metadata> {
   const sp = await searchParams;
@@ -42,6 +42,8 @@ export default async function ContractsExplorerPage({ searchParams }: { searchPa
   const filtered = Object.values(params).some(Boolean);
   const href = (page: number) => buildHref('/data/contracts', { ...params, page: page > 1 ? String(page) : undefined });
   const fyText = f.fy ? `FY${f.fy}` : 'FY2024–26';
+  // D8c: print the actual as-of date of the load, never "as of the last load" (only when the load time is unknown).
+  const asOf = fmtDate(statuses.find((s) => s.key === 'contracts')?.lastUpdated) ?? 'the last load';
   const agencyName = agencies.find((a) => a.code === f.agency)?.name;
 
   return (
@@ -146,7 +148,7 @@ export default async function ContractsExplorerPage({ searchParams }: { searchPa
                   csvName="non-competed-contracts"
                   footer={
                     <span>
-                      Source: USAspending.gov. &ldquo;Obligated to date&rdquo; is the total obligated on the contract so far, as of the last load; it can grow with later modifications and is not spending in a year.
+                      Source: USAspending.gov. &ldquo;Obligated to date&rdquo; is the total obligated on the contract so far (USAspending, as of {asOf}); it can grow with later modifications and is not spending in a year.
                       &ldquo;Not competed&rdquo; is the agency&rsquo;s own coding. A PIID is not unique, so an order&rsquo;s parent IDV is shown beside it.
                     </span>
                   }

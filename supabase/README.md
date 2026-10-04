@@ -19,6 +19,18 @@ The verdict-word scan is `supabase/tools/scan_verdict_words.mjs` (run it after a
 `vacuum (full, analyze) awards;` outside a transaction: without it the table kept ~130 MB of dead rows and anon reads of `top_vendors` /
 `get_alert_summary` hit the 3 s statement timeout (DB 249 MB before, 99 MB after). Do the same for `congress_trades` after repeated `compute_conflicts.py` runs.
 
+**R6f (A7c G1, G3, G4, G5), after the R6e files:** `20261011_r6f_first_report.sql` (`original_source_doc_id`, `original_disclosure_url`,
+`original_source_basis`: the first report of every row, additive), then **backfill with the loaders** (`load_bulk_trades.py` from its PTR cache,
+`load_senate_trades.py load --refresh`; no network needed), then `20261012_r6f_counts_and_access.sql` (a CHECK that the three columns agree;
+`member_conflict_scores` counts FIRST reports and, with `monthly_spending_trend`, is now a MATERIALIZED view: `select refresh_member_conflict_scores();`
+after every trades load, `compute_conflicts.py` does it, and `select refresh_monthly_spending_trend();` after every awards load, `load_awards.py` does it;
+`get_trade_related_contracts` is service_role only; `get_congress_trades_summary.totalTrades` counts every row, `futureDatedTrades` says how many are
+left out of the windowed figures). Both files run twice. The R6e files `20261009_r6e_conflicts.sql` and `20261009_r6e_wording.sql` drop either kind of
+those two relations first, so the whole chain can be re-run; run `20261012_r6f_counts_and_access.sql` last. First report = the earliest filing (filing
+date, then DocID) that listed the transaction. For a Senate report that was amended, the group's original report is the first report of every row
+(an amendment restates the whole report, so a row an amendment added or corrected still takes the original's date and link).
+`20261013_r6f_awards_alert_index.sql` adds a covering index so `get_alert_summary` (one aggregate over the 46 MB `awards` heap, 3 s anon timeout) is an index-only scan; run `vacuum (analyze) awards;` after it and after every big awards load. Other awards-scanning reads (`get_top_agencies`, `top_vendors`, `connection_group_summary`, `get_competition_coverage`, `get_covid_stats`, `get_era_stats`) still scan the heap: warm they take 20-200 ms, and a page must show "data unavailable" for a failed read, never zero.
+
 ```
 # from any machine with the DB password (direct host; use the session pooler if IPv6 is unavailable)
 psql "postgresql://postgres:<password>@db.<ref>.supabase.co:5432/postgres?sslmode=require" -f supabase/migrations/20261003_slushfund_v2.sql

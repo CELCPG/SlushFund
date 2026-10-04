@@ -99,4 +99,11 @@ assert date_typo_twin(D(2023, 12, 7), D(2022, 12, 6), TODAY, [D(2022, 12, 7)]) i
 assert date_typo_twin(D(2023, 12, 7), D(2024, 1, 5), TODAY, [D(2022, 12, 7)]) is None               # not suspect: filed after the trade
 assert date_typo_twin(D(2026, 12, 26), D(2026, 2, 9), TODAY, [D(2025, 12, 26)]) == D(2025, 12, 26)   # a 'future' row works the same way
 assert date_typo_twin(D(2026, 12, 26), D(2026, 2, 9), TODAY, [D(2026, 12, 26)]) is None
+# ── R6f: first report (A7c G1) ──
+from trade_fields import first_report_basis
+assert first_report_basis("20023474", "20022227") == "first_report_earlier_filing"                  # Wittman: Aug restatement, Jan first
+assert first_report_basis("20022227", "20022227") == "first_report_this_filing"
+assert first_report_basis(20022227, "20022227") == "first_report_this_filing"                       # int / str doc ids compare equal
+assert first_report_basis("20023474", None) == "first_report_not_identified"
+assert first_report_basis("fda235b3-bad7-4637-8fa1-053f354d929c", "fda235b3-bad7-4637-8fa1-053f354d929c") == "first_report_this_filing"
 print("trade_fields: all tests passed")

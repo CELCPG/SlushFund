@@ -45,7 +45,17 @@ comment on column congress_trades.contract_basis is
   'Basis of has_federal_contract. awards_signed_from_2023-10-01 = computed against our listed set: true when a linked company had an award in it signed on or before the trade date, false when it had none. not_computed_trade_before_2023-10-01 = the trade predates the awards table, which cannot answer: has_federal_contract is NULL. not_computed_date_<flag> = the transaction date as filed is flagged (see date_flag): NULL. Written by compute_conflicts.py.';
 
 -- 2. the view ------------------------------------------------------------------------------------------------------
-drop view if exists member_conflict_scores;
+-- R6f: member_conflict_scores is a MATERIALIZED view from 20261012_r6f_counts_and_access.sql on, so a re-run must drop either kind
+do $$
+begin
+  if to_regclass('public.member_conflict_scores') is not null then
+    if (select relkind from pg_class where oid = to_regclass('public.member_conflict_scores')) = 'm' then
+      drop materialized view public.member_conflict_scores;
+    else
+      drop view public.member_conflict_scores;
+    end if;
+  end if;
+end $$;
 create view member_conflict_scores with (security_invoker = true) as
 select
   ct.member_name,

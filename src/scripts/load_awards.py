@@ -417,12 +417,14 @@ def collect(windows, date_type, min_fy=None, max_fy=None):
 
 
 def refresh_summary():
-    """R6e (A7b F10): agency_spending_summary is a materialized view; refresh it after every awards change."""
-    try:
-        sb().rpc("refresh_agency_spending_summary").execute()
-        print("  agency_spending_summary refreshed", flush=True)
-    except Exception as e:
-        print(f"  WARNING: agency_spending_summary NOT refreshed ({str(e)[:200]}); run: select refresh_agency_spending_summary();", flush=True)
+    """R6e (A7b F10) / R6f (A7c G5): agency_spending_summary and monthly_spending_trend are materialized views;
+    refresh them after every awards change."""
+    for fn in ("refresh_agency_spending_summary", "refresh_monthly_spending_trend"):
+        try:
+            sb().rpc(fn).execute()
+            print(f"  {fn[len('refresh_'):]} refreshed", flush=True)
+        except Exception as e:
+            print(f"  WARNING: {fn[len('refresh_'):]} NOT refreshed ({str(e)[:200]}); run: select {fn}();", flush=True)
 
 
 def upsert(rows):

@@ -46,6 +46,7 @@ export default function LateReportList({ items, over }: { items: ReportWithTrade
                   <span className="block text-[11.5px] font-semibold uppercase tracking-[0.05em] text-muted">Report filed</span>
                   {fmtDate(r.reportDate) ?? 'Date unknown'}
                   {docId(r.url, r.chamber) && <span className="block font-mono text-[11.5px] text-muted">{docId(r.url, r.chamber)}</span>}
+                  {r.restated.length > 0 && <span className="block text-[12px] text-muted">restated in {r.restated.length === 1 ? 'a later filing' : `${fmtCount(r.restated.length)} later filings`}</span>}
                 </span>
                 <span className="min-w-[130px] text-[13.5px]">
                   <span className="block text-[11.5px] font-semibold uppercase tracking-[0.05em] text-muted">Trades in it</span>
@@ -63,7 +64,16 @@ export default function LateReportList({ items, over }: { items: ReportWithTrade
                   {r.bioguide
                     ? <Link href={`/people/${r.bioguide}`} className="inline-flex min-h-6 items-center font-semibold text-trades-ink hover:underline">{r.name}&rsquo;s page →</Link>
                     : null}
-                  <FilingLink href={r.url} source={sourceName} />
+                  <FilingLink href={r.url} source={`${sourceName}, the first report`} label="View first report" />
+                  {r.restated.length > 0 && (
+                    <span className="text-[13px] text-muted">
+                      restated in{' '}
+                      {r.restated.slice(0, 4).map((x, i) => (
+                        <span key={x.docId}>{i ? ', ' : ''}<FilingLink href={x.url} source={sourceName} label={`the ${fmtDate(x.filed) ?? 'later'} filing`} /></span>
+                      ))}
+                      {r.restated.length > 4 ? ` and ${fmtCount(r.restated.length - 4)} more` : ''}
+                    </span>
+                  )}
                   {exploreHref && <Link href={exploreHref} className="inline-flex min-h-6 items-center font-semibold text-trades-ink hover:underline">All of this member&rsquo;s trades first reported that day →</Link>}
                 </p>
                 {trades === null ? (

@@ -225,3 +225,14 @@ def date_typo_twin(txn, filed, today, candidates):
     twins = {as_date(c) for c in candidates
              if as_date(c) != txn and (as_date(c).month, as_date(c).day) == (txn.month, txn.day) and as_date(c) <= ref}
     return twins.pop() if len(twins) == 1 else None
+
+
+def first_report_basis(own_doc, first_doc):
+    """R6f (A7c G1): how a row's first report relates to the filing it is stored under.
+    first_report_this_filing      the row's own filing is the first report that held the transaction
+    first_report_earlier_filing   a later filing (an amendment or re-filing) restates it; the first report is earlier
+    first_report_not_identified   the earliest filing seen is itself an amendment and the original is not in the
+                                  index or cache: no first report, original_filed_date is NULL too"""
+    if first_doc is None:
+        return 'first_report_not_identified'
+    return 'first_report_this_filing' if str(first_doc) == str(own_doc) else 'first_report_earlier_filing'
