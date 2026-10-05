@@ -123,8 +123,8 @@ export default async function LateFilersPage({ searchParams }: { searchParams: P
                 <b className="text-ink">The gap</b> is the number of days from the trade date to the day the first report holding it was filed. An amended report does not reset it.
               </li>
               <li>
-                <b className="text-ink">The STOCK Act asks for a report within {STOCK_ACT_DAYS} days.</b> The count can start when the member learns of the trade, which a filing does not always show, so a gap over {STOCK_ACT_DAYS} days
-                is a measured fact about two dates, not a finding about the filer. Dates are as the member filed them; see the House Clerk or Senate eFD record linked on each row.
+                <b className="text-ink">The STOCK Act asks for a report within {STOCK_ACT_DAYS} days of the trade.</b> A gap over {STOCK_ACT_DAYS} days
+                is a measured fact about two dates as the member filed them, not a finding about the filer. Dates are as the member filed them; see the House Clerk or Senate eFD record linked on each row.
               </li>
               <li>
                 <b className="text-ink">How days are counted.</b> We count calendar days from the trade date to the first report. We do not adjust for weekends or holidays, so a report filed on the next business day after a weekend deadline is included.

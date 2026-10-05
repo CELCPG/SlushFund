@@ -924,9 +924,9 @@ const F2 = 'post-launch fixes (F2)';
   if (lateFilersEnabled()) {
     await hit('/data/late-filers', 200, {
       bodyAll: [M, 'calendar days, not adjusted for weekends or holidays', 'asks for a report within 45 days'],
-      notBody: ['after the 45-day limit', 'sets a 45-day limit', 'missed the deadline', 'late filer', 'whose lateness we compute'], group: F2 });
+      notBody: ['after the 45-day limit', 'sets a 45-day limit', 'missed the deadline', 'late filer', 'whose lateness we compute', 'count can start when the member learns', 'clock can start when the member learns', 'up to 30 days after it'], group: F2 });
     await hit('/data', 200, { bodyAll: ['Reports filed more than 45 days after the trade', 'in calendar days after the trade'], notBody: ['after the 45-day limit'], group: F2 });
-    await hit('/about/methodology/trades', 200, { bodyAll: [M], notBody: ['after the 45-day limit', 'sets 45 days'], group: F2 });
+    await hit('/about/methodology/trades', 200, { bodyAll: [M], notBody: ['after the 45-day limit', 'sets 45 days', 'count can start when the member learns', 'clock can start when the member learns', 'up to 30 days after it'], group: F2 });
   }
   await hit('/about/methodology', 200, { bodyAll: [M], notBody: ['after the 45-day limit'], group: F2 });
   const SRC = readFileSync(join(ROOT, 'src', 'lib', 'v2', 'datasets.ts'), 'utf8');
