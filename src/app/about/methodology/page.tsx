@@ -57,7 +57,7 @@ export default function MethodologyPage() {
           <h2 id="signals" className="scroll-mt-6 font-display text-[24px] font-extrabold">Signal scores</h2>
           <div className="mt-2 max-w-[760px] space-y-2 text-[15px] leading-relaxed">
             <p>
-              Signal score out of 100 from our method: committee seat +45, listed federal contractor +30, reported late +15, large position +10. A score is a prompt to look closer, not a finding.
+              Signal score out of 100 from our method: committee seat +45, listed federal contractor +30, reported 45+ days after the trade +15, large position +10. A score is a prompt to look closer, not a finding.
               Scores are shown as bands (70 and up, 45&ndash;69, 20&ndash;44, under 20), never as labels about the member.
             </p>
             <p>
@@ -71,7 +71,7 @@ export default function MethodologyPage() {
               amount at the trade. A &ldquo;no&rdquo; means no award in that set was signed between 2023-10-01 and the trade; trades before 2023-10-01 are not computed.
             </p>
             <p>
-              <b>Reported late:</b> the first report was filed more than 45 days after the trade date shown in the filing. Lateness is not computed below the $1,000 reporting threshold, when the first report is not
+              <b>Reported 45+ days after the trade:</b> the first report was filed more than 45 days after the trade date shown in the filing. We count calendar days from the trade date to the first report. We do not adjust for weekends or holidays, so a report filed on the next business day after a weekend deadline is included. Lateness is not computed below the $1,000 reporting threshold, when the first report is not
               in our records, or when the dates as filed look inconsistent.
             </p>
           </div>

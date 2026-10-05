@@ -21,7 +21,7 @@ export interface ReportWithTrades {
 
 /**
  * The late-filers trade list, one row per report: member, the date of the report, how many of its trades
- * were reported more than the limit after the trade, and the largest gap. Each row opens (a plain
+ * were reported more than 45 days after the trade, and the largest gap. Each row opens (a plain
  * <details>, no script) to the trades in it, longest gap first, each with its own filing link.
  */
 export default function LateReportList({ items, over }: { items: ReportWithTrades[]; over: number }) {

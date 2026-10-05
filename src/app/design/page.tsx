@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { pageMetadata } from '@/lib/v2/seo';
+import { hiddenPageMetadata } from '@/lib/v2/hidden-page';
 import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
 import { DataStatusPanelView, DataStatusTableView, StatePill } from '@/components/v2/DataStatus';
@@ -19,11 +20,15 @@ import { getContractTotals, getLatestTrades, getMembersInOffice } from '@/lib/v2
 // Component gallery for review (D1). Real database values wherever a
 // component shows data; state previews are labeled as previews.
 // Behind designPagesEnabled(): 404 on the production deployment (A8 L2).
-export const metadata: Metadata = pageMetadata({
-  path: '/design',
-  title: 'Design system',
-  robots: { index: false, follow: false },
-});
+// A9 N1: on production the page answers 404, so its metadata is the site's 404 metadata (no title, no canonical).
+export function generateMetadata(): Metadata {
+  if (!designPagesEnabled()) return hiddenPageMetadata();
+  return pageMetadata({
+    path: '/design',
+    title: 'Design system',
+    robots: { index: false, follow: false },
+  });
+}
 export const revalidate = 600;
 
 const PALETTE: { name: string; hex: string; text: string; note: string }[] = [

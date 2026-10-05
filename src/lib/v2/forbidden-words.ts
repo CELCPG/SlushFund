@@ -10,7 +10,7 @@ export interface ForbiddenPhrase {
   /** RegExp source, matched with the `gi` flags. */
   re: string;
   /** Which part of A7b's list it comes from. */
-  from: 'late filers' | 'signals' | 'contractor' | 'A8 L3' | 'A8b W1';
+  from: 'late filers' | 'signals' | 'contractor' | 'A8 L3' | 'A8b W1' | 'A8c W2' | 'F3';
 }
 
 export const FORBIDDEN_PHRASES: readonly ForbiddenPhrase[] = [
@@ -70,8 +70,14 @@ export const FORBIDDEN_PHRASES: readonly ForbiddenPhrase[] = [
   { re: String.raw`\bcompanies with federal contracts this member traded\b`, from: 'A8 L3' },
   { re: String.raw`\bpattern worth a look\b`, from: 'A8 L3' },
   { re: String.raw`\bworth a look, not an accusation\b`, from: 'A8 L3' },
-  // A8b W1 (Apex): the board is "Reports filed after the 45-day limit", a label on reports, not on the people who filed them.
+  // A8b W1 (Apex): the board is a label on reports, not on the people who filed them.
   { re: String.raw`\blate[- ]filers?\b`, from: 'A8b W1' },
+  // A8c W2 (Apex): 10 reports were filed on the first business day after a 45th day that fell on a weekend or holiday, so
+  // the board is "Reports filed more than 45 days after the trade" and no page says a limit or deadline was missed.
+  { re: String.raw`\bafter the 45[- ]day (?:limit|deadline)\b`, from: 'A8c W2' },
+  { re: String.raw`\b(?:missed|past|beyond) the (?:45[- ]day )?(?:deadline|limit)\b`, from: 'A8c W2' },
+  // F3 (Apex): the score component is "Reported 45+ days after the trade" (+15), the measured fact, never "late".
+  { re: String.raw`\breported late\b`, from: 'F3' },
 ];
 
 /**

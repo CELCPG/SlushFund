@@ -6,7 +6,7 @@
 type Env = Record<string, string | undefined>;
 
 /**
- * The board of reports filed after the 45-day limit (/data/late-filers) shows days from trade to first report,
+ * The board of reports filed more than 45 days after the trade (/data/late-filers) shows days from trade to first report,
  * which is not public until an Auditor GO. It is ON in local dev and in Vercel previews, and OFF on the production
  * deployment (VERCEL_ENV === 'production') unless SHOW_LATE_FILERS=1 is set there (F1: Apex sets it at launch only
  * if the re-check gives the board GO). One switch for the page, the sitemap, the Data tab, the /data card and the
@@ -30,6 +30,18 @@ export function lateFilersPreview(env: Env = process.env): boolean {
  */
 export function designPagesEnabled(env: Env = process.env): boolean {
   return env.VERCEL_ENV !== 'production';
+}
+
+/**
+ * Paths that answer the site's own 404 on this deployment because their flag is off: the board, and /design and /design/story
+ * on production. src/proxy.ts rewrites them to an unmatched path, so the response is the generic 404 (server-rendered, the root
+ * layout's title, no canonical). The pages still call notFound() and return hiddenPageMetadata() as a second line (A9 N1:
+ * with only those, the 404 carried the page's own title and canonical and had no server-rendered body).
+ */
+export function hiddenByFlag(pathname: string, env: Env = process.env): boolean {
+  if (pathname === '/data/late-filers') return !lateFilersEnabled(env);
+  if (pathname === '/design' || pathname.startsWith('/design/')) return !designPagesEnabled(env);
+  return false;
 }
 
 /**

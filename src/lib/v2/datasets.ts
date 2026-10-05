@@ -165,12 +165,12 @@ export const DATASETS: Record<DatasetKey, DatasetDef> = {
     label: 'Signal scores',
     moneyType: 'trades',
     source: { name: 'Computed from the trade, committee and ticker-link datasets', url: '/about/methodology#signals' },
-    scope: 'For every trade: a signal score from our method (committee seat on the trade date, listed federal contract award, reported late, large position), shown as a score band',
+    scope: 'For every trade: a signal score from our method (committee seat on the trade date, listed federal contract award, reported 45+ days after the trade, large position), shown as a score band',
     cadence: 'After any trade, committee or ticker-link load, once automations run',
     staleAfterDays: 4,
     methodologyHref: `${METHODS}/trades`,
     latestRecordLabel: 'Latest filing scored',
-    caveat: 'Signal score out of 100 from our method: committee seat +45, listed federal contractor +30, reported late +15, large position +10. A score is a prompt to look closer, not a finding. No page shows per-trade scores yet.',
+    caveat: 'Signal score out of 100 from our method: committee seat +45, listed federal contractor +30, reported 45+ days after the trade +15, large position +10. A score is a prompt to look closer, not a finding. No page shows per-trade scores yet.',
   },
   campaign: {
     key: 'campaign',
@@ -242,20 +242,37 @@ function unreadTotal(field: 'house_scanned' | 'senate_paper'): number {
   return Object.values(unreadData as Record<string, { house_scanned: number; senate_paper: number }>).reduce((n, m) => n + (m[field] ?? 0), 0);
 }
 
+/** One row of the trade_source_status view (F2): the figures the trades source bar shows for one source_system. */
+type TradeSourceRow = {
+  source_system: string;
+  row_count: number;
+  oldest_filed: string | null;
+  newest_filed: string | null;
+  newest_updated: string | null;
+  flagged: number;
+  no_first_report: number;
+  below_threshold: number;
+};
+
+/**
+ * Both trade sources in ONE request (F2). The source bar used to send seven requests per dataset, five of which scanned
+ * the whole congress_trades table, so a page with House and Senate trades sent 14 at once. On a fresh deployment the first
+ * render met a cold backend and one refused request made the whole bar "unavailable". The view is a plain aggregate (always
+ * current, nothing to refresh) and `cache` shares the answer between the House and Senate readers of one render.
+ */
+const readTradeSources = cache(async (): Promise<TradeSourceRow[] | null> => {
+  if (!supabase) return null;
+  const r = await supabase
+    .from('trade_source_status')
+    .select('source_system,row_count,oldest_filed,newest_filed,newest_updated,flagged,no_first_report,below_threshold');
+  return r.error || !r.data ? null : (r.data as TradeSourceRow[]);
+});
+
 async function readTrades(system: 'House_Clerk' | 'Senate_EFD'): Promise<Raw> {
-  if (!supabase) return { ...EMPTY, failed: true };
-  const t = () => supabase!.from('congress_trades');
-  const [count, newestFiled, oldestFiled, newestRow, flagged, noFirst, belowThreshold] = await Promise.all([
-    t().select('id', { count: 'exact', head: true }).eq('source_system', system),
-    t().select('filed_date').eq('source_system', system).not('filed_date', 'is', null).order('filed_date', { ascending: false }).limit(1),
-    t().select('filed_date').eq('source_system', system).not('filed_date', 'is', null).order('filed_date', { ascending: true }).limit(1),
-    t().select('updated_at').eq('source_system', system).order('updated_at', { ascending: false }).limit(1),
-    t().select('id', { count: 'exact', head: true }).eq('source_system', system).not('date_flag', 'is', null),
-    t().select('id', { count: 'exact', head: true }).eq('source_system', system).is('original_filed_date', null),
-    t().select('id', { count: 'exact', head: true }).eq('source_system', system).eq('lateness_basis', 'below_reporting_threshold'),
-  ]);
-  if (count.error || newestFiled.error || oldestFiled.error || newestRow.error) return { ...EMPTY, failed: true };
-  const latest = first(newestFiled, 'filed_date');
+  const rows = await readTradeSources();
+  if (!rows) return { ...EMPTY, failed: true };
+  const row = rows.find((r) => r.source_system === system);
+  if (!row) return { ...EMPTY, rowCount: 0 };
   const gaps: string[] = [];
   const unread = unreadTotal(system === 'House_Clerk' ? 'house_scanned' : 'senate_paper');
   if (unread > 0) {
@@ -263,16 +280,16 @@ async function readTrades(system: 'House_Clerk' | 'Senate_EFD'): Promise<Raw> {
       ? `In our count of ${UNREAD_AS_OF}, ${nf(unread)} scanned House filings were not read (images, not text); their trades are missing, and nothing is said about their timing. The count is not redone on each load.`
       : `In our count of ${UNREAD_AS_OF}, ${nf(unread)} paper Senate filings were not read; their trades are missing, and nothing is said about their timing. The count is not redone on each load.`);
   }
-  if (!flagged.error && flagged.count) gaps.push(`${nf(flagged.count)} trades carry a date note (the trade is dated more than two years before the report, or the dates as filed look inconsistent).`);
-  if (!noFirst.error && noFirst.count) gaps.push(`${nf(noFirst.count)} trades have no first-report date in our records, so lateness is not computed for them.`);
-  if (!belowThreshold.error && belowThreshold.count) gaps.push(`${nf(belowThreshold.count)} trades are below the $1,000 reporting threshold, so lateness is not computed for them.`);
+  if (row.flagged) gaps.push(`${nf(row.flagged)} trades carry a date note (the trade is dated more than two years before the report, or the dates as filed look inconsistent).`);
+  if (row.no_first_report) gaps.push(`${nf(row.no_first_report)} trades have no first-report date in our records, so lateness is not computed for them.`);
+  if (row.below_threshold) gaps.push(`${nf(row.below_threshold)} trades are below the $1,000 reporting threshold, so lateness is not computed for them.`);
   return {
-    rowCount: count.count ?? null,
-    lastUpdated: first(newestRow, 'updated_at'),
+    rowCount: row.row_count ?? null,
+    lastUpdated: row.newest_updated,
     updatedBasis: 'row_timestamps',
     updatedColumn: 'updated_at',
-    latestRecord: latest,
-    coverage: yearSpan(first(oldestFiled, 'filed_date'), latest),
+    latestRecord: row.newest_filed,
+    coverage: yearSpan(row.oldest_filed, row.newest_filed),
     extraGaps: gaps,
     failed: false,
   };

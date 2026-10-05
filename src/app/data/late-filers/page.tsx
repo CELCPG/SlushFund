@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { pageMetadata } from '@/lib/v2/seo';
+import { hiddenPageMetadata } from '@/lib/v2/hidden-page';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import DataSubNav from '@/components/v2/DataSubNav';
@@ -22,13 +23,18 @@ import {
 } from '@/lib/v2/late-filers';
 
 // Behind lateFilersEnabled(): on in dev and preview, off on the production deployment unless SHOW_LATE_FILERS=1 (F1).
-// Titled "Reports filed after the 45-day limit" (A8b W1, Apex): a label on reports, not on the people who filed them.
-export const metadata: Metadata = pageMetadata({
-  path: '/data/late-filers',
-  title: 'Reports filed after the 45-day limit',
-  description: 'The stock trades members of Congress reported the longest after the trade date, measured to the first report, grouped by report, each with a link to the filing.',
-  robots: lateFilersPreview() ? { index: false, follow: false } : undefined,
-});
+// Titled "Reports filed more than 45 days after the trade" (A8b W1, then A8c W2, Apex): the measured fact, a label on reports, not on the people who filed them.
+// 60 rows in 10 reports were filed on the first business day after a 45th day that fell on a weekend or holiday, so no sentence here says a limit was missed.
+// A9 N1: while the board is off the page answers 404, so its metadata is the site's 404 metadata (no title, no canonical).
+export function generateMetadata(): Metadata {
+  if (!lateFilersEnabled()) return hiddenPageMetadata();
+  return pageMetadata({
+    path: '/data/late-filers',
+    title: 'Reports filed more than 45 days after the trade',
+    description: 'The stock trades members of Congress reported the longest after the trade date, measured to the first report, grouped by report, each with a link to the filing.',
+    robots: lateFilersPreview() ? { index: false, follow: false } : undefined,
+  });
+}
 
 const MEMBERS_SHOWN = 20;
 
@@ -94,9 +100,9 @@ export default async function LateFilersPage({ searchParams }: { searchParams: P
     <div data-v2>
       <PageBand>
         <p className="mt-8 text-[13px] font-bold uppercase tracking-[0.06em] text-on-deep max-md:mt-5">Data</p>
-        <h1 className="mt-1 font-display text-[44px] font-extrabold leading-[1.06] tracking-[-1px] max-md:text-[30px]">Reports filed after the 45-day limit</h1>
+        <h1 className="mt-1 font-display text-[44px] font-extrabold leading-[1.06] tracking-[-1px] max-md:text-[30px]">Reports filed more than 45 days after the trade</h1>
         <p className="mt-3 max-w-[760px] text-[16px] text-on-deep max-md:text-[15px]">
-          The longest gaps between a stock trade and the first report that disclosed it. Each is stated as days after the trade, with the STOCK Act&rsquo;s {STOCK_ACT_DAYS} days beside it and a link to the filing.
+          The longest gaps between a stock trade and the first report that disclosed it. Each is stated as days after the trade, with a link to the filing.
         </p>
         <DataSubNav current="/data/late-filers" />
       </PageBand>
@@ -117,8 +123,11 @@ export default async function LateFilersPage({ searchParams }: { searchParams: P
                 <b className="text-ink">The gap</b> is the number of days from the trade date to the day the first report holding it was filed. An amended report does not reset it.
               </li>
               <li>
-                <b className="text-ink">The STOCK Act sets a {STOCK_ACT_DAYS}-day limit.</b> The count can start when the member learns of the trade, which a filing does not always show, so a gap over {STOCK_ACT_DAYS} days
+                <b className="text-ink">The STOCK Act asks for a report within {STOCK_ACT_DAYS} days.</b> The count can start when the member learns of the trade, which a filing does not always show, so a gap over {STOCK_ACT_DAYS} days
                 is a measured fact about two dates, not a finding about the filer. Dates are as the member filed them; see the House Clerk or Senate eFD record linked on each row.
+              </li>
+              <li>
+                <b className="text-ink">How days are counted.</b> We count calendar days from the trade date to the first report. We do not adjust for weekends or holidays, so a report filed on the next business day after a weekend deadline is included.
               </li>
               <li>
                 <b className="text-ink">Grouped by report.</b> One report can hold hundreds of trades, so the trade list has one row per report, each opening to its trades. Members are ranked by the longest single
@@ -128,7 +137,7 @@ export default async function LateFilersPage({ searchParams }: { searchParams: P
                 <b className="text-ink">What is left out.</b>{' '}
                 {notComputed != null && summary
                   ? <>
-                      Lateness is not computed for {fmtCount(notComputed)} of {fmtCount(summary.totalRows)} trade rows
+                      The gap is not computed for {fmtCount(notComputed)} of {fmtCount(summary.totalRows)} trade rows
                       {reasons.length > 0 && <>: {reasons.map((r, i) => <span key={i}>{i ? '; ' : ''}{fmtCount(r.count)} ({basisReason(r.basis)})</span>)}</>}.
                       {' '}They are left off this page and are never counted either way.{' '}
                     </>
@@ -139,7 +148,7 @@ export default async function LateFilersPage({ searchParams }: { searchParams: P
             {summary && (
               <p className="mt-4 rounded-2xl bg-page px-4 py-3 text-[14px]">
                 <b>{fmtCount(summary.over)}</b> transactions in <b>{fmtCount(summary.reports.length)}</b> reports were filed more than {STOCK_ACT_DAYS} days after the trade, by <b>{fmtCount(summary.members.length)}</b> members.
-                That is {fmtPct(summary.over / summary.computed)} of the {fmtCount(summary.computed)} trades whose lateness we compute.
+                That is {fmtPct(summary.over / summary.computed)} of the {fmtCount(summary.computed)} trades whose gap we compute.
               </p>
             )}
           </Card>
@@ -174,7 +183,7 @@ export default async function LateFilersPage({ searchParams }: { searchParams: P
                 columns={memberColumns}
                 rows={memberRows}
                 caption="Members ranked by the gap between a trade and its first report, or by reports"
-                footer={<span>A report is one first report holding at least one trade filed more than {STOCK_ACT_DAYS} days after the trade; restated filings are not counted again, and each member&rsquo;s count matches the late-report count in our database. &ldquo;Transactions in them&rdquo; is the secondary count; &ldquo;of N with a computed gap&rdquo; counts all of the member&rsquo;s trades whose gap we compute, in any report.</span>}
+                footer={<span>A report is one first report holding at least one trade filed more than {STOCK_ACT_DAYS} days after the trade; restated filings are not counted again, and each member&rsquo;s count matches the report count in our database. &ldquo;Transactions in them&rdquo; is the secondary count; &ldquo;of N with a computed gap&rdquo; counts all of the member&rsquo;s trades whose gap we compute, in any report.</span>}
               />
               {ranked.length > MEMBERS_SHOWN && (
                 <p className="mt-3 text-[13.5px]">

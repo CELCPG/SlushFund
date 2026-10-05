@@ -21,7 +21,8 @@ import {
   matchRetiredApi,
 } from '../src/lib/v2/redirect-map.ts';
 import { LEGACY_AGENCIES, LEGACY_PEOPLE, LEGACY_VENDORS } from '../src/lib/v2/legacy-map.generated.ts';
-import { designPagesEnabled, lateFilersEnabled, lateFilersPreview, readFailureInjected } from '../src/lib/v2/flags.ts';
+import { designPagesEnabled, hiddenByFlag, lateFilersEnabled, lateFilersPreview, readFailureInjected } from '../src/lib/v2/flags.ts';
+import { hiddenPageMetadata } from '../src/lib/v2/hidden-page.ts';
 import { HONEYPOT_FIELD, RATE_LIMIT, REPLY_PROMISE, normalizePageUrl, reportErrorHref } from '../src/lib/v2/error-reports.ts';
 import { HOME_HEADLINE_TEXT, MEMBERS_TILE_COPY, MEMBERS_TILE_LEAD } from '../src/lib/v2/home-copy.ts';
 import { DATE_FLAG_FALLBACK, DATE_FLAG_WORDING, LATENESS_BASIS_WORDING, dateFlagNote, latenessNote } from '../src/lib/v2/date-flags.ts';
@@ -282,9 +283,13 @@ await hit('/data/contracts?parent=ZFN2JJXBLZT3', 200, { body: 'Only awards to th
 await hit('/data/contracts/export?fy=2026&agency=097&amt=1b', 200, { ctype: 'text/csv', startsWith: 'PIID,Parent IDV PIID', bodyAll: ['https://www.usaspending.gov/award/', 'Obligated to date (USD)'], group: 'explorers (D4) csv' });
 await hit('/data/contracts/export?fy=2030&agency=%27', 200, { ctype: 'text/csv', startsWith: 'PIID,Parent IDV PIID', group: 'explorers (D4) csv' });
 // Late filers: factual wording only (no verdict words), the STOCK Act's 45 days named, the filing linked.
-await hit('/data/late-filers', 200, { bodyAll: ['the STOCK Act sets a 45-day limit', 'View filing', ...(lateFilersPreview() ? ['Preview only'] : [])], noindex: lateFilersPreview(), notBody: ['violation', 'illegal', 'broke the law', 'guilty', 'crime', 'stock_act_late'], group: 'late filers (D4)' });
-await hit('/data/late-filers?chamber=Senate&over=365&msort=reports&members=all', 200, { notBody: ['unavailable right now'], group: 'late filers (D4)' });
-await hit('/data/late-filers?over=abc&chamber=x&page=-1&msort=zz', 200, { notBody: ['unavailable right now'], group: 'late filers (D4)' });
+if (lateFilersEnabled()) {
+  await hit('/data/late-filers', 200, { bodyAll: ['asks for a report within 45 days', 'View filing', ...(lateFilersPreview() ? ['Preview only'] : [])], noindex: lateFilersPreview(), notBody: ['violation', 'illegal', 'broke the law', 'guilty', 'crime', 'stock_act_late'], group: 'late filers (D4)' });
+  await hit('/data/late-filers?chamber=Senate&over=365&msort=reports&members=all', 200, { notBody: ['unavailable right now'], group: 'late filers (D4)' });
+  await hit('/data/late-filers?over=abc&chamber=x&page=-1&msort=zz', 200, { notBody: ['unavailable right now'], group: 'late filers (D4)' });
+} else {
+  await hit('/data/late-filers', 404, { group: 'late filers (D4)' }); // the board is off here (production without SHOW_LATE_FILERS=1)
+}
 // The flag: ON in dev and preview, OFF on the production deployment (VERCEL_ENV === 'production').
 for (const [env, want] of [[{}, true], [{ VERCEL_ENV: 'preview' }, true], [{ VERCEL_ENV: 'development' }, true], [{ VERCEL_ENV: 'production' }, false]]) {
   const got = lateFilersEnabled(env);
@@ -417,7 +422,7 @@ if (lateFilersEnabled()) {
   await hit('/data/late-filers?rsort=trades&over=365&page=2', 200, { notBody: ['unavailable right now'], group: 'late filers by report (D6b)' });
   // D8a: reports first, transactions second; ranked by reports or days only; every NULL has its lateness_basis reason.
   await hit('/data/late-filers', 200, {
-    bodyAll: ['Reports with a trade over 45 days', 'Transactions in them', 'transactions in', 'Lateness is not computed for', 'below the $1,000 reporting threshold', 'Dates are as the member filed them', 'sets a 45-day limit'],
+    bodyAll: ['Reports with a trade over 45 days', 'Transactions in them', 'transactions in', 'The gap is not computed for', 'below the $1,000 reporting threshold', 'Dates are as the member filed them', 'asks for a report within 45 days'],
     notBody: ['Most trades over', 'In how many reports', 'unavailable right now'],
     group: 'late filers semantics (D8a)',
   });
@@ -477,6 +482,7 @@ for (const p of KEEP_PAGES) {
   if (p === '/withdrawn') { await hit(p, 410, { group: 'keep (v2)' }); continue; }
   if (p === '/search') { await hit('/search?q=Warren', 200, { group: 'keep (v2)' }); continue; }
   if ((p === '/design' || p === '/design/story') && !designPagesEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // D8d L2
+  if (p === '/data/late-filers' && !lateFilersEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // the board is off (production without SHOW_LATE_FILERS=1)
   await hit(p, 200, { group: 'keep (v2)', noindex: p === '/design' || p === '/design/story' || p === '/rebuilding' });
 }
 // The draft corrections entry must not render while its status is 'draft' and the preview flag is off.
@@ -886,13 +892,13 @@ for (const [env, wantOn, wantPreview] of [[{}, true, true], [{ VERCEL_ENV: 'prev
 // W1 and B3: the board's title and tab, the /data card and the method sentence; "of N" says what N is.
 if (lateFilersEnabled()) {
   await hit('/data/late-filers?members=all', 200, {
-    bodyAll: ['Reports filed after the 45-day limit', 'Filed after 45 days', 'with a computed gap)', '<title>Reports filed after the 45-day limit'],
+    bodyAll: ['Reports filed more than 45 days after the trade', 'Filed 45+ days after', 'with a computed gap)', '<title>Reports filed more than 45 days after the trade'],
     notBody: ['>Late filers<', 'Late filers:', 'unavailable right now'], group: F1 });
-  await hit('/data', 200, { body: 'Reports filed after the 45-day limit', notBody: 'Late filers', group: F1 });
-  await hit('/about/methodology/trades', 200, { body: 'reports filed after the 45-day limit</a>', notBody: ['late-filers board', 'Late filers'], group: F1 });
+  await hit('/data', 200, { body: 'Reports filed more than 45 days after the trade', notBody: 'Late filers', group: F1 });
+  await hit('/about/methodology/trades', 200, { body: 'reports filed more than 45 days after the trade</a>', notBody: ['late-filers board', 'Late filers'], group: F1 });
 } else {
   await hit('/data/late-filers', 404, { group: F1 });
-  await hit('/data', 200, { notBody: ['Reports filed after the 45-day limit', 'Filed after 45 days'], group: F1 });
+  await hit('/data', 200, { notBody: ['Reports filed more than 45 days after the trade', 'Filed 45+ days after'], group: F1 });
 }
 // N10b and the nit: the /latest card caption fits (no mid-word cut), and the unknown-member card says "Disclosed trades".
 {
@@ -908,6 +914,103 @@ if (lateFilersEnabled()) {
 // Audit-status lines carry their dates and scope; the board line follows the switch.
 await hit('/about/methodology/trades', 200, { bodyAll: ['on October 3 and 4, 2026', lateFilersEnabled() && !lateFilersPreview() ? 're-checked against the filings on October 4, 2026' : 'stay preview-only until a review clears them'], group: F1 });
 await hit('/about/methodology/tickers', 200, { body: 'a separate review on October 4, 2026', group: F1 });
+
+// F2 (W2 and the cold read). W2: the board says what it measured, not that a limit was missed, and the calendar-day method line is
+// on the board, the trades method page and the score definition. Cold read: the first fetch of the trades method page has its
+// source bar (one read of trade_source_status, not 14 requests), never "temporarily unavailable".
+const F2 = 'post-launch fixes (F2)';
+{
+  const M = 'We count calendar days from the trade date to the first report. We do not adjust for weekends or holidays, so a report filed on the next business day after a weekend deadline is included.';
+  if (lateFilersEnabled()) {
+    await hit('/data/late-filers', 200, {
+      bodyAll: [M, 'calendar days, not adjusted for weekends or holidays', 'asks for a report within 45 days'],
+      notBody: ['after the 45-day limit', 'sets a 45-day limit', 'missed the deadline', 'late filer', 'whose lateness we compute'], group: F2 });
+    await hit('/data', 200, { bodyAll: ['Reports filed more than 45 days after the trade', 'in calendar days after the trade'], notBody: ['after the 45-day limit'], group: F2 });
+    await hit('/about/methodology/trades', 200, { bodyAll: [M], notBody: ['after the 45-day limit', 'sets 45 days'], group: F2 });
+  }
+  await hit('/about/methodology', 200, { bodyAll: [M], notBody: ['after the 45-day limit'], group: F2 });
+  const SRC = readFileSync(join(ROOT, 'src', 'lib', 'v2', 'datasets.ts'), 'utf8');
+  const readTradesSrc = SRC.slice(SRC.indexOf('async function readTrades'), SRC.indexOf('async function readCommitteeHistory'));
+  const oneRead = SRC.includes(".from('trade_source_status')") && !readTradesSrc.includes("count: 'exact'");
+  if (!oneRead) failed++;
+  rows.push({ path: 'trades source bar reads one view, not per-dataset counts', status: oneRead ? 'ok' : 'FAIL', expect: 'ok', ok: oneRead, note: 'trade_source_status', group: F2 });
+  await hit('/about/methodology/trades', 200, { bodyAll: ['Source:', 'Coverage:'], notBody: ['temporarily unavailable', 'unavailable right now'], group: F2 });
+}
+
+// F3 (A9 N1 and the score label). N1: a page hidden on this deployment (the board with its flag off, /design and /design/story on
+// production) answers 404 with the site's own 404 metadata: generic title, no canonical, no og:url, noindex, and a server-rendered
+// "Page not found". Run it against a production build (VERCEL_ENV=production) to see the hidden state. Label: the signal-score
+// component is "Reported 45+ days after the trade" (+15) in page text; "reported late" is on the wording list.
+const F3 = 'post-launch fixes (F3)';
+{
+  const decode = (t) => t.replace(/<!-- -->/g, '').replace(/&#x27;/g, "'").replace(/&amp;/g, '&');
+  const attr = (tag, name) => (tag.match(new RegExp(`\\b${name}="([^"]*)"`)) ?? [])[1];
+  const headOf = (html) => {
+    const tags = (re) => [...html.matchAll(re)].map((m) => m[0]);
+    const meta = (key, val) => tags(/<meta\b[^>]*>/g).filter((t) => attr(t, key) === val).map((t) => attr(t, 'content'));
+    return {
+      title: (html.match(/<title[^>]*>([^<]*)<\/title>/) ?? [])[1] ?? null,
+      canonical: tags(/<link\b[^>]*>/g).filter((t) => attr(t, 'rel') === 'canonical').map((t) => attr(t, 'href')),
+      ogUrl: meta('property', 'og:url'),
+      ogTitle: meta('property', 'og:title'),
+      description: meta('name', 'description'),
+      robots: meta('name', 'robots'),
+    };
+  };
+  const get = async (path) => { const res = await fetch(base + path, { redirect: 'manual' }); return { status: res.status, html: decode(await res.text()) }; };
+  const hidden = [
+    ...(lateFilersEnabled() ? [] : ['/data/late-filers', '/data/late-filers?page=2']),
+    ...(designPagesEnabled() ? [] : ['/design', '/design/story']),
+  ];
+  if (hidden.length) {
+    const generic = await get('/f3-no-such-page');
+    const g = headOf(generic.html);
+    for (const path of hidden) {
+      const { status, html } = await get(path);
+      const h = headOf(html);
+      const problems = [];
+      if (status !== 404) problems.push(`status ${status}`);
+      if (h.title !== g.title) problems.push(`title "${h.title}" (the 404 has "${g.title}")`);
+      if (h.canonical.length) problems.push(`canonical ${h.canonical.join(',')}`);
+      if (h.ogUrl.length) problems.push(`og:url ${h.ogUrl.join(',')}`);
+      if (JSON.stringify(h.ogTitle) !== JSON.stringify(g.ogTitle)) problems.push(`og:title ${JSON.stringify(h.ogTitle)}`);
+      if (JSON.stringify(h.description) !== JSON.stringify(g.description)) problems.push('description differs from the 404');
+      // The 404 shell carries the root layout's "index, follow" beside Next's own "noindex" (the site's 404 does too). A hidden page may only
+      // keep that or tighten it (a layout that returns hiddenPageMetadata() adds "noindex, nofollow"); it must keep a noindex and never add an index.
+      if (!h.robots.some((r) => /noindex/.test(r)) || h.robots.some((r) => !g.robots.includes(r) && !/noindex/.test(r))) problems.push(`robots ${JSON.stringify(h.robots)} (the 404 has ${JSON.stringify(g.robots)})`);
+      for (const t of ['Reports filed more than 45 days after the trade', 'Filed 45+ days after', 'Design system', 'Story template']) if (html.includes(t)) problems.push(`carries "${t}"`);
+      if (!/<h1[^>]*>We can't find that page<\/h1>/.test(html)) problems.push('no server-rendered "Page not found" heading (markup, not the RSC payload)');
+      const ok = problems.length === 0;
+      if (!ok) failed++;
+      rows.push({ path, status, expect: '404, the site 404 metadata', ok, note: ok ? `title "${h.title}", no canonical, robots ${h.robots.join(' + ')}` : problems.join('; '), group: F3 });
+    }
+  } else {
+    rows.push({ path: 'hidden pages (N1)', status: 'n/a', expect: 'n/a', ok: true, note: 'every gated page is on in this run; run with VERCEL_ENV=production to see the hidden state', group: F3 });
+  }
+  // The helper itself, so the default run also covers it: noindex, and nothing of a page's own.
+  const hm = hiddenPageMetadata();
+  const hmOk = hm.robots?.index === false && !hm.title && !hm.alternates && !hm.openGraph && !hm.description;
+  if (!hmOk) failed++;
+  rows.push({ path: 'hiddenPageMetadata()', status: hmOk ? 'ok' : 'FAIL', expect: 'ok', ok: hmOk, note: 'noindex, no title, canonical, og or description', group: F3 });
+  // hiddenByFlag(): the proxy's list follows the two flags.
+  for (const [env, path, want] of [
+    [{}, '/data/late-filers', false], [{}, '/design', false], [{}, '/design/story', false],
+    [{ VERCEL_ENV: 'production' }, '/data/late-filers', true], [{ VERCEL_ENV: 'production' }, '/design', true], [{ VERCEL_ENV: 'production' }, '/design/story', true],
+    [{ VERCEL_ENV: 'production', SHOW_LATE_FILERS: '1' }, '/data/late-filers', false], [{ VERCEL_ENV: 'production', SHOW_LATE_FILERS: '1' }, '/design', true],
+    [{ VERCEL_ENV: 'production' }, '/data', false], [{ VERCEL_ENV: 'production' }, '/data/late-filers-x', false], [{ VERCEL_ENV: 'production' }, '/designs', false],
+  ]) {
+    const got = hiddenByFlag(path, env);
+    if (got !== want) failed++;
+    rows.push({ path: `hiddenByFlag(${JSON.stringify(path)}, ${JSON.stringify(env)})`, status: String(got), expect: String(want), ok: got === want, note: '', group: F3 });
+  }
+  // Label.
+  const L = 'reported 45+ days after the trade';
+  await hit('/about/methodology', 200, { bodyAll: [`${L} +15`, 'Reported 45+ days after the trade:'], notBody: ['reported late'], group: F3 });
+  await hit('/data/status', 200, { bodyAll: [`reported 45+ days after the trade, large position`], notBody: ['reported late'], group: F3 });
+  const listed = FORBIDDEN_PHRASES.some((p) => p.from === 'F3' && new RegExp(p.re, 'gi').test('The signal is Reported late (+15).'));
+  if (!listed) failed++;
+  rows.push({ path: 'wording gate lists "reported late"', status: listed ? 'ok' : 'FAIL', expect: 'ok', ok: listed, note: 'forbidden-words.ts', group: F3 });
+}
 
 const byGroup = {};
 for (const r of rows) (byGroup[r.group] ??= []).push(r);

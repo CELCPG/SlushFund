@@ -28,7 +28,7 @@ export default function TradesMethodology() {
       datasets={['house_trades', 'senate_trades']}
       moneyType="trades"
       toc={TOC}
-      reviewed="2026-10-03"
+      reviewed="2026-10-04"
     >
       <MethodSection id="source" title="Official sources">
         <ul className="list-disc space-y-2 pl-5">
@@ -77,10 +77,10 @@ export default function TradesMethodology() {
             Where the filing says whether an option is a call or a put, we show it, with the strike price and the expiry date (for example &ldquo;Sold call options &middot; strike $340 &middot; expires Dec 18, 2026&rdquo;). Where a filing leaves a term out, the row says so and the filing has the rest. Options and other non-stock assets are listed apart from stock purchases and sales and never counted as one.
           </Caveat>
           <Caveat lead="&ldquo;Days to file&rdquo; is not a verdict.">
-            We do not show a days-to-file count or label any filing late on a trade row. The STOCK Act sets 45 days, but the clock can start when the member learns of the trade, up to 30 days after it, and an amended report carries a later date than the original. Where a trade is dated more than two years before its report, or the dates as filed look inconsistent, the row carries a plain date note that describes the dates; it is not a ruling. Any days-to-file figure is measured to the first report, never to an amendment.
+            We do not show a days-to-file count or label any filing late on a trade row. The STOCK Act asks for a report within 45 days, but the clock can start when the member learns of the trade, up to 30 days after it, and an amended report carries a later date than the original. Where a trade is dated more than two years before its report, or the dates as filed look inconsistent, the row carries a plain date note that describes the dates; it is not a ruling. Any days-to-file figure is measured to the first report, never to an amendment. We count calendar days from the trade date to the first report. We do not adjust for weekends or holidays, so a report filed on the next business day after a weekend deadline is included.
             {lateFilersEnabled() && (lateFilersPreview()
-              ? <>{' '}A preview-only board, <Link href="/data/late-filers" className="font-semibold underline">reports filed after the 45-day limit</Link>, already shows it, measured to the first report, until an audit decides whether it goes public.</>
-              : <>{' '}The board of <Link href="/data/late-filers" className="font-semibold underline">reports filed after the 45-day limit</Link> shows it, measured to the first report.</>)}
+              ? <>{' '}A preview-only board, <Link href="/data/late-filers" className="font-semibold underline">reports filed more than 45 days after the trade</Link>, already shows it, measured to the first report, until an audit decides whether it goes public.</>
+              : <>{' '}The board of <Link href="/data/late-filers" className="font-semibold underline">reports filed more than 45 days after the trade</Link> shows it, measured to the first report.</>)}
           </Caveat>
           <Caveat lead="Who owns the asset matters.">
             Members also report trades by a spouse or a dependent child. The row shows the owner (self, spouse, joint, child).
@@ -100,7 +100,7 @@ export default function TradesMethodology() {
         <AuditNote>
           Reviews separate from the builder, on October 3 and 4, 2026, compared sampled rows and page figures with the original House Clerk and Senate eFD filings. Data problems they found were fixed and checked again. They were samples, so this page describes the method and publishes no match rate.
           {lateFilersEnabled() && !lateFilersPreview()
-            ? ' The board of reports filed after the 45-day limit was re-checked against the filings on October 4, 2026.'
+            ? ' The board of reports filed more than 45 days after the trade was re-checked against the filings on October 4, 2026.'
             : ' Days from a trade to its first report stay preview-only until a review clears them.'}
         </AuditNote>
         <p className="text-[14.5px] text-muted">

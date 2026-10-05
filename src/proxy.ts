@@ -1,11 +1,13 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { matchGatedApi, matchGatedPage, matchRetiredApi, matchWithdrawn } from '@/lib/v2/redirect-map';
 import { resolveLegacyRedirect } from '@/lib/v2/legacy-redirects';
+import { hiddenByFlag } from '@/lib/v2/flags';
 
 /**
  * Trust gate (D5). Runs after the 301s in next.config.ts and before any page renders.
  *
  *  - A withdrawn story  -> /withdrawn, HTTP 410 (a rewrite, so the URL stays what the visitor asked for).
+ *  - A page whose flag is off (the board, /design on production) -> the site's own 404 (a rewrite to an unmatched path; A9 N1).
  *  - A gated legacy page -> /rebuilding?from=<path>, HTTP 200, noindex.
  *  - A gated legacy API  -> HTTP 503 JSON, never the old data.
  *  - A retired write API -> HTTP 410 JSON.
@@ -22,6 +24,11 @@ export function proxy(request: NextRequest) {
       status: 410,
       headers: { 'X-Robots-Tag': 'noindex, nofollow' },
     });
+  }
+
+  // A9 N1: the page's own notFound() left a 404 with the page's title and canonical and no server-rendered body.
+  if (hiddenByFlag(pathname)) {
+    return NextResponse.rewrite(new URL('/_hidden-by-flag', request.url));
   }
 
   if (matchRetiredApi(pathname)) {

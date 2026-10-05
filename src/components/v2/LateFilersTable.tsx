@@ -6,7 +6,6 @@ import { partyLetter } from '@/components/v2/TradesTable';
 import { fmtDate, fmtRange } from '@/lib/v2/format';
 import { instrumentKind, ownerLabel, typeLabel } from '@/lib/v2/instruments';
 import type { LateTrade } from '@/lib/v2/late-filers';
-import { STOCK_ACT_DAYS } from '@/lib/v2/late-filers';
 
 const COLUMNS: DataTableColumn[] = [
   { key: 'member', header: 'Member', mobile: 'title', sortable: false },
@@ -20,7 +19,7 @@ const COLUMNS: DataTableColumn[] = [
 
 /**
  * Trades ordered by the gap between the trade and its first report. The wording is factual: "filed N
- * days after the trade; the STOCK Act asks for 45 days", with the filing one tap away. A row that
+ * days after the trade", with the filing one tap away. A row that
  * carries a date_flag is shown with the flag as a plain note, whatever its value.
  */
 export default function LateFilersTable({ trades, caption, hideMember = false }: { trades: LateTrade[]; caption: string; hideMember?: boolean }) {
@@ -65,7 +64,7 @@ export default function LateFilersTable({ trades, caption, hideMember = false }:
         gap: (
           <span className="block">
             <b className="font-mono text-[15px] font-semibold">{t.days_to_file.toLocaleString('en-US')} days</b>
-            <span className="block font-sans text-[12px] font-normal text-muted">after the trade date shown in the filing; the STOCK Act sets a {STOCK_ACT_DAYS}-day limit</span>
+            <span className="block font-sans text-[12px] font-normal text-muted">after the trade date shown in the filing (calendar days, not adjusted for weekends or holidays)</span>
           </span>
         ),
         dates: (

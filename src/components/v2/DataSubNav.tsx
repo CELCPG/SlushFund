@@ -6,7 +6,7 @@ export const DATA_TABS = [
   { href: '/data', label: 'Overview' },
   { href: '/data/trades', label: 'Trades' },
   { href: '/data/contracts', label: 'Contracts' },
-  { href: '/data/late-filers', label: 'Filed after 45 days' },
+  { href: '/data/late-filers', label: 'Filed 45+ days after' },
   { href: '/data/status', label: 'Status' },
 ] as const;
 
