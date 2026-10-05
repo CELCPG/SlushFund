@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
+import ReportErrorLink from '@/components/v2/ReportErrorLink';
 import SimplePage from '@/components/v2/SimplePage';
 
 // Served by src/proxy.ts at the address of each withdrawn story, with HTTP 410. The copy is
@@ -30,6 +31,7 @@ export default function WithdrawnPage() {
           <Link href="/about/corrections" className="inline-flex rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-white hover:bg-deep">Read the corrections log</Link>
           <Link href="/investigations" className="inline-flex rounded-full bg-neutral-tint px-5 py-2.5 text-sm font-bold text-ink hover:bg-line">All investigations</Link>
           <Link href="/about/methodology" className="inline-flex rounded-full bg-neutral-tint px-5 py-2.5 text-sm font-bold text-ink hover:bg-line">How we verify</Link>
+          <ReportErrorLink className="inline-flex rounded-full bg-neutral-tint px-5 py-2.5 text-sm font-bold text-ink hover:bg-line" />
         </div>
       </section>
     </SimplePage>

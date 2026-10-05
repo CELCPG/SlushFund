@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ReportErrorLink from '@/components/v2/ReportErrorLink';
 import SimplePage from '@/components/v2/SimplePage';
 
 // D5: the old 404 advertised figures ("$17B in contracts", "926 live trades", "11 published
@@ -25,7 +26,7 @@ export default function NotFound() {
           ))}
         </ul>
         <p className="mt-5 text-[14px] text-muted">
-          Came from a link? <Link href="/about#report-an-error" className="font-semibold text-trades-ink hover:underline">Tell us</Link> and we will look into it.
+          Came from a link? <ReportErrorLink className="font-semibold text-trades-ink hover:underline">Tell us</ReportErrorLink> and we will look into it.
         </p>
       </section>
     </SimplePage>

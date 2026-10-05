@@ -32,7 +32,7 @@ async function tradesFigure() {
 export async function personCard(raw: string): Promise<OgCardOptions> {
   const id = raw.toUpperCase();
   const m = BIOGUIDE_RE.test(id) ? await getMember(id) : undefined;
-  if (!m) return { title: 'Member of Congress', eyebrow: 'Stock trades, from the filings' };
+  if (!m) return { title: 'Member of Congress', eyebrow: 'Disclosed trades' };
   const base: OgCardOptions = { title: m.name, eyebrow: `${m.chamber === 'Senate' ? 'U.S. Senate' : 'U.S. House'} · ${m.state}` };
   const trades = await getMemberTrades(id);
   if (!trades?.length) return base;
@@ -142,7 +142,7 @@ export async function latestCard(): Promise<OgCardOptions> {
     ...base,
     type: 'trades',
     stat: fmtCount(count) ?? undefined,
-    statLabel: 'trades first reported in the 30 days before the newest report',
+    statLabel: 'trades first reported in the 30 days to the newest report', // A8b N10b: fits the card's 60 characters
     source: 'House Clerk + Senate eFD',
     asOf,
   };

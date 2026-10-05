@@ -46,7 +46,7 @@ export const CORRECTIONS: CorrectionEntry[] = [
       'We have not republished any part of the withdrawn stories, and none of their claims is repeated on this site.',
       'We also removed older pages whose figures had not been verified, and rebuilt the data pages from official records: House and Senate periodic transaction reports and USAspending.gov.',
       'Going forward, a story is published only with a numbered source for every figure and a “last verified” date, and its corrections appear on this page.',
-      'If you were named in one of the withdrawn stories, or you spot an error anywhere on the site, see “Report an error” on the About page.',
+      'If you were named in one of the withdrawn stories, or you spot an error anywhere on the site, use the “Report an error” form (slushfund.net/report-an-error).',
     ],
     affects: ['/investigations', '/blog'],
     status: 'draft',

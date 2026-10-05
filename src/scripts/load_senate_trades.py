@@ -46,6 +46,7 @@ import subprocess
 import sys
 import time
 import urllib.request
+from collections import Counter
 from datetime import date, datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
@@ -583,27 +584,89 @@ def amend_no(label):
     return 0 if not m else int(m.group(1) or 1)
 
 
-def pick_versions(recs):
-    """An amendment restates the whole report (same rows, corrections applied), so the newest amendment
-    supersedes the original and earlier amendments.
+class PairingError(Exception):
+    """An amendment that cannot be paired with any original in its group (D1)."""
+
+
+def _line(x):
+    """One transaction line as the filer printed it (owner, date, asset, direction, band)."""
+    return tuple(norm(str(x.get(k) or '')).lower() for k in ('transaction_date', 'owner', 'ticker', 'asset_name', 'type', 'amount'))
+
+
+def _asset(x):
+    """The instrument of a line, when a correction changed its date, direction or band: the ticker, else the asset name."""
+    t = norm(x.get('ticker') or '')
+    return (t if t not in ('', '--', 'N/A') else norm(x.get('asset_name') or '')).lower()
+
+
+def shared_lines(amend, orig):
+    """(lines both reports print exactly, lines that name the same instrument): how much of `orig` the amendment
+    restates. The first number decides; the second only matters when a correction changed every line's date,
+    direction or band (Graham VIG/USFR, Mullin HIYS)."""
+    def n(f):
+        return sum((Counter(f(x) for x in amend['rows']) & Counter(f(x) for x in orig['rows'])).values())
+    return n(_line), n(_asset)
+
+
+def pick_versions(recs, notes=None):
+    """An amendment restates the whole report it amends (same rows, corrections applied), so the newest amendment
+    supersedes that report and the amendments before it.
     -> (kept [(rec, original_filed_date, original_rec)], superseded [rec]). original_filed_date is the filing date of
-    the group's original report (amendment 0) when the listing has it, else None (only amendments are listed:
-    the first version's date is unknown, and the amendment's own date is not a substitute). original_rec is that
-    original report (R6f, A7c G1: its report id and url are stored as the row's first report), else None."""
+    the amended original (amendment 0) when the listing has it, else None (only amendments are listed: the first
+    version's date is unknown, and the amendment's own date is not a substitute). original_rec is that original
+    report (R6f, A7c G1: its report id and url are stored as the row's first report), else None.
+
+    D1 (A8b L6): a senator can file several reports with the same title (a sales report and a purchases report
+    on one day), so the title does not say which one an amendment restates. An amendment is paired with the
+    original in its group that shares the most lines with it (shared_lines); a tie goes to the earlier filing
+    (then the lower report id) and is noted. An original no amendment restates stands on its own. An amendment that
+    shares no instrument with any original in its group raises PairingError (nothing is paired by default).
+    `notes`, when given, collects one dict per amendment: the pairing and the scores behind it."""
     groups = {}
     for rec in recs:
         groups.setdefault(base_label(rec['listing']['label']), []).append(rec)
+
+    def when(r):
+        return (parse_date(r['listing']['filed']) or date.min, r['report_id'])
+
     kept, superseded = [], []
     for v in groups.values():
-        v.sort(key=lambda r: (amend_no(r['listing']['label']), parse_date(r['listing']['filed']) or date.min, r['report_id']))
-        originals = [(parse_date(r['listing']['filed']), r) for r in v if amend_no(r['listing']['label']) == 0]
-        first, first_rec = min(((d, r) for d, r in originals if d), key=lambda x: (x[0], x[1]['report_id']),
-                               default=(None, None))
-        if amend_no(v[-1]['listing']['label']) == 0:      # no amendment: every report stands on its own
-            kept += [(r, parse_date(r['listing']['filed']), r) for r in v]
-        else:
-            kept.append((v[-1], first, first_rec))
-            superseded += v[:-1]
+        originals = sorted((r for r in v if amend_no(r['listing']['label']) == 0), key=when)
+        amends = sorted((r for r in v if amend_no(r['listing']['label']) > 0), key=lambda r: (amend_no(r['listing']['label']),) + when(r))
+        paired = {r['report_id']: [] for r in originals}
+        orphans = []                                   # amendments of an original the listing does not have
+        for a in amends:
+            if not originals:
+                orphans.append(a)
+                continue
+            scored = [(shared_lines(a, o), o) for o in originals]
+            best = max(s for s, _ in scored)
+            if best[1] == 0:
+                raise PairingError(f"amendment {a['report_id']} ({a['listing']['label']!r}, filed {a['listing']['filed']}, "
+                                   f"{a.get('url')}) shares no instrument with any original in its group "
+                                   f"({', '.join(o['report_id'] for o in originals)}): not paired")
+            tied = [o for s, o in scored if s == best]
+            o = tied[0]                                # originals are in filing-time order: the earliest filing wins a tie
+            paired[o['report_id']].append(a)
+            if notes is not None:
+                notes.append({'amendment': a['report_id'], 'amendment_url': a.get('url'), 'label': a['listing']['label'],
+                              'filed': a['listing']['filed'], 'paired_original': o['report_id'], 'original_url': o.get('url'),
+                              'original_filed': o['listing']['filed'], 'shared_lines': best[0], 'shared_instruments': best[1],
+                              'amendment_lines': len(a['rows']), 'exact_match': best[0] > 0,
+                              'tie_between': [x['report_id'] for x in tied] if len(tied) > 1 else None,
+                              'candidates': [{'report_id': x['report_id'], 'filed': x['listing']['filed'], 'lines': len(x['rows']),
+                                              'shared_lines': s[0], 'shared_instruments': s[1]} for s, x in scored]})
+        for o in originals:
+            ams = paired[o['report_id']]
+            if not ams:
+                kept.append((o, parse_date(o['listing']['filed']), o))
+                continue
+            d = parse_date(o['listing']['filed'])
+            kept.append((ams[-1], d, o if d else None))
+            superseded += [o] + ams[:-1]
+        if orphans:
+            kept.append((orphans[-1], None, None))
+            superseded += orphans[:-1]
     return kept, superseded
 
 
@@ -717,7 +780,7 @@ def stage_load(args):
     state = jload(CK / 'loaded.json', {})
     sb = None if args.dry_run else supabase_client()
     acct = {'bad': [], 'unticked': [], 'folded': [], 'superseded': [], 'cross_report': [], 'ticker_from_name': [],
-            'option_unreadable': []}
+            'option_unreadable': [], 'amendment_pairings': []}
     src_rows = 0
     by_sen = {}
     for f in matched:
@@ -732,7 +795,17 @@ def stage_load(args):
     replaced_lines = 0
     for bio, recs in by_sen.items():
         r = roster_by_bio[bio]
-        kept, superseded = pick_versions(recs)
+        notes = []
+        try:
+            kept, superseded = pick_versions(recs, notes)
+        except PairingError as e:
+            # D1: never pair an amendment with a report it does not restate; nothing has been written yet
+            raise SystemExit(f"{r['name']}: {e}")
+        acct['amendment_pairings'] += [dict(n, senator=r['name']) for n in notes]
+        for n in notes:
+            if n['tie_between'] or not n['exact_match']:
+                log(f"{r['name']}: amendment {n['amendment']} paired with {n['paired_original']} "
+                    f"({'tie between ' + ', '.join(n['tie_between']) + ', earliest filing taken' if n['tie_between'] else 'no identical line: a correction changed every line, paired on the instruments they name'})")
         for rec in superseded:
             acct['superseded'].append({'report_id': rec['report_id'], 'senator': r['name'], 'label': rec['listing']['label'],
                                        'filed': rec['listing']['filed'], 'rows': len(rec['rows'])})
@@ -797,7 +870,7 @@ def stage_load(args):
     years = set(args.years)
     total = 0
     for (bio, year), rows_by_key in sorted(pending.items(), key=lambda kv: (-kv[0][1], roster_by_bio[kv[0][0]]['name'])):
-        if year not in years:
+        if year not in years or (args.only and bio not in args.only):
             continue
         key = f'{bio}|{year}'
         if key in state and not args.refresh:
@@ -816,11 +889,12 @@ def stage_load(args):
     # after a full refresh, remove this source's rows that this run did not write
     pruned = None
     if sb and args.refresh:
-        stale = (sb.table('congress_trades').select('id', count='exact').eq('source_system', 'Senate_EFD')
-                 .in_('disclosure_year', sorted(years)).lt('updated_at', run_ts).execute())
-        pruned = stale.count
+        def stale_q(q):
+            q = q.eq('source_system', 'Senate_EFD').in_('disclosure_year', sorted(years)).lt('updated_at', run_ts)
+            return q.in_('bio_guide_id', args.only) if args.only else q
+        pruned = stale_q(sb.table('congress_trades').select('id', count='exact')).execute().count
         if args.prune and pruned:
-            sb.table('congress_trades').delete().eq('source_system', 'Senate_EFD').in_('disclosure_year', sorted(years)).lt('updated_at', run_ts).execute()
+            stale_q(sb.table('congress_trades').delete()).execute()
     # reconciliation: every source line is accounted for exactly once
     rows_out = sum(len(v) for v in pending.values())
     lines_in_rows = sum(r['lot_count'] for v in pending.values() for r in v.values())
@@ -862,6 +936,7 @@ def main():
     ap.add_argument('--limit', type=int, default=0, help='fetch: stop after N reports')
     ap.add_argument('--refresh', action='store_true', help='ignore checkpoints for this stage')
     ap.add_argument('--dry-run', action='store_true', help='load: build rows, write nothing')
+    ap.add_argument('--only', nargs='+', metavar='BIOGUIDE', help='load: write only these senators (every senator is still built and checked; --prune looks only at them)')
     ap.add_argument('--prune', action='store_true', help='load --refresh: delete this source\'s rows of the loaded years that this run did not write (old key shape)')
     args = ap.parse_args()
     CK.mkdir(parents=True, exist_ok=True)

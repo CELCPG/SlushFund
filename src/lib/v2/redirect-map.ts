@@ -157,11 +157,12 @@ export const GATED_APIS: { path: string; why: string }[] = [
   { path: '/api/latest', why: 'ranked feed' },
   { path: '/api/policy/bills', why: 'curated static bills list' },
   { path: '/api/tax-expenditures', why: 'unaudited table' },
+  { path: '/api/fec', why: 'F1 (L0): an open, unauthenticated proxy to the FEC API; no v2 page uses it, and campaign money is not loaded yet' },
 ];
 
 /**
  * Write endpoints whose sources break data-rules.md (third-party aggregators) or whose output is
- * derived. They answer 410 so the cron entries in vercel.json fail loudly instead of writing.
+ * derived. They answer 410, so a stray caller fails loudly instead of writing. (F1 removed the legacy crons from vercel.json.)
  * (/api/sync, /api/backfill and /api/sync/trigger already return 410 from their own code.)
  */
 export const RETIRED_APIS: { path: string; why: string }[] = [

@@ -5,9 +5,10 @@ import { MoneyLegend } from '@/components/v2/MoneyChip';
 import { Card } from '@/components/v2/PageBand';
 import SimplePage from '@/components/v2/SimplePage';
 import DraftBlock from '@/components/v2/trust/DraftBlock';
+import { reportErrorHref } from '@/lib/v2/error-reports';
 
-// D5 About. The founder note and the error-report contact are Colin's to write (DraftBlock
-// renders them everywhere except Vercel production). Do not name the founder anywhere else.
+// D5 About. The founder note is Colin's to write (DraftBlock renders it everywhere except Vercel production).
+// Do not name the founder anywhere else. Error reports go to the built-in form (F1, HQ A-089): no email address.
 export const metadata: Metadata = pageMetadata({
   path: '/about',
   card: 'own',
@@ -59,14 +60,20 @@ export default function AboutPage() {
           <Card as="section">
             <h2 id="report-an-error" className="scroll-mt-6 font-display text-[24px] font-extrabold">Report an error</h2>
             <p className="mt-3 max-w-[680px] text-[16px] leading-relaxed">
-              If a figure, a name or a date on this site is wrong, tell us. Please include the page address, the number or sentence you think is wrong, and the official record that differs (a link is best). We check every report against the source filing, and we fix confirmed errors and log them on the{' '}
-              <Link href="/about/corrections" className="font-semibold text-trades-ink hover:underline">corrections page</Link>. We never edit a story silently.
+              If a figure, a name or a date on this site is wrong, tell us with the{' '}
+              <Link href={reportErrorHref('/about')} className="font-semibold text-trades-ink hover:underline">error-report form</Link>. Please include the page address, the number or sentence you think is wrong, and the official record that differs (a link is best). Every &ldquo;Report an error&rdquo; link on the site opens the form with that page&rsquo;s address filled in.
             </p>
-            <div className="mt-3">
-              <DraftBlock title="How to send it: Colin to supply">
-                An email address or a form for error reports, and the promised response time. Nothing is published here until it exists, so a visitor is never given an address that nobody reads.
-              </DraftBlock>
-            </div>
+            <ul className="mt-3 max-w-[680px] list-disc space-y-2 pl-5 text-[16px] leading-relaxed">
+              <li>Each report is saved and read by a person, who checks it against the official record it points to.</li>
+              <li>If you leave a way to reach you, we reply within 2 business days. A contact is optional.</li>
+              <li>
+                We fix confirmed errors and log them on the{' '}
+                <Link href="/about/corrections" className="font-semibold text-trades-ink hover:underline">corrections page</Link>. We never edit a story silently.
+              </li>
+            </ul>
+            <p className="mt-4">
+              <Link href={reportErrorHref('/about')} className="inline-flex rounded-full bg-ink px-5 py-2.5 text-sm font-bold text-white hover:bg-deep">Report an error</Link>
+            </p>
           </Card>
         </div>
 

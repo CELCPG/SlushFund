@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { reportErrorHref } from '@/lib/v2/error-reports';
 import EmptyState from '@/components/v2/EmptyState';
 import { Card } from '@/components/v2/PageBand';
 import SimplePage from '@/components/v2/SimplePage';
@@ -36,7 +37,7 @@ export default function InvestigationsPage() {
         ))}
       </div>
       <p className="mt-6 text-[14px] text-muted">
-        See <Link href="/about/methodology" className="font-semibold text-trades-ink hover:underline">how each dataset is built</Link>, or <Link href="/about#report-an-error" className="font-semibold text-trades-ink hover:underline">report an error</Link>.
+        See <Link href="/about/methodology" className="font-semibold text-trades-ink hover:underline">how each dataset is built</Link>, or <Link href={reportErrorHref('/investigations')} className="font-semibold text-trades-ink hover:underline">report an error</Link>.
       </p>
     </SimplePage>
   );

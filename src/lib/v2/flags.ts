@@ -6,12 +6,22 @@
 type Env = Record<string, string | undefined>;
 
 /**
- * The late-filers board shows days from trade to first report, which is not public until an
- * Auditor GO. It is ON in local dev and in Vercel previews, and OFF on the production deployment
- * (VERCEL_ENV === 'production'). Remove this flag, and its uses, once the audit passes.
+ * The board of reports filed after the 45-day limit (/data/late-filers) shows days from trade to first report,
+ * which is not public until an Auditor GO. It is ON in local dev and in Vercel previews, and OFF on the production
+ * deployment (VERCEL_ENV === 'production') unless SHOW_LATE_FILERS=1 is set there (F1: Apex sets it at launch only
+ * if the re-check gives the board GO). One switch for the page, the sitemap, the Data tab, the /data card and the
+ * method sentence. Vercel reads env vars at build time too, so changing it needs a redeploy.
  */
 export function lateFilersEnabled(env: Env = process.env): boolean {
-  return env.VERCEL_ENV !== 'production';
+  return env.VERCEL_ENV !== 'production' || env.SHOW_LATE_FILERS === '1';
+}
+
+/**
+ * Where the board shows as a preview (dev and Vercel previews): a "Preview only" note, noindex, and "(preview)"
+ * on the /data card. On production with SHOW_LATE_FILERS=1 the board is public and carries none of these.
+ */
+export function lateFilersPreview(env: Env = process.env): boolean {
+  return lateFilersEnabled(env) && env.VERCEL_ENV !== 'production';
 }
 
 /**

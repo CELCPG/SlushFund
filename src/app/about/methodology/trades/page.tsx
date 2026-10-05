@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
+import { reportErrorHref } from '@/lib/v2/error-reports';
 import { AuditNote, Caveat, ExtLink, MethodPage, MethodSection, WorthALookNote } from '@/components/v2/trust/Method';
-import { lateFilersEnabled } from '@/lib/v2/flags';
+import { lateFilersEnabled, lateFilersPreview } from '@/lib/v2/flags';
 
 export const metadata: Metadata = pageMetadata({
   path: '/about/methodology/trades',
@@ -77,7 +78,9 @@ export default function TradesMethodology() {
           </Caveat>
           <Caveat lead="&ldquo;Days to file&rdquo; is not a verdict.">
             We do not show a days-to-file count or label any filing late on a trade row. The STOCK Act sets 45 days, but the clock can start when the member learns of the trade, up to 30 days after it, and an amended report carries a later date than the original. Where a trade is dated more than two years before its report, or the dates as filed look inconsistent, the row carries a plain date note that describes the dates; it is not a ruling. Any days-to-file figure is measured to the first report, never to an amendment.
-            {lateFilersEnabled() && <>{' '}A preview-only <Link href="/data/late-filers" className="font-semibold underline">late-filers board</Link> already shows it, measured to the first report, until an audit decides whether it goes public.</>}
+            {lateFilersEnabled() && (lateFilersPreview()
+              ? <>{' '}A preview-only board, <Link href="/data/late-filers" className="font-semibold underline">reports filed after the 45-day limit</Link>, already shows it, measured to the first report, until an audit decides whether it goes public.</>
+              : <>{' '}The board of <Link href="/data/late-filers" className="font-semibold underline">reports filed after the 45-day limit</Link> shows it, measured to the first report.</>)}
           </Caveat>
           <Caveat lead="Who owns the asset matters.">
             Members also report trades by a spouse or a dependent child. The row shows the owner (self, spouse, joint, child).
@@ -95,10 +98,13 @@ export default function TradesMethodology() {
       <MethodSection id="checks" title="How we check">
         <p>After a load, we re-open a random sample of stored rows against the original filing, using a second parser written separately from the loader, and compare every field. A row that does not match is investigated, and the cause is fixed in the loader, not patched in the data.</p>
         <AuditNote>
-          A review separate from the builder (October 2026) compared sampled rows and page figures with the original House Clerk and Senate eFD filings. Data problems it found were fixed and checked again. It was a sample, so this page describes the method and publishes no match rate.
+          Reviews separate from the builder, on October 3 and 4, 2026, compared sampled rows and page figures with the original House Clerk and Senate eFD filings. Data problems they found were fixed and checked again. They were samples, so this page describes the method and publishes no match rate.
+          {lateFilersEnabled() && !lateFilersPreview()
+            ? ' The board of reports filed after the 45-day limit was re-checked against the filings on October 4, 2026.'
+            : ' Days from a trade to its first report stay preview-only until a review clears them.'}
         </AuditNote>
         <p className="text-[14.5px] text-muted">
-          Found something wrong? <Link href="/about#report-an-error" className="font-semibold text-trades-ink hover:underline">Report an error</Link>. Past changes are in the <Link href="/about/corrections" className="font-semibold text-trades-ink hover:underline">corrections log</Link>.
+          Found something wrong? <Link href={reportErrorHref('/about/methodology/trades')} className="font-semibold text-trades-ink hover:underline">Report an error</Link>. Past changes are in the <Link href="/about/corrections" className="font-semibold text-trades-ink hover:underline">corrections log</Link>.
         </p>
       </MethodSection>
     </MethodPage>

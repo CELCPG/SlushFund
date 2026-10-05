@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
+import { reportErrorHref } from '@/lib/v2/error-reports';
 import EmptyState from '@/components/v2/EmptyState';
 import { Card } from '@/components/v2/PageBand';
 import SimplePage from '@/components/v2/SimplePage';
@@ -83,7 +84,7 @@ export default function CorrectionsPage() {
       )}
 
       <p className="mt-6 max-w-[760px] text-[14px] text-muted">
-        Spotted something wrong? See <Link href="/about#report-an-error" className="font-semibold text-trades-ink hover:underline">how to report an error</Link>. How each dataset is built is on the <Link href="/about/methodology" className="font-semibold text-trades-ink hover:underline">methodology page</Link>.
+        Spotted something wrong? See <Link href={reportErrorHref('/about/corrections')} className="font-semibold text-trades-ink hover:underline">how to report an error</Link>. How each dataset is built is on the <Link href="/about/methodology" className="font-semibold text-trades-ink hover:underline">methodology page</Link>.
       </p>
     </SimplePage>
   );

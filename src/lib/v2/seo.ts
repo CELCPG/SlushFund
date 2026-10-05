@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { HOME_HEADLINE_TEXT } from '@/lib/v2/home-copy';
 
 /**
  * Per-page canonical URL, og:url, og:title/og:description and the matching Twitter text (A8 N1).
@@ -19,7 +20,7 @@ export const SITE_DESCRIPTION =
 
 /** The section share cards (app/opengraph-image.tsx, app/about/…, app/data/…); their files take `alt` from here. */
 export const SHARE_CARDS = {
-  site: { url: '/opengraph-image', alt: 'SlushFund: see where public money goes, and who’s on both ends of it.' },
+  site: { url: '/opengraph-image', alt: `SlushFund: ${HOME_HEADLINE_TEXT.charAt(0).toLowerCase()}${HOME_HEADLINE_TEXT.slice(1)}` },
   about: { url: '/about/opengraph-image', alt: 'About SlushFund: methods, sources and corrections.' },
   data: { url: '/data/opengraph-image', alt: 'SlushFund data: congressional trades and federal contracts, each with its source and date.' },
 } as const;

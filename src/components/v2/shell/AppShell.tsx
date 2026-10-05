@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import Wordmark from '@/components/v2/shell/Wordmark';
 import { HeaderSearchSlot, MobileMenu, NavLinks } from '@/components/v2/shell/HeaderNav';
 import ScrollRegions from '@/components/v2/shell/ScrollRegions';
+import ReportErrorLink from '@/components/v2/ReportErrorLink';
 import { FOOTER_LINKS } from '@/components/v2/shell/nav';
 
 /**
@@ -51,6 +52,9 @@ function Footer() {
                 <Link href={l.href} className="inline-flex min-h-6 items-center font-semibold text-white hover:underline">{l.label}</Link>
               </li>
             ))}
+            <li>
+              <ReportErrorLink className="inline-flex min-h-6 items-center font-semibold text-white hover:underline" />
+            </li>
           </ul>
         </nav>
       </div>

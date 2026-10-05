@@ -10,7 +10,7 @@ export interface ForbiddenPhrase {
   /** RegExp source, matched with the `gi` flags. */
   re: string;
   /** Which part of A7b's list it comes from. */
-  from: 'late filers' | 'signals' | 'contractor' | 'A8 L3';
+  from: 'late filers' | 'signals' | 'contractor' | 'A8 L3' | 'A8b W1';
 }
 
 export const FORBIDDEN_PHRASES: readonly ForbiddenPhrase[] = [
@@ -70,6 +70,8 @@ export const FORBIDDEN_PHRASES: readonly ForbiddenPhrase[] = [
   { re: String.raw`\bcompanies with federal contracts this member traded\b`, from: 'A8 L3' },
   { re: String.raw`\bpattern worth a look\b`, from: 'A8 L3' },
   { re: String.raw`\bworth a look, not an accusation\b`, from: 'A8 L3' },
+  // A8b W1 (Apex): the board is "Reports filed after the 45-day limit", a label on reports, not on the people who filed them.
+  { re: String.raw`\blate[- ]filers?\b`, from: 'A8b W1' },
 ];
 
 /**

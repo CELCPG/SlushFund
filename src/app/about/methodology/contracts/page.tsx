@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { pageMetadata } from '@/lib/v2/seo';
 import Link from 'next/link';
+import { reportErrorHref } from '@/lib/v2/error-reports';
 import { AuditNote, Caveat, ExtLink, MethodPage, MethodSection } from '@/components/v2/trust/Method';
 
 export const metadata: Metadata = pageMetadata({
@@ -84,10 +85,10 @@ export default function ContractsMethodology() {
       <MethodSection id="checks" title="How we check">
         <p>After each load we compare stored rows with USAspending&rsquo;s award record on eight fields (amount, recipient, competition code, dates and contract number), and we compare agency totals with USAspending&rsquo;s own agency figures.</p>
         <AuditNote>
-          In October 2026 the builder checked 30 random FY2026 rows against the award records (all matched) and three agency totals against USAspending&rsquo;s agency figures (all matched to the cent). A separate review the same month re-checked a sample of awards and the agency totals against USAspending, and the totals matched to the cent. These are samples, so this page publishes no overall match rate. FY2026 totals are not final until the DoD delay has passed.
+          In October 2026 the builder checked 30 random FY2026 rows against the award records (all matched) and three agency totals against USAspending&rsquo;s agency figures (all matched to the cent). A separate review on October 4, 2026 re-checked a sample of awards and the agency totals against USAspending, and the totals matched to the cent. These are samples, so this page publishes no overall match rate. FY2026 totals are not final until the DoD delay has passed.
         </AuditNote>
         <p className="text-[14.5px] text-muted">
-          Found something wrong? <Link href="/about#report-an-error" className="font-semibold text-trades-ink hover:underline">Report an error</Link>. Past changes are in the <Link href="/about/corrections" className="font-semibold text-trades-ink hover:underline">corrections log</Link>.
+          Found something wrong? <Link href={reportErrorHref('/about/methodology/contracts')} className="font-semibold text-trades-ink hover:underline">Report an error</Link>. Past changes are in the <Link href="/about/corrections" className="font-semibold text-trades-ink hover:underline">corrections log</Link>.
         </p>
       </MethodSection>
     </MethodPage>

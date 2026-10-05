@@ -27,8 +27,11 @@ after every trades load, `compute_conflicts.py` does it, and `select refresh_mon
 `get_trade_related_contracts` is service_role only; `get_congress_trades_summary.totalTrades` counts every row, `futureDatedTrades` says how many are
 left out of the windowed figures). Both files run twice. The R6e files `20261009_r6e_conflicts.sql` and `20261009_r6e_wording.sql` drop either kind of
 those two relations first, so the whole chain can be re-run; run `20261012_r6f_counts_and_access.sql` last. First report = the earliest filing (filing
-date, then DocID) that listed the transaction. For a Senate report that was amended, the group's original report is the first report of every row
-(an amendment restates the whole report, so a row an amendment added or corrected still takes the original's date and link).
+date, then DocID) that listed the transaction. For a Senate report that was amended, the original it restates is the first report of every row
+(an amendment restates the whole report, so a row an amendment added or corrected still takes the original's date and link). D1 (A8b L6): the
+original is the one in the same-title group that shares the most lines with the amendment (tie: earlier filing); a senator's same-day sibling
+report that the amendment does not restate stays its own report, and an amendment that shares no instrument with any original is a load error
+(`load_senate_trades.py pick_versions`, `test_senate_pairing.py`; `load --only <bioguide>` reloads one senator).
 `20261013_r6f_awards_alert_index.sql` adds a covering index so `get_alert_summary` (one aggregate over the 46 MB `awards` heap, 3 s anon timeout) is an index-only scan; run `vacuum (analyze) awards;` after it and after every big awards load. Other awards-scanning reads (`get_top_agencies`, `top_vendors`, `connection_group_summary`, `get_competition_coverage`, `get_covid_stats`, `get_era_stats`) still scan the heap: warm they take 20-200 ms, and a page must show "data unavailable" for a failed read, never zero.
 
 ```

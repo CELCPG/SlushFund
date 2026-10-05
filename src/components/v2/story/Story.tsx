@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ReportErrorLink from '@/components/v2/ReportErrorLink';
 import type { ReactNode } from 'react';
 import { Wrap } from '@/components/v2/PageBand';
 import { cn } from '@/lib/cn';
@@ -178,7 +179,7 @@ export function StoryFooter({ corrections }: { corrections: ReactNode }) {
           <h2 className="text-[13px] font-extrabold uppercase tracking-[0.08em] text-muted">Corrections to this story</h2>
           <div className="mt-1.5">{corrections}</div>
           <p className="mt-4 text-[14px] text-muted">
-            Something wrong? <Link href="/about#report-an-error" className="font-semibold text-trades-ink hover:underline">Report an error</Link>. All changes are in the <Link href="/about/corrections" className="font-semibold text-trades-ink hover:underline">corrections log</Link>.
+            Something wrong? <ReportErrorLink className="font-semibold text-trades-ink hover:underline" />. All changes are in the <Link href="/about/corrections" className="font-semibold text-trades-ink hover:underline">corrections log</Link>.
           </p>
         </div>
       </Wrap>

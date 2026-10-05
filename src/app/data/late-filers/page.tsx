@@ -15,18 +15,19 @@ import { partyLetter } from '@/components/v2/TradesTable';
 import { getDatasetStatuses } from '@/lib/v2/datasets';
 import { buildHref, one, type SP } from '@/lib/v2/explorer';
 import { LATENESS_BASIS_WORDING } from '@/lib/v2/date-flags';
-import { lateFilersEnabled } from '@/lib/v2/flags';
+import { lateFilersEnabled, lateFilersPreview } from '@/lib/v2/flags';
 import { fmtCount, fmtDateShort, fmtPct } from '@/lib/v2/format';
 import {
   MEMBER_SORTS, OVER_OPTIONS, REPORT_SORTS, STOCK_ACT_DAYS, getLateSummary, getReportTrades, pageReports, parseLateFilters, sortMembers, type MemberSort,
 } from '@/lib/v2/late-filers';
 
-// Behind lateFilersEnabled(): on in dev and preview, off on the production deployment until an Auditor GO.
+// Behind lateFilersEnabled(): on in dev and preview, off on the production deployment unless SHOW_LATE_FILERS=1 (F1).
+// Titled "Reports filed after the 45-day limit" (A8b W1, Apex): a label on reports, not on the people who filed them.
 export const metadata: Metadata = pageMetadata({
   path: '/data/late-filers',
-  title: 'Late filers: the longest gaps between a trade and its report',
+  title: 'Reports filed after the 45-day limit',
   description: 'The stock trades members of Congress reported the longest after the trade date, measured to the first report, grouped by report, each with a link to the filing.',
-  robots: { index: false, follow: false },
+  robots: lateFilersPreview() ? { index: false, follow: false } : undefined,
 });
 
 const MEMBERS_SHOWN = 20;
@@ -82,7 +83,7 @@ export default async function LateFilersPage({ searchParams }: { searchParams: P
         </span>
       ),
       reports: <b className="font-mono text-[15px] font-semibold">{fmtCount(m.reports)}</b>,
-      over: <span className="text-muted">{fmtCount(m.over)} <span className="font-sans text-[12px]">of {fmtCount(m.computed)}</span></span>,
+      over: <span className="text-muted">{fmtCount(m.over)} <span className="font-sans text-[12px]">(of {fmtCount(m.computed)} with a computed gap)</span></span>,
     },
   }));
 
@@ -93,7 +94,7 @@ export default async function LateFilersPage({ searchParams }: { searchParams: P
     <div data-v2>
       <PageBand>
         <p className="mt-8 text-[13px] font-bold uppercase tracking-[0.06em] text-on-deep max-md:mt-5">Data</p>
-        <h1 className="mt-1 font-display text-[44px] font-extrabold leading-[1.06] tracking-[-1px] max-md:text-[30px]">Late filers</h1>
+        <h1 className="mt-1 font-display text-[44px] font-extrabold leading-[1.06] tracking-[-1px] max-md:text-[30px]">Reports filed after the 45-day limit</h1>
         <p className="mt-3 max-w-[760px] text-[16px] text-on-deep max-md:text-[15px]">
           The longest gaps between a stock trade and the first report that disclosed it. Each is stated as days after the trade, with the STOCK Act&rsquo;s {STOCK_ACT_DAYS} days beside it and a link to the filing.
         </p>
@@ -101,10 +102,12 @@ export default async function LateFilersPage({ searchParams }: { searchParams: P
       </PageBand>
 
       <Wrap className="pb-12">
-        <p className="mt-6 rounded-2xl bg-stale-tint px-4 py-2.5 text-[13.5px] text-stale-ink">
-          Preview only. This page is hidden on slushfund.net until its figures and wording have been audited.
-        </p>
-        <SourceBar datasets={['house_trades', 'senate_trades']} className="mt-4" />
+        {lateFilersPreview() && (
+          <p className="mt-6 rounded-2xl bg-stale-tint px-4 py-2.5 text-[13.5px] text-stale-ink">
+            Preview only. This page is hidden on slushfund.net until its figures and wording have been audited.
+          </p>
+        )}
+        <SourceBar datasets={['house_trades', 'senate_trades']} className={lateFilersPreview() ? 'mt-4' : 'mt-6'} />
 
         <section className="pt-6" aria-labelledby="lf-read">
           <Card>
@@ -171,7 +174,7 @@ export default async function LateFilersPage({ searchParams }: { searchParams: P
                 columns={memberColumns}
                 rows={memberRows}
                 caption="Members ranked by the gap between a trade and its first report, or by reports"
-                footer={<span>A report is one first report holding at least one trade filed more than {STOCK_ACT_DAYS} days after the trade; restated filings are not counted again, and each member&rsquo;s count matches the late-report count in our database. &ldquo;Transactions in them&rdquo; is the secondary count; &ldquo;of N&rdquo; is all of the member&rsquo;s trades whose lateness we compute.</span>}
+                footer={<span>A report is one first report holding at least one trade filed more than {STOCK_ACT_DAYS} days after the trade; restated filings are not counted again, and each member&rsquo;s count matches the late-report count in our database. &ldquo;Transactions in them&rdquo; is the secondary count; &ldquo;of N with a computed gap&rdquo; counts all of the member&rsquo;s trades whose gap we compute, in any report.</span>}
               />
               {ranked.length > MEMBERS_SHOWN && (
                 <p className="mt-3 text-[13.5px]">

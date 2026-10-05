@@ -1,4 +1,5 @@
 import { SHARE_CARDS } from '@/lib/v2/seo';
+import { HOME_HEADLINE_TEXT } from '@/lib/v2/home-copy';
 import { getDatasetStatuses } from '@/lib/v2/datasets';
 import { fmtCount, fmtDate } from '@/lib/v2/format';
 import { OG_SIZE, renderOgCard } from '@/lib/v2/og';
@@ -12,7 +13,7 @@ export const revalidate = 3600;
 // Share card for / (D6a), inherited by pages without their own card. It draws the trade count only
 // with its source and as-of date; if the count did not load, the card has no figure at all.
 export default async function Image() {
-  const title = 'See where public money goes, and who’s on both ends of it.';
+  const title = HOME_HEADLINE_TEXT;
   const [house, senate] = await getDatasetStatuses(['house_trades', 'senate_trades']);
   const ok = [house, senate].every((s) => (s.state === 'fresh' || s.state === 'stale') && s.rowCount != null);
   if (!ok) return renderOgCard({ title, eyebrow: 'Follow the public money' });

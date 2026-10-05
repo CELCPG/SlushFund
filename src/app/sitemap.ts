@@ -27,7 +27,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
   // The corrections log is listed only once it has a published entry.
   if (hasPublishedCorrections()) paths.push({ path: '/about/corrections', changeFrequency: 'weekly', priority: 0.6 });
-  // The late-filers board is off on the production deployment until the Auditor gives GO (D4 flag).
+  // The board of reports filed after the 45-day limit is off on the production deployment unless SHOW_LATE_FILERS=1 (D4 flag, F1).
   if (lateFilersEnabled()) paths.push({ path: '/data/late-filers', changeFrequency: 'daily', priority: 0.7 });
 
   return paths.map((p) => ({

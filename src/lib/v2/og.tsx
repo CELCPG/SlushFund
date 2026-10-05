@@ -24,6 +24,14 @@ export const OG_SIZE = { width: 1200, height: 630 };
 
 const FONT_DIR = join(process.cwd(), 'src', 'assets', 'fonts');
 
+/** Cut a caption at a word boundary with an ellipsis, never mid-word (A8b N10b). */
+export function clipWords(s: string, max: number): string {
+  if (s.length <= max) return s;
+  const cut = s.slice(0, max - 1);
+  const sp = cut.lastIndexOf(' ');
+  return `${(sp > max / 2 ? cut.slice(0, sp) : cut).trimEnd()}…`;
+}
+
 async function fonts() {
   const [display, body] = await Promise.all([
     readFile(join(FONT_DIR, 'BricolageGrotesque-ExtraBold.ttf')),
@@ -86,7 +94,7 @@ export async function renderOgCard(opts: OgCardOptions): Promise<ImageResponse> 
             >
               {m && <div style={{ display: 'flex', fontSize: 20, letterSpacing: 1, textTransform: 'uppercase', opacity: 0.95 }}>{m.label}</div>}
               <div style={{ display: 'flex', fontFamily: 'Bricolage', fontSize: 72, lineHeight: 1.05, marginTop: 6 }}>{opts.stat!.slice(0, 12)}</div>
-              {opts.statLabel && <div style={{ display: 'flex', fontSize: 22, marginTop: 6, lineHeight: 1.25 }}>{opts.statLabel.slice(0, 60)}</div>}
+              {opts.statLabel && <div style={{ display: 'flex', fontSize: 22, marginTop: 6, lineHeight: 1.25 }}>{clipWords(opts.statLabel, 60)}</div>}
             </div>
           )}
         </div>

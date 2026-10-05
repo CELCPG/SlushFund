@@ -23,6 +23,9 @@ Loader rules the checks apply explicitly (so they are tested, not excused):
     original_filed_date is the first version's date (a fresh eFD search for an amendment); the
     lateness columns are recomputed from the source dates: days_to_file = original - transaction,
     stock_act_late = days > 45, both NULL when date_flag is set
+  * D1 (A8b L6): a row stored under an amendment must have as its first report a report the amendment restates:
+    the stored first report (original_source_doc_id) is opened and must hold at least one of the amendment's lines
+    (ticker or asset, date, direction); --first-report samples only such rows
 
 Usage:
     python src/scripts/verify_senate_trades.py --n 25 --seed 20261003 [--out verification-1.json]
@@ -88,6 +91,17 @@ def eff_ticker(c):
     return (named, True) if named else ('', False)
 
 
+def table_lines(table):
+    """(date, direction, ticker or asset) of every line of a scraped report table."""
+    out = set()
+    for x in table['rows']:
+        name = x.get('asset_name')
+        name = name.get('name') if isinstance(name, dict) else name
+        tick = ' '.join(z for z in (x.get('ticker') or '').split() if z not in ('--', 'N/A')) or (name or '').strip()
+        out.add((norm_date(x.get('transaction_date')), type_of(x.get('type')), tick.lower()))
+    return out
+
+
 def first_filing_date(efd, last, label):
     """Filing date of the ORIGINAL report that an amendment restates, from a fresh eFD search."""
     rows = efd.search('01/01/2024', '12/31/2026', last=last)
@@ -112,6 +126,7 @@ def main():
     ap.add_argument('--late', action='store_true', help='draw the sample only from rows whose lateness was computed')
     ap.add_argument('--not-member', help='R6e: leave this member out of the sample (Armstrong holds 701 of the 754 late Senate rows)')
     ap.add_argument('--late-board', action='store_true', help='R6e: draw the sample only from rows the late-filers board would show (stock_act_late = true)')
+    ap.add_argument('--first-report', action='store_true', help='D1: draw the sample only from rows whose first report is another filing than the one they are stored under')
     ap.add_argument('--amended', action='store_true', help='draw the sample only from rows whose filed_date differs from original_filed_date')
     args = ap.parse_args()
 
@@ -144,6 +159,9 @@ def main():
     if args.late_board:
         rows = [r for r in rows if r['stock_act_late'] is True]
         print(f'{len(rows)} of them are late-board rows (stock_act_late = true; the sample is drawn from these)')
+    if args.first_report:
+        rows = [r for r in rows if r['original_source_doc_id'] and r['original_source_doc_id'] != r['source_doc_id']]
+        print(f'{len(rows)} of them cite a first report other than the filing they are stored under (the sample is drawn from these)')
     if args.amended:
         rows = [r for r in rows if r['original_filed_date'] and r['filed_date'] != r['original_filed_date']]
         print(f'{len(rows)} of them cite an amendment (filed_date differs from original_filed_date)')
@@ -192,6 +210,19 @@ def main():
                 cands.append({'date': norm_date(x.get('transaction_date')), 'ticker': (x.get('ticker') or '').strip(),
                               'asset': (name or '').strip(), 'type': type_of(x.get('type')), 'amount': (x.get('amount') or '').strip(),
                               'owner': x.get('owner'), 'asset_type': x.get('asset_type'), 'detail': detail})
+            first_doc = r.get('original_source_doc_id')
+            if first_doc and first_doc != r['source_doc_id'] and r.get('original_disclosure_url'):
+                # D1: the first report must be one this report restates (shares a line with it), not a same-day sibling
+                furl = r['original_disclosure_url']
+                if furl not in cache:
+                    time.sleep(args.pause)
+                    cache[furl] = sc._scrape_ptr_report(furl)
+                frep = cache[furl]
+                ftable = frep['sections']['transactions']['table'] or {'rows': []}
+                shared = table_lines(table) & table_lines(ftable)
+                checks['first_report_restated'] = bool(shared)
+                checks['first_report_id_in_url'] = first_doc in furl
+                note += f"first report {first_doc[:8]} shares {len(shared)} of this report's {len(table['rows'])} lines; "
             tick = r['ticker']
             same_key = [c for c in cands if c['date'] == r['transaction_date'] and c['type'] == r['transaction_type']
                         and eff_ticker(c)[0] == tick and c['asset_type'] == r['asset_type']

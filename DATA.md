@@ -176,7 +176,8 @@ It is data, not opinion — every flag is a verifiable fact.
   `original_filed_date` is the date of); `source_doc_id` / `disclosure_url` are the filing the row is stored under, which is a later filing when one
   restates it (`original_source_basis` = `first_report_earlier_filing`). NULL together, with `first_report_not_identified`, when the earliest filing seen is
   an amendment and the original is not in the index (229 House rows, none late). `late_report_count` = distinct `original_source_doc_id` over the
-  late rows; count reports that way, never with `source_doc_id`.
+  late rows; count reports that way, never with `source_doc_id`. A Senate amendment's first report is the original it restates (the report in the same-title
+  group sharing the most lines, D1), never a same-day sibling report of a different set of trades.
 - **Caveat:** committee seats come from the seat history (`committee_seats`, built from the git
   history of `unitedstates/congress-legislators`); `committee_basis` names the snapshot used and a
   trade with no complete snapshot has `committee_conflict` NULL. The sector/ticker maps in
