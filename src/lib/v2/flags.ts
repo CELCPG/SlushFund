@@ -61,9 +61,18 @@ export function campaignMoneyEnabled(env: Env = process.env): boolean {
   return env.VERCEL_ENV !== 'production' || env.SHOW_CAMPAIGN_MONEY === '1';
 }
 
+/**
+ * D11: the per-state voter pages (/your-members and /your-members/[state], "Your members of Congress: the records"). Current
+ * members only, no ballot claims. Off on production until the Auditor's page check (SHOW_VOTER_PAGES=1).
+ */
+export function voterPagesEnabled(env: Env = process.env): boolean {
+  return env.VERCEL_ENV !== 'production' || env.SHOW_VOTER_PAGES === '1';
+}
+
 export const PRESIDENT_PATH = '/people/executive/donald-trump';
 export const MOST_ACTIVE_PATH = '/data/most-active-traders';
 export const GRADE_METHOD_PATH = '/about/methodology/report-card';
+export const VOTER_PATH = '/your-members';
 
 /**
  * Paths that answer the site's own 404 on this deployment because their flag is off: the board, and /design and /design/story
@@ -76,6 +85,7 @@ export function hiddenByFlag(pathname: string, env: Env = process.env): boolean 
   if (pathname === PRESIDENT_PATH) return !presidentPageEnabled(env);
   if (pathname === MOST_ACTIVE_PATH) return !mostActiveEnabled(env);
   if (pathname === GRADE_METHOD_PATH) return !gradesEnabled(env);
+  if (pathname === VOTER_PATH || pathname.startsWith(`${VOTER_PATH}/`)) return !voterPagesEnabled(env);
   if (pathname === '/design' || pathname.startsWith('/design/')) return !designPagesEnabled(env);
   return false;
 }

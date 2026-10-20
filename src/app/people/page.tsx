@@ -11,7 +11,8 @@ import { fmtCount, fmtDate } from '@/lib/v2/format';
 import { getRoster, getTradeStats, partyName, seatLabel, type Member, type TradeStats } from '@/lib/v2/people';
 import { cleanQuery } from '@/lib/v2/queries';
 import { lookupZip, ZCTA_SOURCE, type DistrictCandidate } from '@/lib/v2/zip';
-import { MOST_ACTIVE_PATH, PRESIDENT_PATH, mostActiveEnabled, presidentPageEnabled } from '@/lib/v2/flags';
+import { MOST_ACTIVE_PATH, PRESIDENT_PATH, VOTER_PATH, mostActiveEnabled, presidentPageEnabled, voterPagesEnabled } from '@/lib/v2/flags';
+import { VOTER_TITLE } from '@/lib/v2/voter-copy';
 
 export const metadata: Metadata = pageMetadata({
   path: '/people',
@@ -159,10 +160,17 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
 
         {(zip || zipRaw) && <ZipResult zip={zip} raw={zipRaw} roster={roster} stats={stats} />}
 
-        {(presidentPageEnabled() || mostActiveEnabled()) && (
+        {(presidentPageEnabled() || mostActiveEnabled() || voterPagesEnabled()) && (
           <section className="pt-8" aria-labelledby="ppl-more">
             <h2 id="ppl-more" className="sr-only">More people pages</h2>
             <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
+              {voterPagesEnabled() && (
+                <Link href={VOTER_PATH} className="block rounded-2xl bg-card px-5 py-4 shadow-tile hover:bg-neutral-tint" data-link="voter-pages">
+                  <span className="block text-[12px] font-bold uppercase tracking-[0.06em] text-muted">By state</span>
+                  <span className="block font-display text-[20px] font-extrabold">{VOTER_TITLE}</span>
+                  <span className="block text-[14px] text-muted">Your current senators and House members, each with the same panels and links to their filings.</span>
+                </Link>
+              )}
               {presidentPageEnabled() && (
                 <Link href={PRESIDENT_PATH} className="block rounded-2xl bg-card px-5 py-4 shadow-tile hover:bg-neutral-tint">
                   <span className="block text-[12px] font-bold uppercase tracking-[0.06em] text-muted">Executive branch</span>

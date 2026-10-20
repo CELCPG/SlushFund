@@ -10,7 +10,7 @@ export interface ForbiddenPhrase {
   /** RegExp source, matched with the `gi` flags. */
   re: string;
   /** Which part of A7b's list it comes from. */
-  from: 'late filers' | 'signals' | 'contractor' | 'A8 L3' | 'A8b W1' | 'A8c W2' | 'F3' | 'A11' | 'G1' | 'G2';
+  from: 'late filers' | 'signals' | 'contractor' | 'A8 L3' | 'A8b W1' | 'A8c W2' | 'F3' | 'A11' | 'G1' | 'G2' | 'G10';
 }
 
 export const FORBIDDEN_PHRASES: readonly ForbiddenPhrase[] = [
@@ -111,6 +111,10 @@ export const FORBIDDEN_PHRASES: readonly ForbiddenPhrase[] = [
   { re: String.raw`\b(?:lining|line) (?:their|his|her) pockets?\b|\bin the pocket of\b|\bpockets?\b`, from: 'G1' },
   { re: String.raw`\bowned by (?:donors|PACs|corporations|special interests|lobbyists|big)\b`, from: 'G1' },
   { re: String.raw`\b(?:bought|paid) (?:and paid for|off)\b|\bbought by\b`, from: 'G1' },
+  // D11 voter pages (G10 election window): no ranking of members, no endorsement, no voting advice.
+  { re: String.raw`\bbest\b`, from: 'G10' },
+  { re: String.raw`\bvot(?:e|ing) (?:for|against)\b`, from: 'G10' },
+  { re: String.raw`\bendors(?:e|ed|es|ing|ement|ements)\b`, from: 'G10' },
 ];
 
 /**
@@ -123,4 +127,6 @@ export const ALLOWED_VERBATIM: readonly string[] = [
   'LEXISNEXIS RISK SOLUTIONS',
   'COUNTER INSIDER THREAT PROGRAM',
   'Severely Disabled',
+  // D11: a company name as filed (BBY), not a ranking word.
+  'Best Buy',
 ];

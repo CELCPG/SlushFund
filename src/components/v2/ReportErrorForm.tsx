@@ -55,7 +55,7 @@ export default function ReportErrorForm({ from, sent: sentAtLoad, error: errorAt
       <div>
         <label htmlFor="re-message" className={label}>What is wrong</label>
         <textarea id="re-message" name="message" required minLength={MESSAGE_MIN} maxLength={MESSAGE_MAX} rows={7} className={`${field} py-2.5`} aria-describedby="re-message-hint" />
-        <span id="re-message-hint" className={hint}>The number, name, date or sentence you think is wrong, and the official record that differs (a link is best).</span>
+        <span id="re-message-hint" className={hint}>The number, name, date or sentence you think is wrong, and the official record that differs (a link helps most).</span>
       </div>
       <div>
         <label htmlFor="re-contact" className={label}>How to reach you <span className="font-normal text-muted">(optional)</span></label>

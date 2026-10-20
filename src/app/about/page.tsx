@@ -61,7 +61,7 @@ export default function AboutPage() {
             <h2 id="report-an-error" className="scroll-mt-6 font-display text-[24px] font-extrabold">Report an error</h2>
             <p className="mt-3 max-w-[680px] text-[16px] leading-relaxed">
               If a figure, a name or a date on this site is wrong, tell us with the{' '}
-              <Link href={reportErrorHref('/about')} className="font-semibold text-trades-ink hover:underline">error-report form</Link>. Please include the page address, the number or sentence you think is wrong, and the official record that differs (a link is best). Every &ldquo;Report an error&rdquo; link on the site opens the form with that page&rsquo;s address filled in.
+              <Link href={reportErrorHref('/about')} className="font-semibold text-trades-ink hover:underline">error-report form</Link>. Please include the page address, the number or sentence you think is wrong, and the official record that differs (a link helps most). Every &ldquo;Report an error&rdquo; link on the site opens the form with that page&rsquo;s address filled in.
             </p>
             <ul className="mt-3 max-w-[680px] list-disc space-y-2 pl-5 text-[16px] leading-relaxed">
               <li>Each report is saved and read by a person, who checks it against the official record it points to.</li>

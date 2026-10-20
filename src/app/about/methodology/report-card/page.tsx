@@ -100,7 +100,10 @@ export default function ReportCardMethodology() {
 
       {campaignMoneyEnabled() && (<MethodSection id="funding" title="Who funds them (not graded)">
         <p>
-          Member pages also show where a member&rsquo;s campaign committee money came from in the 2025&ndash;2026 FEC reporting cycle: small donors, larger individual gifts, corporate and trade-association PACs, labor PACs, leadership, party and other committees, and self-funding, plus outside spending for and against them. It is not graded: taking legal PAC money is not misconduct, and grading it would be an editorial verdict.
+          Member pages also show campaign committee receipts in the 2025&ndash;26 FEC cycle, through the date of the latest report, for every member in the same words: small donors, larger individual gifts, corporate and trade-association PACs, labor PACs, leadership, party and other committees, and self-funding, plus outside spending for and against them. It is not graded: taking legal PAC money is not misconduct, and grading it would be an editorial verdict.
+        </p>
+        <p>
+          Every share is a share of the committee&rsquo;s total receipts, so the shares need not add to 100: loans, transfers and other receipts are in no group. Individual gifts use the FEC&rsquo;s own itemized and unitemized totals. PAC shares come from the giving committees&rsquo; own reports to the FEC, matched to the committee whose receipts are the denominator, so a PAC refund can lower a share. When a member has an FEC record for another office as well as for their seat, the page says which record the figures belong to and gives the other record&rsquo;s receipts with its own label. When refunds or giver-side reports do not line up with the committee&rsquo;s own total receipts (a share would be negative, or the shares would add to more than 100), the page prints no shares for that member and says so. A category with no gifts reads 0.0%.
         </p>
       </MethodSection>)}
 

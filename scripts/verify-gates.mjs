@@ -23,9 +23,10 @@ import {
 import { LEGACY_AGENCIES, LEGACY_PEOPLE, LEGACY_VENDORS } from '../src/lib/v2/legacy-map.generated.ts';
 import {
   GRADE_METHOD_PATH, MOST_ACTIVE_PATH, PRESIDENT_PATH, campaignMoneyEnabled, designPagesEnabled, gradesEnabled, hiddenByFlag, lateFilersEnabled, lateFilersPreview,
-  mostActiveEnabled, presidentPageEnabled, readFailureInjected,
+  mostActiveEnabled, presidentPageEnabled, readFailureInjected, VOTER_PATH, voterPagesEnabled,
 } from '../src/lib/v2/flags.ts';
-import { GRADE_FIXED_LINE, gradeClass, notGradedLine, unreadCaveat, unreadInWindow, windowStart } from '../src/lib/v2/grade-method.ts';
+import { GRADE_FIXED_LINE, activityOf, gradeClass, inWindow, notGradedLine, unreadCaveat, unreadInWindow, windowStart } from '../src/lib/v2/grade-method.ts';
+import { VOTER_NOT_FINDING, VOTER_SCOPE, VOTER_TITLE, voterWhat } from '../src/lib/v2/voter-copy.ts';
 import { hiddenPageMetadata } from '../src/lib/v2/hidden-page.ts';
 import { HONEYPOT_FIELD, RATE_LIMIT, REPLY_PROMISE, normalizePageUrl, reportErrorHref } from '../src/lib/v2/error-reports.ts';
 import { HOME_HEADLINE_TEXT, MEMBERS_TILE_COPY, MEMBERS_TILE_LEAD } from '../src/lib/v2/home-copy.ts';
@@ -47,12 +48,15 @@ const KEEP_PAGES = new Set([
   '/data/trades', '/data/contracts', '/data/late-filers', '/data/status', '/latest', '/report-an-error',
   // D9 / D10, each behind its flag (flags.ts)
   '/people/executive/donald-trump', '/data/most-active-traders', '/about/methodology/report-card',
+  // D11 voter pages, behind SHOW_VOTER_PAGES
+  '/your-members',
 ]);
 // Dynamic v2 pages, each with a real sample URL that must answer 200.
 const KEEP_DYNAMIC = new Map([
   ['/people/:bioguide', '/people/G000583'],
   ['/companies/:slug', '/companies/lockheed-martin-corp-zfn2jjxblzt3'],
   ['/agencies/:code', '/agencies/097'],
+  ['/your-members/:state', '/your-members/vt'],
 ]);
 // Public data routes that return raw rows from the audited loaders, or no figures of ours at all.
 const KEEP_ROUTES = new Map([
@@ -507,6 +511,7 @@ for (const p of KEEP_PAGES) {
   if (p === '/search') { await hit('/search?q=Warren', 200, { group: 'keep (v2)' }); continue; }
   if ((p === '/design' || p === '/design/story') && !designPagesEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // D8d L2
   if (p === '/data/late-filers' && !lateFilersEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // the board is off (production without SHOW_LATE_FILERS=1)
+  if (p === VOTER_PATH && !voterPagesEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // D11: off on production without SHOW_VOTER_PAGES=1
   await hit(p, 200, { group: 'keep (v2)', noindex: p === '/design' || p === '/design/story' || p === '/rebuilding' });
 }
 // The draft corrections entry must not render while its status is 'draft' and the preview flag is off.
@@ -515,7 +520,7 @@ if (process.env.SHOW_DRAFT_CORRECTIONS !== '1') {
   await hit('/about/corrections', 200, { body: 'The corrections log opens with the rebuilt site', group: 'corrections draft hidden' });
   await hit('/sitemap.xml', 200, { notBody: '/about/corrections', group: 'corrections draft hidden' });
 }
-for (const [route, url] of KEEP_DYNAMIC) await hit(url, 200, { group: `keep (v2) ${route}` });
+for (const [route, url] of KEEP_DYNAMIC) await hit(url, route.startsWith(VOTER_PATH) && !voterPagesEnabled() ? 404 : 200, { group: `keep (v2) ${route}` });
 await hit('/no-such-page-d5', 404, { body: 'find that page', notBody: 'live trades', group: 'keep (v2)' });
 await hit('/feed.xml', 200, { notBody: '<item>', group: 'keep (v2)' });
 await hit('/sitemap.xml', 200, { notBody: '/dashboard', group: 'keep (v2)' });
@@ -628,7 +633,8 @@ const sitemapXml = await (await fetch(base + '/sitemap.xml')).text();
 const sitemapPaths = [...sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname || '/');
 const WORDING_PATHS = [...new Set([
   ...sitemapPaths,
-  ...KEEP_DYNAMIC.values(),
+  ...[...KEEP_DYNAMIC.values()].filter((u) => voterPagesEnabled() || !u.startsWith(VOTER_PATH)),
+  ...(voterPagesEnabled() ? [`${VOTER_PATH}?zip=00000`, `${VOTER_PATH}?zip=12ab`, `${VOTER_PATH}/ca?zip=94110`, `${VOTER_PATH}/dc`] : []),
   '/people/S001201', '/people/A000383', '/people/M001186',
   '/agencies', '/investigations', '/rebuilding', '/search?q=Warren', '/latest.xml',
   '/latest?type=awards', '/latest?chamber=Senate', '/data/trades?instrument=option', '/data/contracts?fy=2026',
@@ -1130,7 +1136,121 @@ const F3 = 'post-launch fixes (F3)';
   let viewMissing = false;
   try { await restAll('member_campaign_money?select=bioguide_id&limit=1'); } catch { viewMissing = true; }
   if (viewMissing || !campaignMoneyEnabled()) { await hit(member, 200, { notBody: ['Who funds them', 'Campaign finance data: coming soon', 'corporate and trade-association PACs'], group: G }); if (gradesEnabled()) await hit(GRADE_METHOD_PATH, 200, { notBody: ['Who funds them', '2026 campaign money'], group: G }); }
-  else await hit(member, 200, { bodyAll: ['Who funds them', 'FEC, through'], group: G });
+  else {
+    // A12 M5-M8 (f1b): one template for every member; never "2026 campaign"; no share when it cannot be printed.
+    const FG = 'who funds them (F1b)';
+    const TEMPLATE = ['campaign committee reported $', 'in total receipts in the 2025–26 FEC cycle (through '];
+    const NEVER = ['2026 campaign', 'not available', 'reported no in total', 'NaN%', 'undefined%'];
+    await hit(member, 200, { bodyAll: ['Who funds them', ...TEMPLATE, 'of those receipts came from corporate and trade-association PACs, by the PACs’ own reports (FEC, through '], notBody: NEVER, group: FG });
+    await hit('/people/M001212', 200, { bodyAll: [...TEMPLATE, 'These figures are for the FEC candidate record for U.S. Senate.', 'also has an FEC record for U.S. House; it uses the same committee, whose receipts are in these figures.'], notBody: [...NEVER, 'that committee reported $'], group: FG }); // M5/M11: Barry Moore (his House record's committee is inside his Senate total)
+    await hit('/people/P000614', 200, { bodyAll: [...TEMPLATE, 'also has an FEC record for U.S. House; it uses the same committee, whose receipts are in these figures.'], notBody: NEVER, group: FG });
+    await hit('/people/S001203', 200, { bodyAll: [...TEMPLATE, 'Shares not shown: in this period, refunds or giver-side reports do not line up with the campaign’s own total receipts. See the FEC record.'], notBody: [...NEVER, 'came from corporate and trade-association PACs'], group: FG }); // M6: Tina Smith
+    await hit('/people/B001328', 200, { bodyAll: ['No receipts reported for the 2025–26 FEC cycle (FEC).'], notBody: [...NEVER, 'in total receipts'], group: FG }); // M8: Everton Blair Jr.
+    if (gradesEnabled()) await hit(GRADE_METHOD_PATH, 200, { bodyAll: ['Who funds them (not graded)', 'in the 2025–26 FEC cycle'], notBody: ['2026 campaign'], group: FG });
+    // Data assertion on the live view: shares print only when none is negative and they add to at most 100.
+    const mcm = await restAll('member_campaign_money?select=name,raised,pct_small_individual,pct_large_individual,pct_corporate_trade_pac,pct_labor_pac,pct_leadership_party_other,pct_self_funded,shares_ok');
+    const SH = ['pct_small_individual', 'pct_large_individual', 'pct_corporate_trade_pac', 'pct_labor_pac', 'pct_leadership_party_other', 'pct_self_funded'];
+    const wrong = mcm.filter((r) => { const v = SH.map((k) => Number(r[k] ?? 0)); const printable = Number(r.raised) > 0 && v.every((x) => x >= 0) && v.reduce((a, b) => a + b, 0) <= 100.0001; return r.shares_ok !== printable || SH.some((k) => r[k] == null && Number(r.raised) > 0); });
+    gateRow('member_campaign_money shares_ok', wrong.length === 0, wrong.length ? `${wrong.length} rows disagree, e.g. ${wrong.slice(0, 3).map((r) => r.name).join(', ')}` : `${mcm.length} rows: shares_ok matches the negative/over-100 rule, no empty share where receipts > 0`, FG);
+  }
+}
+
+// ---------------------------------------------------------------- D11: voter pages ("Your members of Congress: the records")
+{
+  const G = 'D11 voter pages';
+  const row = (path, ok, note, expect = 'ok') => { if (!ok) failed++; rows.push({ path, status: ok ? 'ok' : 'FAIL', expect, ok, note, group: G }); };
+  // Flag: off on production until SHOW_VOTER_PAGES is exactly '1'; the index and every state page follow it.
+  for (const path of [VOTER_PATH, `${VOTER_PATH}/ca`]) {
+    for (const [env, want] of [[{}, false], [{ VERCEL_ENV: 'preview' }, false], [{ VERCEL_ENV: 'production' }, true], [{ VERCEL_ENV: 'production', SHOW_VOTER_PAGES: '1' }, false], [{ VERCEL_ENV: 'production', SHOW_VOTER_PAGES: 'true' }, true]]) {
+      const got = hiddenByFlag(path, env);
+      row(`hiddenByFlag(${JSON.stringify(path)}, ${JSON.stringify(env)})`, got === want, '', String(want));
+    }
+  }
+  row(`hiddenByFlag("/your-membership", production)`, hiddenByFlag('/your-membership', { VERCEL_ENV: 'production' }) === false, 'prefix match is per path segment', 'false');
+  // G10 wording: no ranking, endorsement or voting advice (one test sentence each); a company name as filed passes.
+  for (const s of ['vote for him', 'Vote against her', 'voting for', 'the best record', 'Best in the state', 'we endorse', 'an endorsement', 'endorsed by']) {
+    row(`wording gate lists "${s}"`, FORBIDDEN_PHRASES.some((p) => new RegExp(p.re, 'gi').test(s)), 'forbidden-words.ts');
+  }
+  row('"Best Buy" (BBY, as filed) is allowed verbatim', ALLOWED_VERBATIM.includes('Best Buy'), 'forbidden-words.ts');
+  const sm = await (await fetch(base + '/sitemap.xml')).text();
+  const peopleHtml = await (await fetch(base + '/people')).text();
+  if (!voterPagesEnabled()) {
+    for (const p of [VOTER_PATH, `${VOTER_PATH}/ca`, `${VOTER_PATH}/vt`, `${VOTER_PATH}?zip=94110`]) await hit(p, 404, { group: G });
+    row('sitemap has no voter pages', !sm.includes(`slushfund.net${VOTER_PATH}`), '');
+    row('/people has no voter-page link', !peopleHtml.includes(`href="${VOTER_PATH}"`), '');
+  } else {
+    const head = [VOTER_TITLE, voterWhat(campaignMoneyEnabled()), VOTER_SCOPE, VOTER_NOT_FINDING];
+    await hit(VOTER_PATH, 200, { bodyAll: [...head, 'Find my members', 'Pick your state', `href="${VOTER_PATH}/ca"`, `href="${VOTER_PATH}/vt"`], group: G });
+    row('sitemap lists the index and 56 state pages', sm.includes(`slushfund.net${VOTER_PATH}<`) && sm.includes(`slushfund.net${VOTER_PATH}/vt<`) && (sm.match(new RegExp(`slushfund\\.net${VOTER_PATH}/[a-z]{2}<`, 'g')) ?? []).length === 56, '');
+    row('/people links the voter pages', peopleHtml.includes(`href="${VOTER_PATH}"`), '');
+    // ZIP lookup (D2): one state -> that state's page; a bad ZIP stays on the index with a message; the picker redirects.
+    await hit(`${VOTER_PATH}?zip=05401`, 307, { location: `${VOTER_PATH}/vt?zip=05401#zip-note`, group: G });
+    await hit(`${VOTER_PATH}?zip=00000`, 200, { body: 'We can', group: G });
+    await hit(`${VOTER_PATH}?zip=12ab`, 200, { body: 'is not a 5-digit ZIP code', group: G });
+    await hit(`${VOTER_PATH}?state=tx`, 307, { location: `${VOTER_PATH}/tx`, group: G });
+    await hit(`${VOTER_PATH}/CA`, 308, { location: `${VOTER_PATH}/ca`, group: G });
+    for (const p of [`${VOTER_PATH}/zz`, `${VOTER_PATH}/cal`, `${VOTER_PATH}/1a`]) await hit(p, 404, { group: G });
+    await hit(`${VOTER_PATH}/ca?zip=94110`, 200, { bodyAll: ['This ZIP area lies in one district:', 'CA-11'], group: G });
+    // A14 M12: DC delegate seat is coded 98 in the ZIP file and 0 in the roster; DC has no senators.
+    {
+      const dcHtml = (await (await fetch(`${base}${VOTER_PATH}/dc?zip=20001`)).text()).replace(/<!-- -->/g, '');
+      const at = dcHtml.indexOf('id="zip-note"');
+      const note = at < 0 ? '' : dcHtml.slice(at, dcHtml.indexOf('</section>', at));
+      row(`${VOTER_PATH}/dc?zip=20001 ZIP note names the delegate, no "no current member", no "Both senators"`,
+        note.includes('Eleanor Holmes Norton') && !note.includes('no current member in our roster') && !note.includes('Both senators'), `note ${note.length} chars`);
+      const vtNote = (await (await fetch(`${base}${VOTER_PATH}/vt?zip=05401`)).text()).replace(/<!-- -->/g, '');
+      row(`${VOTER_PATH}/vt?zip=05401 still says both senators`, vtNote.includes('Both senators below represent the whole state.'), '');
+      // A14 M13: fec.gov drops non-ASCII letters from q, so the FEC search link folds accents (Barragán -> Barragan).
+      const caHtml = (await (await fetch(`${base}${VOTER_PATH}/ca`)).text()).replace(/<!-- -->/g, '');
+      const bs = caHtml.indexOf('data-member="B001300"');
+      const block = bs < 0 ? '' : caHtml.slice(bs, caHtml.indexOf('</article>', bs));
+      row(`${VOTER_PATH}/ca Barragán FEC search link is q=Barragan`, /href="https:\/\/www\.fec\.gov\/data\/candidates\/\?q=Barragan&(amp;)?state=CA"/.test(block), block ? '' : 'B001300 not on page');
+    }
+    // Every state page: the fixed header, current members only, alphabetical by last name, identical panels for everyone.
+    const roster = await restAll('congress_members?select=bioguide_id,last_name,first_name,name,state,chamber&in_office=eq.true');
+    const key = (m) => (m.last_name ?? m.name).trim();
+    const sortName = (a, b) => key(a).localeCompare(key(b), 'en', { sensitivity: 'base' }) || (a.first_name ?? a.name).localeCompare(b.first_name ?? b.name, 'en', { sensitivity: 'base' }) || a.bioguide_id.localeCompare(b.bioguide_id);
+    const gradesOn = gradesEnabled();
+    const moneyOn = campaignMoneyEnabled();
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+    const since = (() => { const [y, m, d] = today.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d - 30)).toISOString().slice(0, 10); })();
+    for (const st of ['CA', 'VT', 'DC', 'TX']) {
+      const path = `${VOTER_PATH}/${st.toLowerCase()}`;
+      const html = (await (await fetch(base + path)).text()).replace(/<!-- -->/g, '').replace(/&#x27;/g, "'");
+      const want = roster.filter((m) => m.state === st);
+      const wantOrder = [...want.filter((m) => m.chamber === 'Senate').sort(sortName), ...want.filter((m) => m.chamber !== 'Senate').sort(sortName)].map((m) => m.bioguide_id);
+      const got = [...html.matchAll(/data-member="([A-Z]\d{6})"/g)].map((m) => m[1]);
+      row(`${path} header text`, head.every((s) => html.includes(s)) && (!gradesOn || html.includes(GRADE_FIXED_LINE)), head.find((s) => !html.includes(s)) ?? '');
+      row(`${path} members = current roster, senators then House, each by last name`, got.join(',') === wantOrder.join(','), `${got.length} on page, ${wantOrder.length} in roster${got.join(',') !== wantOrder.join(',') ? `; first difference at #${got.findIndex((g, i) => g !== wantOrder[i]) + 1}` : ''}`);
+      const count = (re) => (html.match(re) ?? []).length;
+      row(`${path} identical panels`, count(/data-panel="trading"/g) === got.length && count(/data-panel="grade"/g) === (gradesOn ? got.length : 0) && count(/data-panel="funding"/g) === (moneyOn ? got.length : 0),
+        `trading ${count(/data-panel="trading"/g)}, grade ${count(/data-panel="grade"/g)}, funding ${count(/data-panel="funding"/g)} for ${got.length} members`);
+      row(`${path} "Who funds them" only with SHOW_CAMPAIGN_MONEY`, moneyOn || !html.includes('Who funds them'), '');
+      row(`${path} FEC, filings, member-page links per member`, count(/href="https:\/\/www\.fec\.gov\/data\/candidates\/\?q=/g) === got.length && got.every((id) => html.includes(`href="/people/${id}"`) && html.includes(`href="/data/trades?member=${id}"`)), '');
+      // What's new: the number of rows equals the database's count of first reports dated in the last 30 days.
+      try {
+        const ids = want.map((m) => m.bioguide_id).join(',');
+        const news = ids ? await restAll(`congress_trades?select=id&bio_guide_id=in.(${ids})&original_filed_date=gte.${since}&original_filed_date=lte.${today}`) : [];
+        const shown = /data-whats-new="(\d+)"/.exec(html)?.[1];
+        row(`${path} What's new count vs DB (first report ${since} to ${today})`, Number(shown) === news.length, `page ${shown}, DB ${news.length}`);
+      } catch (e) { row(`${path} What's new vs DB`, false, `could not run: ${String(e.message).slice(0, 120)}`); }
+    }
+    // Trading figures re-derived from REST for Vermont's members (same window and classification as the leaderboard).
+    try {
+      const vt = roster.filter((m) => m.state === 'VT');
+      const start = windowStart(today);
+      const tr = await restAll(`congress_trades?select=id,bio_guide_id,ticker,company_name,asset_type,option_type,transaction_type,transaction_date,amount_min,date_flag,stock_act_late,committee_conflict,has_federal_contract,disclosure_url,original_disclosure_url,original_source_doc_id,source_doc_id&bio_guide_id=in.(${vt.map((m) => m.bioguide_id).join(',')})&transaction_date=gte.${start}&transaction_date=lte.${today}`);
+      const html = (await (await fetch(`${base}${VOTER_PATH}/vt`)).text()).replace(/<!-- -->/g, '');
+      for (const m of vt) {
+        const list = tr.filter((r) => r.bio_guide_id === m.bioguide_id && inWindow(r, start, today)).map((r) => ({ ...r, cls: gradeClass(r, instrumentKind(r)) }));
+        const a = activityOf(m.bioguide_id, list);
+        const block = html.slice(html.indexOf(`data-member="${m.bioguide_id}"`), html.indexOf('</article>', html.indexOf(`data-member="${m.bioguide_id}"`)));
+        const tx = `${a.transactions.toLocaleString('en-US')} individual-stock`;
+        const val = a.transactions ? `at least $${Math.round(a.valueMin).toLocaleString('en-US')}` : '$0';
+        row(`/your-members/vt ${m.name}: transactions and value vs DB`, block.includes(tx) && block.includes(val), `want "${tx}", "${val}"`);
+      }
+    } catch (e) { row('/your-members/vt figures vs DB', false, `could not run: ${String(e.message).slice(0, 120)}`); }
+  }
 }
 
 const byGroup = {};
