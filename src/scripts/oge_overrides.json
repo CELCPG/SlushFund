@@ -1,0 +1,4147 @@
+{
+ "_about": "R10d hand-checked corrections, applied by oge_overrides.apply() in build_rows and by apply_r10d.py. See oge_overrides.py.",
+ "entries": [
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 1,
+   "action": "delete",
+   "fields": {},
+   "why": "R10d continuity: phantom row from a skewed table border inside the # column; page p7 holds #132-#157 only (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 2,
+   "action": "set",
+   "fields": {
+    "n": 132
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 3,
+   "action": "set",
+   "fields": {
+    "n": 133
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 4,
+   "action": "set",
+   "fields": {
+    "n": 134
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 5,
+   "action": "set",
+   "fields": {
+    "n": 135
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 6,
+   "action": "set",
+   "fields": {
+    "n": 136
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 7,
+   "action": "set",
+   "fields": {
+    "n": 137
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 8,
+   "action": "set",
+   "fields": {
+    "n": 138
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 9,
+   "action": "set",
+   "fields": {
+    "n": 139
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 10,
+   "action": "set",
+   "fields": {
+    "n": 140
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 11,
+   "action": "set",
+   "fields": {
+    "n": 141
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 12,
+   "action": "set",
+   "fields": {
+    "n": 142
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 13,
+   "action": "set",
+   "fields": {
+    "n": 143
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 14,
+   "action": "set",
+   "fields": {
+    "n": 144
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 15,
+   "action": "set",
+   "fields": {
+    "n": 145
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 16,
+   "action": "set",
+   "fields": {
+    "n": 146
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 17,
+   "action": "set",
+   "fields": {
+    "n": 147
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 18,
+   "action": "set",
+   "fields": {
+    "n": 148
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 19,
+   "action": "set",
+   "fields": {
+    "n": 149
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 20,
+   "action": "set",
+   "fields": {
+    "n": 150
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 21,
+   "action": "set",
+   "fields": {
+    "n": 151
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 22,
+   "action": "set",
+   "fields": {
+    "n": 152
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 23,
+   "action": "set",
+   "fields": {
+    "n": 153
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 24,
+   "action": "set",
+   "fields": {
+    "n": 154
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 25,
+   "action": "set",
+   "fields": {
+    "n": 155
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 26,
+   "action": "set",
+   "fields": {
+    "n": 156
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 7,
+   "line": 27,
+   "action": "set",
+   "fields": {
+    "n": 157
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 1,
+   "action": "set",
+   "fields": {
+    "n": 184
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 2,
+   "action": "set",
+   "fields": {
+    "n": 185
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 3,
+   "action": "set",
+   "fields": {
+    "n": 186
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 4,
+   "action": "set",
+   "fields": {
+    "n": 187
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 5,
+   "action": "set",
+   "fields": {
+    "n": 188
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 6,
+   "action": "set",
+   "fields": {
+    "n": 189
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 7,
+   "action": "set",
+   "fields": {
+    "n": 190
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 8,
+   "action": "set",
+   "fields": {
+    "n": 191
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 9,
+   "action": "set",
+   "fields": {
+    "n": 192
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 10,
+   "action": "set",
+   "fields": {
+    "n": 193
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 11,
+   "action": "set",
+   "fields": {
+    "n": 194
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 12,
+   "action": "set",
+   "fields": {
+    "n": 195
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 13,
+   "action": "set",
+   "fields": {
+    "n": 196
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 14,
+   "action": "set",
+   "fields": {
+    "n": 197
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 15,
+   "action": "set",
+   "fields": {
+    "n": 198
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 16,
+   "action": "set",
+   "fields": {
+    "n": 199
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 17,
+   "action": "set",
+   "fields": {
+    "n": 200
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 18,
+   "action": "set",
+   "fields": {
+    "n": 201
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 19,
+   "action": "set",
+   "fields": {
+    "n": 202
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 20,
+   "action": "set",
+   "fields": {
+    "n": 203
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 21,
+   "action": "set",
+   "fields": {
+    "n": 204
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 22,
+   "action": "set",
+   "fields": {
+    "n": 205
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 23,
+   "action": "set",
+   "fields": {
+    "n": 206
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 24,
+   "action": "set",
+   "fields": {
+    "n": 207
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 25,
+   "action": "set",
+   "fields": {
+    "n": 208
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 1,
+   "action": "set",
+   "fields": {
+    "n": 288
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 2,
+   "action": "set",
+   "fields": {
+    "n": 289
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 3,
+   "action": "set",
+   "fields": {
+    "n": 290
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 4,
+   "action": "set",
+   "fields": {
+    "n": 291
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 5,
+   "action": "set",
+   "fields": {
+    "n": 292
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 6,
+   "action": "set",
+   "fields": {
+    "n": 293
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 7,
+   "action": "set",
+   "fields": {
+    "n": 294
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 8,
+   "action": "set",
+   "fields": {
+    "n": 295
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 9,
+   "action": "set",
+   "fields": {
+    "n": 296
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 10,
+   "action": "set",
+   "fields": {
+    "n": 297
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 11,
+   "action": "set",
+   "fields": {
+    "n": 298
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 12,
+   "action": "set",
+   "fields": {
+    "n": 299
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 13,
+   "action": "set",
+   "fields": {
+    "n": 300
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 14,
+   "action": "set",
+   "fields": {
+    "n": 301
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 15,
+   "action": "set",
+   "fields": {
+    "n": 302
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 16,
+   "action": "set",
+   "fields": {
+    "n": 303
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 17,
+   "action": "set",
+   "fields": {
+    "n": 304
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 18,
+   "action": "set",
+   "fields": {
+    "n": 305
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 19,
+   "action": "set",
+   "fields": {
+    "n": 306
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 20,
+   "action": "set",
+   "fields": {
+    "n": 307
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 21,
+   "action": "set",
+   "fields": {
+    "n": 308
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 22,
+   "action": "set",
+   "fields": {
+    "n": 309
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 23,
+   "action": "set",
+   "fields": {
+    "n": 310
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 24,
+   "action": "set",
+   "fields": {
+    "n": 311
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 25,
+   "action": "set",
+   "fields": {
+    "n": 312
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 1,
+   "action": "set",
+   "fields": {
+    "n": 340
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 2,
+   "action": "set",
+   "fields": {
+    "n": 341
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 3,
+   "action": "set",
+   "fields": {
+    "n": 342
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 4,
+   "action": "set",
+   "fields": {
+    "n": 343
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 5,
+   "action": "set",
+   "fields": {
+    "n": 344
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 6,
+   "action": "set",
+   "fields": {
+    "n": 345
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 7,
+   "action": "set",
+   "fields": {
+    "n": 346
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 8,
+   "action": "set",
+   "fields": {
+    "n": 347
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 9,
+   "action": "set",
+   "fields": {
+    "n": 348
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 10,
+   "action": "set",
+   "fields": {
+    "n": 349
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 11,
+   "action": "set",
+   "fields": {
+    "n": 350
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 12,
+   "action": "set",
+   "fields": {
+    "n": 351
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 13,
+   "action": "set",
+   "fields": {
+    "n": 352
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 14,
+   "action": "set",
+   "fields": {
+    "n": 353
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 15,
+   "action": "set",
+   "fields": {
+    "n": 354
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 16,
+   "action": "set",
+   "fields": {
+    "n": 355
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 17,
+   "action": "set",
+   "fields": {
+    "n": 356
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 18,
+   "action": "set",
+   "fields": {
+    "n": 357
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 19,
+   "action": "set",
+   "fields": {
+    "n": 358
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 20,
+   "action": "set",
+   "fields": {
+    "n": 359
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 21,
+   "action": "set",
+   "fields": {
+    "n": 360
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 22,
+   "action": "set",
+   "fields": {
+    "n": 361
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 23,
+   "action": "set",
+   "fields": {
+    "n": 362
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 24,
+   "action": "set",
+   "fields": {
+    "n": 363
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 25,
+   "action": "set",
+   "fields": {
+    "n": 364
+   },
+   "why": "R10d continuity: band cut halfway between # on the two-line form put each description with the next row's # (page image checked)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 9,
+   "line": 101,
+   "action": "insert",
+   "fields": {
+    "n": 209,
+    "asset": "ST FRANCOIS CNTY MO CENT SCH DIST R III RFDG 2021 B/E B/Q MDDP 2.00 % Due Mar 1, 2026",
+    "type": "Purchase",
+    "date": "2/28/2025",
+    "over30": "YES",
+    "amount": "$500,001 - $1,000,000"
+   },
+   "why": "R10d: row lost by the machine reading; read from a 400 DPI single-row crop (Gemma) and checked by eye on the page"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 13,
+   "line": 101,
+   "action": "insert",
+   "fields": {
+    "n": 313,
+    "asset": "NORTHEAST WI TECH CLLG DIST WI PROM NT SER B B/E 4.00 % Due Oct 1, 2030",
+    "type": "Purchase",
+    "date": "3/13/2025",
+    "over30": "YES",
+    "amount": "$100,001 - $250,000"
+   },
+   "why": "R10d: row lost by the machine reading; read from a 400 DPI single-row crop (Gemma) and checked by eye on the page"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 101,
+   "action": "insert",
+   "fields": {
+    "n": 365,
+    "asset": "WEST FARGO ND PUB SCH DIST 6 BLDG SER A B/E PTC 4.00 % Due May 1, 2031",
+    "type": "Purchase",
+    "date": "3/25/2025",
+    "over30": "YES",
+    "amount": "$50,001 - $100,000"
+   },
+   "why": "R10d: row lost by the machine reading; read from a 400 DPI single-row crop (Gemma) and checked by eye on the page"
+  },
+  {
+   "doc": "2BF91F89",
+   "page": 12,
+   "line": 101,
+   "action": "insert",
+   "fields": {
+    "n": 363,
+    "asset": "DUKE ENERGY CORP",
+    "type": "purchase",
+    "date": "6/15/2026",
+    "over30": "Yes",
+    "amount": "$50,001 - $100,000"
+   },
+   "why": "R10d: row lost by the machine reading; read from a 400 DPI single-row crop (Gemma) and checked by eye on the page"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 2,
+   "line": 101,
+   "action": "insert",
+   "fields": {
+    "n": 8,
+    "asset": "***NETFLIX INC REG S DUE 11/15/2029 05.375% JD 15 DISCRETIONARY ORDER IF THIS CONFIRMATION IS IN CONNECTION WITH A SALE PURSUANT TO REG. S",
+    "type": "purchase",
+    "date": "1/20/2026",
+    "over30": "no",
+    "amount": "$100,001 - $250,000"
+   },
+   "why": "R10d: row lost by the machine reading; read from a 400 DPI single-row crop (Gemma) and checked by eye on the page"
+  },
+  {
+   "doc": "174165F6",
+   "page": 2,
+   "line": 101,
+   "action": "insert",
+   "fields": {
+    "n": 16,
+    "asset": "BANK NEW YORK MELLON CORP PE 5.9500% 12/31/49",
+    "type": "purchase",
+    "date": "9/16/2025",
+    "over30": "yes",
+    "amount": "$100,001 - $250,000"
+   },
+   "why": "R10d: row lost by the machine reading; read from a 400 DPI single-row crop (Gemma) and checked by eye on the page"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 2,
+   "line": 102,
+   "action": "insert",
+   "fields": {
+    "n": 3,
+    "asset": "GENERAL MTRS FINL CO INC DUE 03/01/2026 05.250% MS 01 DISCRETIONARY ORDER YIELD 4.083 % TO PAR CALL YIELD 4.374 % TO MATURITY CALLABLE 02/20/28 AT 100.000 TIME OF EXEQ",
+    "type": "purchase",
+    "date": "1/20/2026",
+    "over30": "no",
+    "amount": "$100,001 - $250,000"
+   },
+   "why": "R10d: row lost by the machine reading; read from a 400 DPI single-row crop (Gemma) and checked by eye on the page; Gemma's 2028 (due date and trade date) corrected to the printed 2026"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 2,
+   "line": 103,
+   "action": "insert",
+   "fields": {
+    "n": 4,
+    "asset": "NEWELL RUBBERMAID INC SENIOR UNSECURED NOTES DUE 09/15/2029 06.625% MS 15 DISCRETIONARY ORDER YIELD 6.429 % TO PAR CALL YIELD 6.438 % TO MATURITY CALLABLE 06/15/",
+    "type": "purchase",
+    "date": "1/20/2026",
+    "over30": "no",
+    "amount": "$100,001 - $250,000"
+   },
+   "why": "R10d: row lost by the machine reading; read from a 400 DPI single-row crop (Gemma) and checked by eye on the page; coupon 06.625% (Gemma 06.825%)"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 2,
+   "line": 104,
+   "action": "insert",
+   "fields": {
+    "n": 5,
+    "asset": "***UNITED RENTALS NORTH AMER INC SENIOR SECURED NOTES REG S DUE 12/15/2029 06.000% JD 15 DISCRETIONARY ORDER IF THIS CONFIRMATION IS IN CONNECTION WITH A SALE P",
+    "type": "purchase",
+    "date": "1/20/2026",
+    "over30": "no",
+    "amount": "$100,001 - $250,000"
+   },
+   "why": "R10d: row lost by the machine reading; read from a 400 DPI single-row crop (Gemma) and checked by eye on the page"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 4,
+   "line": 1,
+   "action": "set",
+   "fields": {
+    "n": 67
+   },
+   "why": "R10d continuity: printed # misread or blank in the machine reading (page image checked)"
+  },
+  {
+   "doc": "174165F6",
+   "page": 6,
+   "line": 33,
+   "action": "set",
+   "fields": {
+    "n": 165
+   },
+   "why": "R10d continuity: printed # misread or blank in the machine reading (page image checked)"
+  },
+  {
+   "doc": "405E4EC4",
+   "page": 11,
+   "line": 1,
+   "action": "set",
+   "fields": {
+    "n": 296
+   },
+   "why": "R10d continuity: printed # misread or blank in the machine reading (page image checked)"
+  },
+  {
+   "doc": "405E4EC4",
+   "page": 27,
+   "line": 4,
+   "action": "set",
+   "fields": {
+    "n": 827
+   },
+   "why": "R10d continuity: printed # misread or blank in the machine reading (page image checked)"
+  },
+  {
+   "doc": "405E4EC4",
+   "page": 41,
+   "line": 12,
+   "action": "set",
+   "fields": {
+    "n": 1297
+   },
+   "why": "R10d continuity: printed # misread or blank in the machine reading (page image checked)"
+  },
+  {
+   "doc": "405E4EC4",
+   "page": 62,
+   "line": 33,
+   "action": "set",
+   "fields": {
+    "n": 2011
+   },
+   "why": "R10d continuity: printed # misread or blank in the machine reading (page image checked)"
+  },
+  {
+   "doc": "405E4EC4",
+   "page": 68,
+   "line": 33,
+   "action": "set",
+   "fields": {
+    "n": 2209
+   },
+   "why": "R10d continuity: printed # misread or blank in the machine reading (page image checked)"
+  },
+  {
+   "doc": "405E4EC4",
+   "page": 78,
+   "line": 27,
+   "action": "set",
+   "fields": {
+    "n": 2533
+   },
+   "why": "R10d continuity: printed # misread or blank in the machine reading (page image checked)"
+  },
+  {
+   "doc": "405E4EC4",
+   "page": 87,
+   "line": 33,
+   "action": "set",
+   "fields": {
+    "n": 2836
+   },
+   "why": "R10d continuity: printed # misread or blank in the machine reading (page image checked)"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 18,
+   "line": 7,
+   "action": "set",
+   "fields": {
+    "n": 535
+   },
+   "why": "R10d continuity: printed # misread or blank in the machine reading (page image checked)"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 30,
+   "line": 11,
+   "action": "set",
+   "fields": {
+    "n": 936
+   },
+   "why": "R10d continuity: printed # misread or blank in the machine reading (page image checked)"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 32,
+   "line": 14,
+   "action": "set",
+   "fields": {
+    "n": 1005
+   },
+   "why": "R10d continuity: printed # misread or blank in the machine reading (page image checked)"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 32,
+   "line": 27,
+   "action": "set",
+   "fields": {
+    "n": 1018
+   },
+   "why": "R10d continuity: printed # misread or blank in the machine reading (page image checked)"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 32,
+   "line": 29,
+   "action": "set",
+   "fields": {
+    "n": 1020
+   },
+   "why": "R10d continuity: printed # misread or blank in the machine reading (page image checked)"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 32,
+   "line": 30,
+   "action": "set",
+   "fields": {
+    "n": 1021
+   },
+   "why": "R10d continuity: printed # misread or blank in the machine reading (page image checked)"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 32,
+   "line": 33,
+   "action": "set",
+   "fields": {
+    "n": 1024
+   },
+   "why": "R10d continuity: printed # misread or blank in the machine reading (page image checked)"
+  },
+  {
+   "doc": "AC435308",
+   "page": 36,
+   "line": 33,
+   "action": "set",
+   "fields": {
+    "n": 1154
+   },
+   "why": "R10d continuity: printed # misread or blank in the machine reading (page image checked)"
+  },
+  {
+   "doc": "87BFE542",
+   "page": 2,
+   "line": 11,
+   "action": "set",
+   "fields": {
+    "asset": "***COTY INC SENIOR SECURED NOTES REG S DUE 01/15/2029 04.750% JJ 15 DISCRETIONARY ORDER IF THIS CONFIRMATION IS IN CONNECTION WITH A SALE PURSUANT TO REG. S",
+    "type": "purchase",
+    "date": "11/4/2025",
+    "amount": "$100,001 - $250,000",
+    "over30": "no"
+   },
+   "why": "R10d continuity: two-line row sliced in two by the band cutter; merged (# row keeps its number, takes the full text, date, type and band of the lower part), fragment deleted (page image checked)"
+  },
+  {
+   "doc": "87BFE542",
+   "page": 2,
+   "line": 12,
+   "action": "delete",
+   "fields": {},
+   "why": "R10d continuity: two-line row sliced in two by the band cutter; merged (# row keeps its number, takes the full text, date, type and band of the lower part), fragment deleted (page image checked)"
+  },
+  {
+   "doc": "87BFE542",
+   "page": 2,
+   "line": 13,
+   "action": "set",
+   "fields": {
+    "asset": "SPDR SERIES TRUST STATE STREET SPDR PORTFOLIO HIGH YIELD BOND ETF DISCRETIONARY ORDER J.P. MORGAN SECURITIES LLC MAKES A MARKET IN THIS SECURITY ROME: WHIPANYAAB25110436111",
+    "type": "purchase",
+    "date": "11/4/2025",
+    "amount": "$500,001 - $1,000,000",
+    "over30": "no"
+   },
+   "why": "R10d continuity: two-line row sliced in two by the band cutter; merged (# row keeps its number, takes the full text, date, type and band of the lower part), fragment deleted (page image checked)"
+  },
+  {
+   "doc": "87BFE542",
+   "page": 2,
+   "line": 14,
+   "action": "delete",
+   "fields": {},
+   "why": "R10d continuity: two-line row sliced in two by the band cutter; merged (# row keeps its number, takes the full text, date, type and band of the lower part), fragment deleted (page image checked)"
+  },
+  {
+   "doc": "87BFE542",
+   "page": 2,
+   "line": 15,
+   "action": "set",
+   "fields": {
+    "asset": "GENERAL MTRS FINL CO INC DUE 03/01/2026 05.250% MS 01 DISCRETIONARY ORDER YIELD 3.937 % TO PAR CALL YIELD 4.870 % TO MATURITY CALLABLE 12/05/25 AT 100,000 TIME OF EXECUTION 15:57:38",
+    "type": "purchase",
+    "date": "11/4/2025",
+    "amount": "$100,001 - $250,000",
+    "over30": "no"
+   },
+   "why": "R10d continuity: two-line row sliced in two by the band cutter; merged (# row keeps its number, takes the full text, date, type and band of the lower part), fragment deleted (page image checked)"
+  },
+  {
+   "doc": "87BFE542",
+   "page": 2,
+   "line": 16,
+   "action": "delete",
+   "fields": {},
+   "why": "R10d continuity: two-line row sliced in two by the band cutter; merged (# row keeps its number, takes the full text, date, type and band of the lower part), fragment deleted (page image checked)"
+  },
+  {
+   "doc": "87BFE542",
+   "page": 2,
+   "line": 17,
+   "action": "set",
+   "fields": {
+    "asset": "NEWELL RUBBERMAID INC SENIOR UNSECURED NOTES DUE 09/15/2029 06,625% MS 15 DISCRETIONARY ORDER YIELD 7.607 % TO MATURITY YIELD 7.671 % TO PAR CALL CALLABLE 06/15/29 AT 100.000",
+    "type": "purchase",
+    "date": "11/4/2025",
+    "amount": "$100,001 - $250,000",
+    "over30": "no"
+   },
+   "why": "R10d continuity: two-line row sliced in two by the band cutter; merged (# row keeps its number, takes the full text, date, type and band of the lower part), fragment deleted (page image checked)"
+  },
+  {
+   "doc": "87BFE542",
+   "page": 2,
+   "line": 18,
+   "action": "delete",
+   "fields": {},
+   "why": "R10d continuity: two-line row sliced in two by the band cutter; merged (# row keeps its number, takes the full text, date, type and band of the lower part), fragment deleted (page image checked)"
+  },
+  {
+   "doc": "024D876A",
+   "page": 5,
+   "line": 30,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (verify_asset): page prints MLTFAM; v400 MLTIFAM wrong"
+  },
+  {
+   "doc": "024D876A",
+   "page": 9,
+   "line": 7,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "STLH",
+     "HLTH"
+    ]
+   },
+   "why": "R10d hand check (verify_asset): page: COMSPIRIT HLTH"
+  },
+  {
+   "doc": "174165F6",
+   "page": 2,
+   "line": 5,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "BACp|",
+     "BACpl"
+    ]
+   },
+   "why": "R10d hand check (reread_unresolved): page: BACpl"
+  },
+  {
+   "doc": "174165F6",
+   "page": 2,
+   "line": 10,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page agrees with stored row"
+  },
+  {
+   "doc": "174165F6",
+   "page": 2,
+   "line": 13,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page agrees with stored row"
+  },
+  {
+   "doc": "174165F6",
+   "page": 2,
+   "line": 20,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page agrees with stored row"
+  },
+  {
+   "doc": "174165F6",
+   "page": 2,
+   "line": 25,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "BACpI",
+     "BACpl"
+    ]
+   },
+   "why": "R10d hand check (reread_unresolved): page: BACpl"
+  },
+  {
+   "doc": "174165F6",
+   "page": 2,
+   "line": 26,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "BACp!",
+     "BACpl"
+    ]
+   },
+   "why": "R10d hand check (reread_unresolved): page: BACpl"
+  },
+  {
+   "doc": "174165F6",
+   "page": 4,
+   "line": 27,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "MELLCO",
+     "MELLON"
+    ]
+   },
+   "why": "R10d hand check (verify_asset): page: MELLON"
+  },
+  {
+   "doc": "174165F6",
+   "page": 5,
+   "line": 10,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "TIER !",
+     "TIER I"
+    ]
+   },
+   "why": "R10d hand check (reread_unresolved): page: ALT TIER I"
+  },
+  {
+   "doc": "174165F6",
+   "page": 5,
+   "line": 12,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page agrees with stored row"
+  },
+  {
+   "doc": "174165F6",
+   "page": 6,
+   "line": 15,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page agrees with stored row"
+  },
+  {
+   "doc": "174165F6",
+   "page": 6,
+   "line": 22,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page agrees with stored row"
+  },
+  {
+   "doc": "18353894",
+   "page": 2,
+   "line": 1,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page: 06.625% ... DISCRETIONA (cut at the column edge)"
+  },
+  {
+   "doc": "18353894",
+   "page": 2,
+   "line": 5,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (verify_asset): page cut at column edge after DISC"
+  },
+  {
+   "doc": "18353894",
+   "page": 2,
+   "line": 6,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page: 06.875%"
+  },
+  {
+   "doc": "18353894",
+   "page": 3,
+   "line": 3,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "RENOVTNV",
+     "RENOVTN"
+    ]
+   },
+   "why": "R10d hand check (verify_asset): page: RENOVTN"
+  },
+  {
+   "doc": "18353894",
+   "page": 3,
+   "line": 8,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (verify_asset): page cut after 'May 1, 202'; stored 2026 kept"
+  },
+  {
+   "doc": "26835393",
+   "page": 2,
+   "line": 24,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (verify_asset): page prints Duo Feb"
+  },
+  {
+   "doc": "26835393",
+   "page": 3,
+   "line": 9,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "FAUTH",
+     "FING AUTH"
+    ]
+   },
+   "why": "R10d hand check (verify_asset): page: FING AUTH"
+  },
+  {
+   "doc": "26835393",
+   "page": 5,
+   "line": 9,
+   "action": "set",
+   "fields": {
+    "amount": "$1,000,001 - $5,000,000"
+   },
+   "why": "R10d hand check (band): page: $1,000,001 - $5,000,000"
+  },
+  {
+   "doc": "26835393",
+   "page": 6,
+   "line": 13,
+   "action": "set",
+   "fields": {
+    "amount": "$1,000,001 - $5,000,000",
+    "asset_sub": [
+     "OH ARE",
+     "O HARE"
+    ]
+   },
+   "why": "R10d hand check (band): page: $1,000,001 - $5,000,000; CHICAGO ILL O HARE"
+  },
+  {
+   "doc": "26835393",
+   "page": 6,
+   "line": 15,
+   "action": "set",
+   "fields": {
+    "amount": "$1,000,001 - $5,000,000"
+   },
+   "why": "R10d hand check (band): page: $1,000,001 - $5,000,000"
+  },
+  {
+   "doc": "26835393",
+   "page": 7,
+   "line": 23,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page: 03.875%"
+  },
+  {
+   "doc": "2BF91F89",
+   "page": 2,
+   "line": 4,
+   "action": "set",
+   "fields": {
+    "date": "6/23/2026"
+   },
+   "why": "R10d hand check (date_stale_2y): page: 6/23/2026"
+  },
+  {
+   "doc": "2BF91F89",
+   "page": 10,
+   "line": 27,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (verify_asset): spacing only"
+  },
+  {
+   "doc": "2BF91F89",
+   "page": 26,
+   "line": 1,
+   "action": "set",
+   "fields": {
+    "amount": "$1,000,001 - $5,000,000"
+   },
+   "why": "R10d hand check (band): page: $1,000,001 - $5,000,000"
+  },
+  {
+   "doc": "2BF91F89",
+   "page": 26,
+   "line": 2,
+   "action": "set",
+   "fields": {
+    "amount": "$1,000,001 - $5,000,000"
+   },
+   "why": "R10d hand check (band): page: $1,000,001 - $5,000,000"
+  },
+  {
+   "doc": "2BF91F89",
+   "page": 26,
+   "line": 3,
+   "action": "set",
+   "fields": {
+    "amount": "$1,000,001 - $5,000,000"
+   },
+   "why": "R10d hand check (band): page: $1,000,001 - $5,000,000"
+  },
+  {
+   "doc": "2BF91F89",
+   "page": 26,
+   "line": 4,
+   "action": "set",
+   "fields": {
+    "amount": "$1,000,001 - $5,000,000"
+   },
+   "why": "R10d hand check (band): page: $1,000,001 - $5,000,000"
+  },
+  {
+   "doc": "2BF91F89",
+   "page": 26,
+   "line": 6,
+   "action": "set",
+   "fields": {
+    "amount": "$1,000,001 - $5,000,000"
+   },
+   "why": "R10d hand check (band): page: $1,000,001 - $5,000,000"
+  },
+  {
+   "doc": "2BF91F89",
+   "page": 26,
+   "line": 7,
+   "action": "set",
+   "fields": {
+    "amount": "$1,000,001 - $5,000,000"
+   },
+   "why": "R10d hand check (band): page: $1,000,001 - $5,000,000"
+  },
+  {
+   "doc": "2BF91F89",
+   "page": 26,
+   "line": 8,
+   "action": "set",
+   "fields": {
+    "amount": "$1,000,001 - $5,000,000"
+   },
+   "why": "R10d hand check (band): page: $1,000,001 - $5,000,000"
+  },
+  {
+   "doc": "2BF91F89",
+   "page": 26,
+   "line": 9,
+   "action": "set",
+   "fields": {
+    "amount": "$1,000,001 - $5,000,000"
+   },
+   "why": "R10d hand check (band): page: $1,000,001 - $5,000,000"
+  },
+  {
+   "doc": "2BF91F89",
+   "page": 26,
+   "line": 10,
+   "action": "set",
+   "fields": {
+    "amount": "$1,000,001 - $5,000,000"
+   },
+   "why": "R10d hand check (band): page: $1,000,001 - $5,000,000"
+  },
+  {
+   "doc": "2C89623D",
+   "page": 2,
+   "line": 20,
+   "action": "set",
+   "fields": {
+    "date": "9/10/2025"
+   },
+   "why": "R10d hand check (date_stale_2y): page: 9/10/2025"
+  },
+  {
+   "doc": "2C89623D",
+   "page": 3,
+   "line": 24,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page: OID@96.932"
+  },
+  {
+   "doc": "405E4EC4",
+   "page": 10,
+   "line": 11,
+   "action": "set",
+   "fields": {
+    "type": "purchase"
+   },
+   "why": "R10d hand check (type_other): page: purchase"
+  },
+  {
+   "doc": "405E4EC4",
+   "page": 12,
+   "line": 30,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page agrees with stored row"
+  },
+  {
+   "doc": "405E4EC4",
+   "page": 16,
+   "line": 7,
+   "action": "set",
+   "fields": {
+    "date": "3/11/2026"
+   },
+   "why": "R10d hand check (date_stale_2y): page: 3/11/2026"
+  },
+  {
+   "doc": "405E4EC4",
+   "page": 17,
+   "line": 11,
+   "action": "set",
+   "fields": {
+    "date": "1/6/2026"
+   },
+   "why": "R10d hand check (date_stale_2y): page: 1/6/2026"
+  },
+  {
+   "doc": "405E4EC4",
+   "page": 45,
+   "line": 11,
+   "action": "set",
+   "fields": {
+    "type": "purchase"
+   },
+   "why": "R10d hand check (type_other): page: purchase"
+  },
+  {
+   "doc": "405E4EC4",
+   "page": 55,
+   "line": 19,
+   "action": "set",
+   "fields": {
+    "type": "purchase"
+   },
+   "why": "R10d hand check (type_other): page: purchase"
+  },
+  {
+   "doc": "405E4EC4",
+   "page": 62,
+   "line": 5,
+   "action": "set",
+   "fields": {
+    "date": "3/23/2026"
+   },
+   "why": "R10d hand check (date_stale_2y): page: 3/23/2026"
+  },
+  {
+   "doc": "405E4EC4",
+   "page": 62,
+   "line": 30,
+   "action": "set",
+   "fields": {
+    "asset": "UNION PAC CORP"
+   },
+   "why": "R10d hand check (reread_unresolved): page: UNION PAC CORP (no 2006)"
+  },
+  {
+   "doc": "405E4EC4",
+   "page": 65,
+   "line": 4,
+   "action": "set",
+   "fields": {
+    "date": "3/23/2026"
+   },
+   "why": "R10d hand check (date_stale_2y): page: 3/23/2026"
+  },
+  {
+   "doc": "405E4EC4",
+   "page": 78,
+   "line": 23,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page agrees with stored row"
+  },
+  {
+   "doc": "405E4EC4",
+   "page": 79,
+   "line": 22,
+   "action": "set",
+   "fields": {
+    "date": "3/26/2026"
+   },
+   "why": "R10d hand check (date_stale_2y): page: 3/26/2026"
+  },
+  {
+   "doc": "405E4EC4",
+   "page": 85,
+   "line": 10,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (verify_type): page: sale; v400 'solo' wrong"
+  },
+  {
+   "doc": "405E4EC4",
+   "page": 91,
+   "line": 29,
+   "action": "set",
+   "fields": {
+    "date": "3/18/2026"
+   },
+   "why": "R10d hand check (date_stale_2y): page: 3/18/2026"
+  },
+  {
+   "doc": "405E4EC4",
+   "page": 98,
+   "line": 28,
+   "action": "set",
+   "fields": {
+    "date": "2/26/2026"
+   },
+   "why": "R10d hand check (date_stale_2y): page: 2/26/2026"
+  },
+  {
+   "doc": "405E4EC4",
+   "page": 101,
+   "line": 14,
+   "action": "set",
+   "fields": {
+    "date": "2/26/2026"
+   },
+   "why": "R10d hand check (date_stale_2y): page: 2/26/2026"
+  },
+  {
+   "doc": "5315A095",
+   "page": 3,
+   "line": 1,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (verify_asset): spacing only"
+  },
+  {
+   "doc": "5326D3AF",
+   "page": 2,
+   "line": 5,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (verify_asset): spacing only"
+  },
+  {
+   "doc": "5326D3AF",
+   "page": 2,
+   "line": 15,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "APPROV",
+     "APPROP"
+    ]
+   },
+   "why": "R10d hand check (verify_asset): page: APPROP REV MILW ARENA"
+  },
+  {
+   "doc": "5326D3AF",
+   "page": 2,
+   "line": 16,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (verify_asset): page prints ST ST ECON"
+  },
+  {
+   "doc": "5326D3AF",
+   "page": 3,
+   "line": 1,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (verify_asset): spacing only"
+  },
+  {
+   "doc": "5326D3AF",
+   "page": 3,
+   "line": 5,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DEACNESS",
+     "DEACONESS"
+    ]
+   },
+   "why": "R10d hand check (verify_asset): page: DEACONESS"
+  },
+  {
+   "doc": "5326D3AF",
+   "page": 3,
+   "line": 10,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "APPROV",
+     "APPROP"
+    ]
+   },
+   "why": "R10d hand check (verify_asset): page: APPROP"
+  },
+  {
+   "doc": "5326D3AF",
+   "page": 3,
+   "line": 13,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (verify_asset): page: ***AVIENT"
+  },
+  {
+   "doc": "5326D3AF",
+   "page": 3,
+   "line": 14,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "SECURITYROME: WHIPANYAAq2602042845",
+     "SECURITY ROME: WHIPANYAAq26020428245"
+    ]
+   },
+   "why": "R10d hand check (verify_asset): page: SECURITY ROME: WHIPANYAAq26020428245"
+  },
+  {
+   "doc": "5326D3AF",
+   "page": 3,
+   "line": 19,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     [
+      "0.375%JD",
+      "05.375%JD"
+     ],
+     [
+      "DISCRETIAL",
+      "DISCRETIONARY"
+     ]
+    ]
+   },
+   "why": "R10d hand check (verify_asset): page: 05.375%JD ... DISCRETIONARY"
+  },
+  {
+   "doc": "87BFE542",
+   "page": 4,
+   "line": 11,
+   "action": "set",
+   "fields": {
+    "n": 68,
+    "date": "11/6/2025"
+   },
+   "why": "R10d hand check (date_stale_2y): page: #68, 11/6/2025"
+  },
+  {
+   "doc": "87BFE542",
+   "page": 4,
+   "line": 20,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page: AUTH REV VAR REV BDS (stored text agrees)"
+  },
+  {
+   "doc": "87BFE542",
+   "page": 4,
+   "line": 32,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "REV L TZTN",
+     "REV REVTLZTN"
+    ]
+   },
+   "why": "R10d hand check (verify_asset): page: RD REV REVTLZTN PJ"
+  },
+  {
+   "doc": "903A217D",
+   "page": 2,
+   "line": 32,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page prints Duo"
+  },
+  {
+   "doc": "AA799A27",
+   "page": 2,
+   "line": 6,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (verify_asset): page: COLLTZD"
+  },
+  {
+   "doc": "AC435308",
+   "page": 6,
+   "line": 7,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page agrees with stored row"
+  },
+  {
+   "doc": "AC435308",
+   "page": 8,
+   "line": 14,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page agrees with stored row"
+  },
+  {
+   "doc": "AC435308",
+   "page": 11,
+   "line": 31,
+   "action": "set",
+   "fields": {
+    "date": "4/27/2026"
+   },
+   "why": "R10d hand check (date_stale_2y): page: 4/27/2026"
+  },
+  {
+   "doc": "AC435308",
+   "page": 18,
+   "line": 5,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "date": "4/17/2026",
+    "amount": "$1,001 - $15,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page p18 (whole-page view): #533 purchase 4/17/2026 $1,001 - $15,000"
+  },
+  {
+   "doc": "AC435308",
+   "page": 18,
+   "line": 6,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "date": "4/10/2026",
+    "amount": "$1,001 - $15,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page p18 (whole-page view): #534 sale 4/10/2026 $1,001 - $15,000"
+  },
+  {
+   "doc": "AC435308",
+   "page": 18,
+   "line": 16,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "date": "4/15/2026",
+    "amount": "$1,001 - $15,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page p18 (whole-page view): #544 purchase 4/15/2026 $1,001 - $15,000"
+  },
+  {
+   "doc": "AC435308",
+   "page": 18,
+   "line": 17,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "date": "4/10/2026",
+    "amount": "$15,001 - $50,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page p18 (whole-page view): #545 sale 4/10/2026 $15,001 - $50,000"
+  },
+  {
+   "doc": "AC435308",
+   "page": 18,
+   "line": 18,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "date": "4/15/2026",
+    "amount": "$1,001 - $15,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page p18 (whole-page view): #546 purchase 4/15/2026 $1,001 - $15,000"
+  },
+  {
+   "doc": "AC435308",
+   "page": 18,
+   "line": 19,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "date": "4/27/2026",
+    "amount": "$100,001 - $250,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page p18 (whole-page view): #547 sale 4/27/2026 $100,001 - $250,000"
+  },
+  {
+   "doc": "AC435308",
+   "page": 18,
+   "line": 24,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "date": "4/15/2026",
+    "amount": "$1,001 - $15,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page p18 (whole-page view): #552 purchase 4/15/2026 $1,001 - $15,000"
+  },
+  {
+   "doc": "AC435308",
+   "page": 18,
+   "line": 25,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "date": "4/7/2026",
+    "amount": "$1,001 - $15,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page p18 (whole-page view): #553 purchase 4/7/2026 $1,001 - $15,000"
+  },
+  {
+   "doc": "AC435308",
+   "page": 18,
+   "line": 29,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "date": "4/15/2026",
+    "amount": "$15,001 - $50,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page p18 (whole-page view): #557 purchase 4/15/2026 $15,001 - $50,000"
+  },
+  {
+   "doc": "AC435308",
+   "page": 18,
+   "line": 30,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "date": "4/17/2026",
+    "amount": "$15,001 - $50,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page p18 (whole-page view): #558 sale 4/17/2026 $15,001 - $50,000"
+  },
+  {
+   "doc": "AC435308",
+   "page": 18,
+   "line": 31,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "date": "4/7/2026",
+    "amount": "$500,001 - $1,000,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page p18 (whole-page view): #559 sale 4/7/2026 $500,001 - $1,000,000"
+  },
+  {
+   "doc": "AC435308",
+   "page": 18,
+   "line": 32,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "date": "4/27/2026",
+    "amount": "$15,001 - $50,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page p18 (whole-page view): #560 purchase 4/27/2026 $15,001 - $50,000"
+  },
+  {
+   "doc": "AC435308",
+   "page": 21,
+   "line": 5,
+   "action": "set",
+   "fields": {
+    "date": "4/15/2026"
+   },
+   "why": "R10d hand check (date_stale_2y): page: 4/15/2026"
+  },
+  {
+   "doc": "AC435308",
+   "page": 27,
+   "line": 13,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page prints CLASS CLASS N"
+  },
+  {
+   "doc": "AC435308",
+   "page": 29,
+   "line": 16,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page agrees with stored row"
+  },
+  {
+   "doc": "AC435308",
+   "page": 33,
+   "line": 21,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page: PROGRESSIVE CORP-OHIO"
+  },
+  {
+   "doc": "AC435308",
+   "page": 33,
+   "line": 22,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page: PROGRESSIVE CORP-OHIO"
+  },
+  {
+   "doc": "AC435308",
+   "page": 43,
+   "line": 20,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page: ZOOM COMMUNICATIONS INC CL A"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 2,
+   "line": 10,
+   "action": "set",
+   "fields": {
+    "date": "1/20/2026"
+   },
+   "why": "R10d hand check (date_stale_2y): page: 1/20/2026"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 2,
+   "line": 16,
+   "action": "set",
+   "fields": {
+    "amount": "$1,000,001 - $5,000,000"
+   },
+   "why": "R10d hand check (band): page: $1,000,001 - $5,000,000"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 2,
+   "line": 18,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (verify_date+asset): page: 1/2/2026 (v400 2028 wrong), 06.625%"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 2,
+   "line": 20,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "MN 08",
+     "MN 06"
+    ]
+   },
+   "why": "R10d hand check (verify_asset): page: MN 06"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 2,
+   "line": 23,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (verify_date+asset): page: 1/2/2026 (v400 2028 wrong)"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 4,
+   "line": 5,
+   "action": "set",
+   "fields": {
+    "amount": "$1,000,001 - $5,000,000",
+    "asset_sub": [
+     "5%2SYST",
+     "5%42SYST"
+    ]
+   },
+   "why": "R10d hand check (band,verify_date+asset+band): page: $1,000,001 - $5,000,000; 5%42SYST"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 4,
+   "line": 6,
+   "action": "set",
+   "fields": {
+    "amount": "$1,000,001 - $5,000,000"
+   },
+   "why": "R10d hand check (band): page: $1,000,001 - $5,000,000"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 4,
+   "line": 7,
+   "action": "set",
+   "fields": {
+    "amount": "$1,000,001 - $5,000,000"
+   },
+   "why": "R10d hand check (band): page: $1,000,001 - $5,000,000"
+  },
+  {
+   "doc": "CD755558",
+   "page": 3,
+   "line": 11,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "CO SER B/E",
+     "CO SER B2 B/E"
+    ]
+   },
+   "why": "R10d hand check (verify_asset): page: SER B2 B/E"
+  },
+  {
+   "doc": "CD755558",
+   "page": 3,
+   "line": 13,
+   "action": "set",
+   "fields": {
+    "amount": "$1,000,001 - $5,000,000"
+   },
+   "why": "R10d hand check (band): page: $1,000,001 - $5,000,000"
+  },
+  {
+   "doc": "CD755558",
+   "page": 3,
+   "line": 19,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (verify_asset): spacing only"
+  },
+  {
+   "doc": "CD755558",
+   "page": 3,
+   "line": 32,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page cut at column edge"
+  },
+  {
+   "doc": "CD755558",
+   "page": 4,
+   "line": 17,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page cut at column edge"
+  },
+  {
+   "doc": "CD755558",
+   "page": 5,
+   "line": 10,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "BE/R 5",
+     "BE/R/ 5"
+    ]
+   },
+   "why": "R10d hand check (verify_asset): page: BE/R/ 5"
+  },
+  {
+   "doc": "CD755558",
+   "page": 5,
+   "line": 12,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page: BE/R/ 5"
+  },
+  {
+   "doc": "CD755558",
+   "page": 5,
+   "line": 13,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page: BE/R/ 5"
+  },
+  {
+   "doc": "CD755558",
+   "page": 5,
+   "line": 15,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "BE/R 5",
+     "BE/R/ 5"
+    ]
+   },
+   "why": "R10d hand check (verify_asset): page: BE/R/ 5"
+  },
+  {
+   "doc": "CD755558",
+   "page": 6,
+   "line": 15,
+   "action": "set",
+   "fields": {
+    "amount": "$1,000,001 - $5,000,000",
+    "asset_sub": [
+     "0.0400%MN",
+     "04.000%MN"
+    ]
+   },
+   "why": "R10d hand check (band): page: $1,000,001 - $5,000,000; 04.000%MN"
+  },
+  {
+   "doc": "CD755558",
+   "page": 6,
+   "line": 16,
+   "action": "set",
+   "fields": {
+    "amount": "$1,000,001 - $5,000,000",
+    "asset_sub": [
+     "0.6800%AO",
+     "06.800%AO"
+    ]
+   },
+   "why": "R10d hand check (band): page: $1,000,001 - $5,000,000; 06.800%AO"
+  },
+  {
+   "doc": "CD755558",
+   "page": 6,
+   "line": 19,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (verify_asset): page cut at column edge"
+  },
+  {
+   "doc": "E590116F",
+   "page": 9,
+   "line": 10,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (verify_date+band): page: sale 7/8/2026 $250,001 - $500,000 (v400 read the row above)"
+  },
+  {
+   "doc": "E590116F",
+   "page": 10,
+   "line": 8,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (verify_asset): page: EQU"
+  },
+  {
+   "doc": "E590116F",
+   "page": 17,
+   "line": 4,
+   "action": "set",
+   "fields": {
+    "date": "7/8/2026"
+   },
+   "why": "R10d hand check (date_stale_2y): page: 7/8/2026"
+  },
+  {
+   "doc": "E590116F",
+   "page": 17,
+   "line": 28,
+   "action": "set",
+   "fields": {
+    "date": "7/29/2026"
+   },
+   "why": "R10d hand check (date_stale_2y): page: 7/29/2026"
+  },
+  {
+   "doc": "E590116F",
+   "page": 19,
+   "line": 23,
+   "action": "set",
+   "fields": {
+    "date": "7/29/2026"
+   },
+   "why": "R10d hand check (date_stale_2y): page: 7/29/2026"
+  },
+  {
+   "doc": "E590116F",
+   "page": 20,
+   "line": 20,
+   "action": "set",
+   "fields": {
+    "date": "7/29/2026"
+   },
+   "why": "R10d hand check (date_stale_2y): page: 7/29/2026"
+  },
+  {
+   "doc": "E590116F",
+   "page": 25,
+   "line": 30,
+   "action": "set",
+   "fields": {
+    "date": "7/24/2026"
+   },
+   "why": "R10d hand check (date_stale_2y): page: 7/24/2026"
+  },
+  {
+   "doc": "E590116F",
+   "page": 34,
+   "line": 6,
+   "action": "set",
+   "fields": {
+    "type": "purchase"
+   },
+   "why": "R10d hand check (type_other): page: purchase"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 2,
+   "line": 10,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): stray mark between REV and GA on the page; text agrees"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 2,
+   "line": 15,
+   "action": "set",
+   "fields": {
+    "date": "1/29/2025"
+   },
+   "why": "R10d hand check (date_stale_2y): page: 1/29/2025 (asset text as printed)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 2,
+   "line": 18,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): punctuation only"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 12,
+   "line": 3,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page: BAM B/E B/Q"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 12,
+   "line": 10,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (verify_band): page: $100,001 - $250,000"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 12,
+   "line": 25,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (verify_band): page: $500,001 - $1,000,000"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 15,
+   "line": 8,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (verify_asset): spacing only (p15 # shift handled by the continuity fix)"
+  },
+  {
+   "doc": "E9C024E2",
+   "page": 19,
+   "line": 18,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page: SER B"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 2,
+   "line": 18,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "amount": "$1,001 - $15,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page (whole-page view, skewed scan): #18 purchase $1,001 - $15,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 2,
+   "line": 30,
+   "action": "set",
+   "fields": {
+    "amount": "$50,001 - $100,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page (whole-page view, skewed scan): #30 purchase $50,001 - $100,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 3,
+   "line": 4,
+   "action": "set",
+   "fields": {
+    "amount": "$250,001 - $500,000"
+   },
+   "why": "R10d hand check (band): page: $250,001 - $500,000 (whole page p3 checked: all other 32 rows agree)"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 4,
+   "line": 31,
+   "action": "set",
+   "fields": {
+    "amount": "$50,001 - $100,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page p4 (whole page checked, others agree): #97 sale $50,001 - $100,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 12,
+   "line": 21,
+   "action": "set",
+   "fields": {
+    "amount": "$15,001 - $50,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page p12 (whole page checked): #351 sale $15,001 - $50,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 12,
+   "line": 22,
+   "action": "set",
+   "fields": {
+    "amount": "$1,001 - $15,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page p12: #352 purchase $1,001 - $15,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 12,
+   "line": 29,
+   "action": "set",
+   "fields": {
+    "amount": "$15,001 - $50,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page p12: #359 sale $15,001 - $50,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 16,
+   "line": 15,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (verify_type+band): page p16: #477 sale $15,001 - $50,000 agrees (v400 wrong)"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 19,
+   "line": 5,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "amount": "$100,001 - $250,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page p19 (whole page checked, skewed scan): #566 purchase $100,001 - $250,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 19,
+   "line": 6,
+   "action": "set",
+   "fields": {
+    "amount": "$1,001 - $15,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page p19 (whole page checked, skewed scan): #567 purchase $1,001 - $15,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 19,
+   "line": 10,
+   "action": "set",
+   "fields": {
+    "amount": "$15,001 - $50,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page p19 (whole page checked, skewed scan): #571 purchase $15,001 - $50,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 19,
+   "line": 12,
+   "action": "set",
+   "fields": {
+    "amount": "$1,001 - $15,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page p19 (whole page checked, skewed scan): #573 sale $1,001 - $15,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 19,
+   "line": 20,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page p19 (whole page checked, skewed scan): #581 purchase $15,001 - $50,000 agrees"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 19,
+   "line": 30,
+   "action": "set",
+   "fields": {
+    "amount": "$15,001 - $50,000"
+   },
+   "why": "R10d hand check (reread_unresolved): page p19 (whole page checked, skewed scan): #591 sale $15,001 - $50,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 20,
+   "line": 25,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page p20 whole page checked: all 33 rows agree"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 20,
+   "line": 27,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page p20 whole page checked: all 33 rows agree"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 25,
+   "line": 7,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page p25 whole page checked: all 33 rows agree"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 28,
+   "line": 9,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread_unresolved): page p28 (whole page checked, skewed scan): #868 sale $1,001 - $15,000 agrees"
+  },
+  {
+   "doc": "26835393",
+   "page": 7,
+   "line": 21,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "05/01/2030 0.750% MN 01",
+     "05/01/2030 05.750% MN 01"
+    ]
+   },
+   "why": "R10d hand check (verify_asset): page 400 DPI: DUE 05/01/2030 05.750% MN 01"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 2,
+   "line": 25,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "05.825%",
+     "05.625%"
+    ]
+   },
+   "why": "R10d hand check (verify_asset): page 400 DPI: OLIN 05.625%"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 3,
+   "line": 1,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "04.825%",
+     "04.625%"
+    ]
+   },
+   "why": "R10d hand check (verify_asset): page 400 DPI: VICTORIAS SECRET 04.625%"
+  },
+  {
+   "doc": "AC435308",
+   "page": 18,
+   "line": 33,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "date": "4/10/2026",
+    "amount": "$100,001 - $250,000"
+   },
+   "why": "R10d hand check: page p18 (whole-page view): #561 sale 4/10/2026 $100,001 - $250,000 (not flagged: reread strip_kept)"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 2,
+   "line": 17,
+   "action": "set",
+   "fields": {
+    "amount": "$15,001 - $50,000"
+   },
+   "why": "R10d hand check: page (whole-page view, skewed scan): #17 sale $15,001 - $50,000 (not flagged)"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 16,
+   "line": 9,
+   "action": "set",
+   "fields": {
+    "amount": "$15,001 - $50,000"
+   },
+   "why": "R10d hand check: page p16 (whole page checked, skewed scan; not flagged): #471 sale $15,001 - $50,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 16,
+   "line": 25,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "amount": "$15,001 - $50,000"
+   },
+   "why": "R10d hand check: page p16 (whole page checked, skewed scan; not flagged): #487 purchase $15,001 - $50,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 16,
+   "line": 26,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$15,001 - $50,000"
+   },
+   "why": "R10d hand check: page p16 (whole page checked, skewed scan; not flagged): #488 sale $15,001 - $50,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 16,
+   "line": 27,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "amount": "$250,001 - $500,000"
+   },
+   "why": "R10d hand check: page p16 (whole page checked, skewed scan; not flagged): #489 purchase $250,001 - $500,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 16,
+   "line": 33,
+   "action": "set",
+   "fields": {
+    "amount": "$50,001 - $100,000"
+   },
+   "why": "R10d hand check: page p16 (whole page checked, skewed scan; not flagged): #495 sale $50,001 - $100,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 19,
+   "line": 17,
+   "action": "set",
+   "fields": {
+    "amount": "$50,001 - $100,000"
+   },
+   "why": "R10d hand check: page p19 (whole page checked, skewed scan): #578 sale $50,001 - $100,000 (not flagged)"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 19,
+   "line": 19,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "amount": "$100,001 - $250,000"
+   },
+   "why": "R10d hand check: page p19 (whole page checked, skewed scan): #580 purchase $100,001 - $250,000 (not flagged)"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 19,
+   "line": 25,
+   "action": "set",
+   "fields": {
+    "amount": "$1,001 - $15,000"
+   },
+   "why": "R10d hand check: page p19 (whole page checked, skewed scan): #586 purchase $1,001 - $15,000 (not flagged)"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 24,
+   "line": 3,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "amount": "$1,001 - $15,000",
+    "date": "5/18/2026"
+   },
+   "why": "R10d hand check: page p24 (whole page checked, skewed scan: right-hand fields paired with the row above): #729 purchase 5/18/2026 $1,001 - $15,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 24,
+   "line": 5,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$1,001 - $15,000",
+    "date": "5/18/2026"
+   },
+   "why": "R10d hand check: page p24 (whole page checked, skewed scan: right-hand fields paired with the row above): #731 sale 5/18/2026 $1,001 - $15,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 24,
+   "line": 9,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$15,001 - $50,000",
+    "date": "5/18/2026"
+   },
+   "why": "R10d hand check: page p24 (whole page checked, skewed scan: right-hand fields paired with the row above): #735 sale 5/18/2026 $15,001 - $50,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 24,
+   "line": 10,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$1,001 - $15,000",
+    "date": "5/18/2026"
+   },
+   "why": "R10d hand check: page p24 (whole page checked, skewed scan: right-hand fields paired with the row above): #736 sale 5/18/2026 $1,001 - $15,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 24,
+   "line": 11,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$15,001 - $50,000",
+    "date": "5/18/2026"
+   },
+   "why": "R10d hand check: page p24 (whole page checked, skewed scan: right-hand fields paired with the row above): #737 sale 5/18/2026 $15,001 - $50,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 24,
+   "line": 12,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$1,001 - $15,000",
+    "date": "5/18/2026"
+   },
+   "why": "R10d hand check: page p24 (whole page checked, skewed scan: right-hand fields paired with the row above): #738 sale 5/18/2026 $1,001 - $15,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 24,
+   "line": 13,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$15,001 - $50,000",
+    "date": "5/18/2026"
+   },
+   "why": "R10d hand check: page p24 (whole page checked, skewed scan: right-hand fields paired with the row above): #739 sale 5/18/2026 $15,001 - $50,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 24,
+   "line": 14,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "amount": "$50,001 - $100,000",
+    "date": "5/18/2026"
+   },
+   "why": "R10d hand check: page p24 (whole page checked, skewed scan: right-hand fields paired with the row above): #740 purchase 5/18/2026 $50,001 - $100,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 24,
+   "line": 15,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$1,001 - $15,000",
+    "date": "5/18/2026"
+   },
+   "why": "R10d hand check: page p24 (whole page checked, skewed scan: right-hand fields paired with the row above): #741 sale 5/18/2026 $1,001 - $15,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 24,
+   "line": 16,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "amount": "$50,001 - $100,000",
+    "date": "5/18/2026"
+   },
+   "why": "R10d hand check: page p24 (whole page checked, skewed scan: right-hand fields paired with the row above): #742 purchase 5/18/2026 $50,001 - $100,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 24,
+   "line": 17,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$15,001 - $50,000",
+    "date": "5/18/2026"
+   },
+   "why": "R10d hand check: page p24 (whole page checked, skewed scan: right-hand fields paired with the row above): #743 sale 5/18/2026 $15,001 - $50,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 24,
+   "line": 18,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "amount": "$1,001 - $15,000",
+    "date": "5/18/2026"
+   },
+   "why": "R10d hand check: page p24 (whole page checked, skewed scan: right-hand fields paired with the row above): #744 purchase 5/18/2026 $1,001 - $15,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 24,
+   "line": 25,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$15,001 - $50,000",
+    "date": "5/18/2026"
+   },
+   "why": "R10d hand check: page p24 (whole page checked, skewed scan: right-hand fields paired with the row above): #751 sale 5/18/2026 $15,001 - $50,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 24,
+   "line": 28,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "amount": "$15,001 - $50,000",
+    "date": "5/18/2026"
+   },
+   "why": "R10d hand check: page p24 (whole page checked, skewed scan: right-hand fields paired with the row above): #754 purchase 5/18/2026 $15,001 - $50,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 24,
+   "line": 29,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$1,001 - $15,000",
+    "date": "5/18/2026"
+   },
+   "why": "R10d hand check: page p24 (whole page checked, skewed scan: right-hand fields paired with the row above): #755 sale 5/18/2026 $1,001 - $15,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 24,
+   "line": 30,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "amount": "$15,001 - $50,000",
+    "date": "5/18/2026"
+   },
+   "why": "R10d hand check: page p24 (whole page checked, skewed scan: right-hand fields paired with the row above): #756 purchase 5/18/2026 $15,001 - $50,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 24,
+   "line": 31,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$1,001 - $15,000",
+    "date": "5/18/2026"
+   },
+   "why": "R10d hand check: page p24 (whole page checked, skewed scan: right-hand fields paired with the row above): #757 sale 5/18/2026 $1,001 - $15,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 24,
+   "line": 32,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "amount": "$250,001 - $500,000",
+    "date": "5/18/2026"
+   },
+   "why": "R10d hand check: page p24 (whole page checked, skewed scan: right-hand fields paired with the row above): #758 purchase 5/18/2026 $250,001 - $500,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 24,
+   "line": 33,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$15,001 - $50,000",
+    "date": "5/18/2026"
+   },
+   "why": "R10d hand check: page p24 (whole page checked, skewed scan: right-hand fields paired with the row above): #759 sale 5/18/2026 $15,001 - $50,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 24,
+   "line": 34,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$50,001 - $100,000",
+    "date": "5/18/2026"
+   },
+   "why": "R10d hand check: page p24 (whole page checked, skewed scan: right-hand fields paired with the row above): #760 sale 5/18/2026 $50,001 - $100,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 28,
+   "line": 4,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "amount": "$1,001 - $15,000"
+   },
+   "why": "R10d hand check: page p28 (whole page checked, skewed scan): #863 purchase $1,001 - $15,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 28,
+   "line": 8,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$15,001 - $50,000"
+   },
+   "why": "R10d hand check: page p28 (whole page checked, skewed scan): #867 sale $15,001 - $50,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 28,
+   "line": 15,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$50,001 - $100,000"
+   },
+   "why": "R10d hand check: page p28 (whole page checked, skewed scan): #874 sale $50,001 - $100,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 28,
+   "line": 16,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "amount": "$1,001 - $15,000"
+   },
+   "why": "R10d hand check: page p28 (whole page checked, skewed scan): #875 purchase $1,001 - $15,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 28,
+   "line": 18,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$1,001 - $15,000"
+   },
+   "why": "R10d hand check: page p28 (whole page checked, skewed scan): #877 sale $1,001 - $15,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 28,
+   "line": 23,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "amount": "$1,001 - $15,000"
+   },
+   "why": "R10d hand check: page p28 (whole page checked, skewed scan): #882 purchase $1,001 - $15,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 28,
+   "line": 24,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "amount": "$100,001 - $250,000"
+   },
+   "why": "R10d hand check: page p28 (whole page checked, skewed scan): #883 purchase $100,001 - $250,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 28,
+   "line": 25,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$50,001 - $100,000"
+   },
+   "why": "R10d hand check: page p28 (whole page checked, skewed scan): #884 sale $50,001 - $100,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 28,
+   "line": 26,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$1,001 - $15,000"
+   },
+   "why": "R10d hand check: page p28 (whole page checked, skewed scan): #885 sale $1,001 - $15,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 28,
+   "line": 29,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$1,001 - $15,000"
+   },
+   "why": "R10d hand check: page p28 (whole page checked, skewed scan): #888 sale $1,001 - $15,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 32,
+   "line": 2,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "date": "5/20/2026",
+    "amount": "$1,001 - $15,000"
+   },
+   "why": "R10d hand check: page p32 (whole page checked, skewed scan): #993 sale 5/20/2026 $1,001 - $15,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 32,
+   "line": 5,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "date": "5/20/2026",
+    "amount": "$100,001 - $250,000"
+   },
+   "why": "R10d hand check: page p32 (whole page checked, skewed scan): #996 purchase 5/20/2026 $100,001 - $250,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 32,
+   "line": 8,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "date": "5/20/2026",
+    "amount": "$50,001 - $100,000"
+   },
+   "why": "R10d hand check: page p32 (whole page checked, skewed scan): #999 purchase 5/20/2026 $50,001 - $100,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 32,
+   "line": 10,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "date": "5/20/2026",
+    "amount": "$1,000,001 - $5,000,000"
+   },
+   "why": "R10d hand check: page p32 (whole page checked, skewed scan): #1001 purchase 5/20/2026 $1,000,001 - $5,000,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 32,
+   "line": 11,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "date": "5/20/2026",
+    "amount": "$100,001 - $250,000"
+   },
+   "why": "R10d hand check: page p32 (whole page checked, skewed scan): #1002 purchase 5/20/2026 $100,001 - $250,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 32,
+   "line": 19,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "date": "5/21/2026",
+    "amount": "$1,000,001 - $5,000,000"
+   },
+   "why": "R10d hand check: page p32 (whole page checked, skewed scan): #1010 sale 5/21/2026 $1,000,001 - $5,000,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 32,
+   "line": 21,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "date": "5/21/2026",
+    "amount": "$1,000,001 - $5,000,000"
+   },
+   "why": "R10d hand check: page p32 (whole page checked, skewed scan): #1012 sale 5/21/2026 $1,000,001 - $5,000,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 32,
+   "line": 23,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "date": "5/21/2026",
+    "amount": "$1,001 - $15,000"
+   },
+   "why": "R10d hand check: page p32 (whole page checked, skewed scan): #1014 purchase 5/21/2026 $1,001 - $15,000"
+  },
+  {
+   "doc": "F9CA13B9",
+   "page": 32,
+   "line": 32,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "date": "5/21/2026",
+    "amount": "$1,000,001 - $5,000,000"
+   },
+   "why": "R10d hand check: page p32 (whole page checked, skewed scan): #1023 purchase 5/21/2026 $1,000,001 - $5,000,000"
+  },
+  {
+   "doc": "40CE0F66",
+   "page": 11,
+   "line": 2,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread not_mappable): Vance 2026 annual p11 hand-checked line by line on the whole page (no row bands on Part 7): all 10 lines agree"
+  },
+  {
+   "doc": "40CE0F66",
+   "page": 11,
+   "line": 3,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread not_mappable): Vance 2026 annual p11 hand-checked line by line on the whole page (no row bands on Part 7): all 10 lines agree"
+  },
+  {
+   "doc": "40CE0F66",
+   "page": 11,
+   "line": 4,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread not_mappable): Vance 2026 annual p11 hand-checked line by line on the whole page (no row bands on Part 7): all 10 lines agree"
+  },
+  {
+   "doc": "40CE0F66",
+   "page": 11,
+   "line": 5,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread not_mappable): Vance 2026 annual p11 hand-checked line by line on the whole page (no row bands on Part 7): all 10 lines agree"
+  },
+  {
+   "doc": "40CE0F66",
+   "page": 11,
+   "line": 6,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread not_mappable): Vance 2026 annual p11 hand-checked line by line on the whole page (no row bands on Part 7): all 10 lines agree"
+  },
+  {
+   "doc": "40CE0F66",
+   "page": 11,
+   "line": 7,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread not_mappable): Vance 2026 annual p11 hand-checked line by line on the whole page (no row bands on Part 7): all 10 lines agree"
+  },
+  {
+   "doc": "40CE0F66",
+   "page": 11,
+   "line": 8,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread not_mappable): Vance 2026 annual p11 hand-checked line by line on the whole page (no row bands on Part 7): all 10 lines agree"
+  },
+  {
+   "doc": "40CE0F66",
+   "page": 11,
+   "line": 9,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread not_mappable): Vance 2026 annual p11 hand-checked line by line on the whole page (no row bands on Part 7): all 10 lines agree"
+  },
+  {
+   "doc": "40CE0F66",
+   "page": 11,
+   "line": 10,
+   "action": "set",
+   "fields": {},
+   "why": "R10d hand check (reread not_mappable): Vance 2026 annual p11 hand-checked line by line on the whole page (no row bands on Part 7): all 10 lines agree"
+  },
+  {
+   "doc": "87BFE542",
+   "page": 2,
+   "line": 17,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 09/15/2029 06,625%",
+     "DUE 09/15/2029 06.625%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "87BFE542",
+   "page": 2,
+   "line": 19,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 03/15/2028 0.6875%",
+     "DUE 03/15/2028 06.875%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "87BFE542",
+   "page": 2,
+   "line": 20,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 12/15/2029 0.6000%",
+     "DUE 12/15/2029 06.000%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "87BFE542",
+   "page": 2,
+   "line": 21,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 02/26/2029 0.4750%",
+     "DUE 02/26/2029 04.750%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "87BFE542",
+   "page": 2,
+   "line": 22,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 11/15/2025 0.3575%",
+     "DUE 11/15/2029 05.375%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "18353894",
+   "page": 2,
+   "line": 4,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 03/01/2026 0.5250%",
+     "DUE 03/01/2026 05.250%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "26835393",
+   "page": 7,
+   "line": 4,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 05/01/2030 0.750%",
+     "DUE 05/01/2030 05.750%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "26835393",
+   "page": 7,
+   "line": 17,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 07/01/2029 0.500%",
+     "DUE 07/01/2029 05.500%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "26835393",
+   "page": 7,
+   "line": 18,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 08/15/2029 0.7000%",
+     "DUE 08/15/2029 07.000%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "26835393",
+   "page": 7,
+   "line": 19,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 08/01/2029 0.525%",
+     "DUE 08/01/2029 05.625%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "26835393",
+   "page": 7,
+   "line": 20,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 05/15/2030 0.3625%",
+     "DUE 05/15/2030 03.625%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "26835393",
+   "page": 7,
+   "line": 22,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 05/01/2029 0.0540%",
+     "DUE 05/01/2027 05.040%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "26835393",
+   "page": 7,
+   "line": 24,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 09/01/2030 0.6625% M5 01",
+     "DUE 09/01/2030 06.625% MS 01"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "26835393",
+   "page": 7,
+   "line": 25,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 06/01/2030 0.9250%",
+     "DUE 06/01/2030 09.250%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "26835393",
+   "page": 7,
+   "line": 26,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 07/15/2029 0.4625%",
+     "DUE 07/15/2029 04.625%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "26835393",
+   "page": 7,
+   "line": 27,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 01/15/2029 0.4750%",
+     "DUE 01/15/2029 04.750%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "26835393",
+   "page": 7,
+   "line": 28,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 03/15/2030 0.5875%",
+     "DUE 03/15/2030 05.875%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "26835393",
+   "page": 7,
+   "line": 29,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     [
+      "DUE 03/15/2030 0.5875%",
+      "DUE 03/15/2030 05.875%"
+     ],
+     [
+      "IF THIS CONNEC TION WITH",
+      "IF THIS CONFIRMATION IS IN CONNECTION WITH"
+     ]
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "26835393",
+   "page": 7,
+   "line": 30,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 06/01/2030 0.9250%",
+     "DUE 06/01/2030 09.250%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "5326D3AF",
+   "page": 3,
+   "line": 18,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 02/26/2029 0.450%",
+     "DUE 02/26/2029 04.750%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "5326D3AF",
+   "page": 3,
+   "line": 20,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 07/01/2029 0.500%",
+     "DUE 07/01/2029 05.500%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "5326D3AF",
+   "page": 3,
+   "line": 22,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 08/01/2029 0.525%",
+     "DUE 08/01/2029 05.625%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "5326D3AF",
+   "page": 3,
+   "line": 23,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 05/01/2030 0.750%",
+     "DUE 05/01/2030 05.750%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "5326D3AF",
+   "page": 3,
+   "line": 24,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 05/01/2027 0.0540%",
+     "DUE 05/01/2027 05.040%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "5326D3AF",
+   "page": 3,
+   "line": 25,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "BLOCK FINL LLC UNSECURED NOTE",
+     "BLOCK FINL LLC SENIOR UNSECURED NOTE"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "5326D3AF",
+   "page": 3,
+   "line": 26,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "06.625%AMS 01",
+     "06.625%MS 01"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "5326D3AF",
+   "page": 3,
+   "line": 27,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 07/15/2029 06.25% 15",
+     "DUE 07/15/2029 04.625%JJ 15"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "5326D3AF",
+   "page": 3,
+   "line": 28,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "09.0000%FA",
+     "09.000%FA"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "5326D3AF",
+   "page": 3,
+   "line": 29,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "04.750%KJ",
+     "04.750%JJ"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 2,
+   "line": 3,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 11/08/2026",
+     "DUE 11/06/2028"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 2,
+   "line": 4,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 02/28/2029 0.4750% FA 28",
+     "DUE 02/26/2029 04.750% FA 26"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 2,
+   "line": 7,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 08/01/2029 05.825%",
+     "DUE 08/01/2029 05.625%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 2,
+   "line": 14,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 01/15/2026 0.4750%",
+     "DUE 01/15/2029 04.750%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 2,
+   "line": 15,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 03/15/2030 0.5875%",
+     "DUE 03/15/2030 05.875%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 2,
+   "line": 17,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "DUE 03/01/2026 0.250%",
+     "DUE 03/01/2026 05.250%"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 3,
+   "line": 3,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     [
+      "DUE 01/15/2029 0.450%",
+      "DUE 01/15/2029 04.750%"
+     ],
+     [
+      "DISCRETION $ ext{ORDER",
+      "DISCRETIONARY ORDER"
+     ],
+     [
+      "REG. S}$",
+      "REG. S"
+     ]
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "CD755558",
+   "page": 6,
+   "line": 15,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "WEYERHAUSER",
+     "WEYERHAEUSER"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "CD755558",
+   "page": 6,
+   "line": 18,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "AVIANT",
+     "AVIENT"
+    ]
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; issuer/coupon/maturity as printed"
+  },
+  {
+   "doc": "87BFE542",
+   "page": 4,
+   "line": 9,
+   "action": "set",
+   "fields": {
+    "asset": "VIRGINIA COLLEGE BLD AUTH VA EDL FACS REV 21ST CENTY COLLEGE & EQUIP PROG FOR ISSUES DTD PRIOR TO5/16/14 SEE 927781 REF BDS 2017 E DUE 2/1/2030 DATED 12/21/2017 2.57%"
+   },
+   "why": "R10f M1 (A11): re-read on a 400 DPI crop of the page; coupon 2.57% was cut off; EDL FACS, TO5/16/14 and SEE 927781 as printed"
+  },
+  {
+   "doc": "AC435308",
+   "page": 3,
+   "line": 9,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "amount": "$5,000,001 - $25,000,000"
+   },
+   "why": "R10f M2 (A11): AC435308 p3 #42 Meta Platforms prints $5,000,001 - $25,000,000 (stored as the band of the row above, #41 McDonald's); checked on a 400 DPI crop"
+  },
+  {
+   "doc": "AC435308",
+   "page": 3,
+   "line": 19,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$500,001 - $1,000,000"
+   },
+   "why": "R10f M2 (A11): AC435308 p3 checked on a 400 DPI crop; the stored band/type of this line did not match the printed line (the band cut slipped a row between #51 and #60)"
+  },
+  {
+   "doc": "AC435308",
+   "page": 3,
+   "line": 20,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$500,001 - $1,000,000"
+   },
+   "why": "R10f M2 (A11): AC435308 p3 checked on a 400 DPI crop; the stored band/type of this line did not match the printed line (the band cut slipped a row between #51 and #60)"
+  },
+  {
+   "doc": "AC435308",
+   "page": 3,
+   "line": 21,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "amount": "$250,001 - $500,000"
+   },
+   "why": "R10f M2 (A11): AC435308 p3 checked on a 400 DPI crop; the stored band/type of this line did not match the printed line (the band cut slipped a row between #51 and #60)"
+  },
+  {
+   "doc": "AC435308",
+   "page": 3,
+   "line": 22,
+   "action": "set",
+   "fields": {
+    "type": "purchase",
+    "amount": "$500,001 - $1,000,000"
+   },
+   "why": "R10f M2 (A11): AC435308 p3 checked on a 400 DPI crop; the stored band/type of this line did not match the printed line (the band cut slipped a row between #51 and #60)"
+  },
+  {
+   "doc": "AC435308",
+   "page": 3,
+   "line": 23,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$500,001 - $1,000,000"
+   },
+   "why": "R10f M2 (A11): AC435308 p3 checked on a 400 DPI crop; the stored band/type of this line did not match the printed line (the band cut slipped a row between #51 and #60)"
+  },
+  {
+   "doc": "AC435308",
+   "page": 3,
+   "line": 24,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$250,001 - $500,000"
+   },
+   "why": "R10f M2 (A11): AC435308 p3 checked on a 400 DPI crop; the stored band/type of this line did not match the printed line (the band cut slipped a row between #51 and #60)"
+  },
+  {
+   "doc": "AC435308",
+   "page": 3,
+   "line": 25,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$1,000,001 - $5,000,000"
+   },
+   "why": "R10f M2 (A11): AC435308 p3 checked on a 400 DPI crop; the stored band/type of this line did not match the printed line (the band cut slipped a row between #51 and #60)"
+  },
+  {
+   "doc": "AC435308",
+   "page": 3,
+   "line": 26,
+   "action": "set",
+   "fields": {
+    "type": "sale",
+    "amount": "$250,001 - $500,000"
+   },
+   "why": "R10f M2 (A11): AC435308 p3 checked on a 400 DPI crop; the stored band/type of this line did not match the printed line (the band cut slipped a row between #51 and #60)"
+  },
+  {
+   "doc": "BCF60D94",
+   "page": 4,
+   "line": 10,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "CITIZENS GROUP INC",
+     "CITIZENS FINL GROUP INC"
+    ]
+   },
+   "why": "R10f N3 (A11): printed 'CITIZENS FINL GROUP INC PERP 4.0000%' (400 DPI crop); FINL was dropped"
+  },
+  {
+   "doc": "CD755558",
+   "page": 3,
+   "line": 9,
+   "action": "set",
+   "fields": {
+    "asset_sub": [
+     "MLTICARE HLTH SYSB SER B/E",
+     "MLTICARE HLTH SYS SER B B/E"
+    ]
+   },
+   "why": "R10f N3 (A11): printed 'MLTICARE HLTH SYS SER B B/E 5.00 % Due Aug 15, 2026' (400 DPI crop)"
+  }
+ ]
+}

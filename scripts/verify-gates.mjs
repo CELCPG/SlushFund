@@ -21,7 +21,11 @@ import {
   matchRetiredApi,
 } from '../src/lib/v2/redirect-map.ts';
 import { LEGACY_AGENCIES, LEGACY_PEOPLE, LEGACY_VENDORS } from '../src/lib/v2/legacy-map.generated.ts';
-import { designPagesEnabled, hiddenByFlag, lateFilersEnabled, lateFilersPreview, readFailureInjected } from '../src/lib/v2/flags.ts';
+import {
+  GRADE_METHOD_PATH, MOST_ACTIVE_PATH, PRESIDENT_PATH, campaignMoneyEnabled, designPagesEnabled, gradesEnabled, hiddenByFlag, lateFilersEnabled, lateFilersPreview,
+  mostActiveEnabled, presidentPageEnabled, readFailureInjected,
+} from '../src/lib/v2/flags.ts';
+import { GRADE_FIXED_LINE } from '../src/lib/v2/grade-method.ts';
 import { hiddenPageMetadata } from '../src/lib/v2/hidden-page.ts';
 import { HONEYPOT_FIELD, RATE_LIMIT, REPLY_PROMISE, normalizePageUrl, reportErrorHref } from '../src/lib/v2/error-reports.ts';
 import { HOME_HEADLINE_TEXT, MEMBERS_TILE_COPY, MEMBERS_TILE_LEAD } from '../src/lib/v2/home-copy.ts';
@@ -41,6 +45,8 @@ const KEEP_PAGES = new Set([
   '/about/methodology/tickers', '/about/methodology/trades', '/companies', '/data', '/design', '/design/story',
   '/investigations', '/people', '/rebuilding', '/search', '/withdrawn', '/agencies',
   '/data/trades', '/data/contracts', '/data/late-filers', '/data/status', '/latest', '/report-an-error',
+  // D9 / D10, each behind its flag (flags.ts)
+  '/people/executive/donald-trump', '/data/most-active-traders', '/about/methodology/report-card',
 ]);
 // Dynamic v2 pages, each with a real sample URL that must answer 200.
 const KEEP_DYNAMIC = new Map([
@@ -612,6 +618,8 @@ const WORDING_PATHS = [...new Set([
   '/analysis/conflicts',
   '/report-an-error', '/report-an-error?sent=1', '/report-an-error?from=%2Fpeople%2FG000583&error=message',
   ...(lateFilersEnabled() ? ['/data/late-filers?chamber=Senate&over=365&members=all', '/data/late-filers?msort=reports&rsort=recent&page=2'] : []),
+  ...(presidentPageEnabled() ? [`${PRESIDENT_PATH}?class=bond&sort=band`, `${PRESIDENT_PATH}?class=fund`, `${PRESIDENT_PATH}?sort=band&page=2`] : []),
+  ...(mostActiveEnabled() ? [`${MOST_ACTIVE_PATH}?sort=value`, `${MOST_ACTIVE_PATH}?sort=late&all=1`] : []),
 ])];
 if (sitemapPaths.length < 10) { failed++; rows.push({ path: '/sitemap.xml', status: sitemapPaths.length, expect: '>= 10 URLs', ok: false, note: 'sitemap read for the wording gate', group: 'wording gate (D8a)' }); }
 for (const p of WORDING_PATHS) await wordingGate(p);
@@ -1010,6 +1018,78 @@ const F3 = 'post-launch fixes (F3)';
   const listed = FORBIDDEN_PHRASES.some((p) => p.from === 'F3' && new RegExp(p.re, 'gi').test('The signal is Reported late (+15).'));
   if (!listed) failed++;
   rows.push({ path: 'wording gate lists "reported late"', status: listed ? 'ok' : 'FAIL', expect: 'ok', ok: listed, note: 'forbidden-words.ts', group: F3 });
+}
+
+// ---------------------------------------------------------------- D9 / D10: President page, leaderboard, grades, who funds them
+{
+  const G = 'D9/D10 pages';
+  const row = (path, ok, note, expect = 'ok') => { if (!ok) failed++; rows.push({ path, status: ok ? 'ok' : 'FAIL', expect, ok, note, group: G }); };
+  // Flags: each page is off on production until its own switch is exactly '1'.
+  for (const [path, sw] of [[PRESIDENT_PATH, 'SHOW_PRESIDENT_TRADES'], [MOST_ACTIVE_PATH, 'SHOW_MOST_ACTIVE'], [GRADE_METHOD_PATH, 'SHOW_GRADES']]) {
+    for (const [env, want] of [[{}, false], [{ VERCEL_ENV: 'preview' }, false], [{ VERCEL_ENV: 'production' }, true], [{ VERCEL_ENV: 'production', [sw]: '1' }, false], [{ VERCEL_ENV: 'production', [sw]: 'true' }, true]]) {
+      const got = hiddenByFlag(path, env);
+      row(`hiddenByFlag(${JSON.stringify(path)}, ${JSON.stringify(env)})`, got === want, '', String(want));
+    }
+  }
+  for (const [fn, env, want] of [[campaignMoneyEnabled, { VERCEL_ENV: 'production' }, false], [campaignMoneyEnabled, { VERCEL_ENV: 'production', SHOW_CAMPAIGN_MONEY: '1' }, true], [gradesEnabled, { VERCEL_ENV: 'production' }, false], [gradesEnabled, {}, true]]) {
+    const got = fn(env);
+    row(`${fn.name}(${JSON.stringify(env)})`, got === want, '', String(want));
+  }
+  // Every A11 forbidden phrase is in the wording gate (one test sentence each).
+  for (const s of ['He filed late.', 'three late filings', 'overdue', 'a delinquent filer', 'broke the STOCK Act', 'he was penalized', 'paid a fine', 'an insider', 'he profited', 'met the deadline', 'paid $1,000 in fees', 'Trump bought shares', 'stock_act_late', 'shortly after the tariff', 'the worst trader', 'lining their pockets', 'in the pocket of', 'cashing in', 'conflict of interest', 'missed the deadline', 'late filer', 'violated the STOCK Act', 'illegal', 'fined', 'penalty', 'hid', 'concealed', 'suspicious', 'on time', 'not late']) {
+    const listed = FORBIDDEN_PHRASES.some((p) => new RegExp(p.re, 'gi').test(s));
+    row(`wording gate lists "${s}"`, listed, 'forbidden-words.ts');
+  }
+  const visible = async (p) => { const r = await fetch(base + p); return { status: r.status, text: visibleText(await r.text()) }; };
+  if (presidentPageEnabled()) {
+    await hit(PRESIDENT_PATH, 200, {
+      bodyAll: [
+        'President Trump reported', 'periodic transaction reports (OGE Form 278-T) signed between', 'as posted by the U.S. Office of Government Ethics.',
+        'The form asks for each transaction to be reported within 30 days of the filer learning of it, and no later than 45 days after it.',
+        'counted to the date President Trump signed the report.',
+        'We count calendar days and do not adjust for weekends or holidays. Filing extensions, if any were granted, are kept in the report file and are not shown on the posted report.',
+        'Not computed: this type of holding (U.S. Treasury securities, money-market and mutual funds) is not required on a 278-T.',
+        'Reported values sum to', 'View report', 'Notification received over 30 days ago',
+      ],
+      notBody: ['JD Vance', 'Vance', 'late_basis', 'not_required_on_278T', 'stock trades'],
+      group: G,
+    });
+    // A11: no "option(s)" anywhere on the page (M3), no single total; the fee note and the compliance opinion only together.
+    const v = await visible(PRESIDENT_PATH);
+    const opt = /\boptions?\b/i.exec(v.text);
+    row(`${PRESIDENT_PATH} visible text has no "option(s)"`, v.status === 200 && !opt, opt ? `"…${v.text.slice(Math.max(0, opt.index - 40), opt.index + 20)}…"` : '');
+    const fee = /Filer paid late fee/.test(v.text);
+    const opinion = /Every report also carries the agency ethics official’s signed opinion that the filer is in compliance with applicable laws and regulations\./.test(v.text);
+    row(`${PRESIDENT_PATH} fee note only beside the compliance opinion`, fee === opinion, `fee note ${fee ? 'shown' : 'absent'}, opinion ${opinion ? 'shown' : 'absent'}`);
+    row(`${PRESIDENT_PATH} no single dollar total`, !/\btotal(?:ing|led)? \$|\bworth \$/i.test(v.text), '');
+    for (const q of ['?class=bond&type=sale&sort=band', '?sort=date_asc&page=3', '?report=zz&type=x&class=y&sort=q&page=-9']) await hit(PRESIDENT_PATH + q, 200, { notBody: ['unavailable right now'], group: G });
+    // Figures against the database (anon): N transactions, 19 reports, rows over 45 days and the reports holding them.
+    try {
+      const et = await restAll('executive_trades?select=source_doc_id,stock_act_late&office=eq.President&report_type=eq.278-T');
+      const docs = new Set(et.map((r) => r.source_doc_id));
+      const over = et.filter((r) => r.stock_act_late === true);
+      const overDocs = new Set(over.map((r) => r.source_doc_id));
+      const want = `${nfmt(over.length)} transactions in ${nfmt(overDocs.size)} of the ${nfmt(docs.size)} reports were reported more than 45 days after the trade date shown`;
+      await hit(PRESIDENT_PATH, 200, { bodyAll: [`President Trump reported ${nfmt(et.length)} securities transactions in ${nfmt(docs.size)} periodic`, want], group: G });
+    } catch (e) { row('President figures vs DB', false, `could not run: ${String(e.message).slice(0, 120)}`); }
+  } else await hit(PRESIDENT_PATH, 404, { group: G });
+  if (mostActiveEnabled()) {
+    await hit(MOST_ACTIVE_PATH, 200, { bodyAll: ['Most active stock traders in Congress', 'at least $', 'All congressional trades per month', 'not a finding about the filer'], group: G });
+    for (const q of ['?sort=value&chamber=Senate', '?sort=late&party=Democrat&state=CA&all=1', '?sort=zz&chamber=Mars&party=Green&state=ZZ']) await hit(MOST_ACTIVE_PATH + q, 200, { notBody: ['unavailable right now'], group: G });
+  } else await hit(MOST_ACTIVE_PATH, 404, { group: G });
+  const member = '/people/G000583';
+  if (gradesEnabled()) {
+    await hit(GRADE_METHOD_PATH, 200, { bodyAll: [GRADE_FIXED_LINE, 'Would this member pass a congressional stock-trading ban today?'], group: G });
+    await hit(member, 200, { bodyAll: ['Stock Trading Grade', GRADE_FIXED_LINE, 'Why this grade'], group: G });
+  } else {
+    await hit(GRADE_METHOD_PATH, 404, { group: G });
+    await hit(member, 200, { notBody: ['Stock Trading Grade'], group: G });
+  }
+  // Who funds them: while F1's view is missing (or the flag is off) the panel says only "coming soon".
+  let viewMissing = false;
+  try { await restAll('member_campaign_money?select=bioguide_id&limit=1'); } catch { viewMissing = true; }
+  if (viewMissing || !campaignMoneyEnabled()) await hit(member, 200, { bodyAll: ['Who funds them', 'Campaign finance data: coming soon'], notBody: ['corporate and trade-association PACs'], group: G });
+  else await hit(member, 200, { bodyAll: ['Who funds them', 'FEC, through'], group: G });
 }
 
 const byGroup = {};

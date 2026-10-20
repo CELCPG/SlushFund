@@ -56,3 +56,5 @@ supabase/.temp/
 # R4 Senate loader checkpoints and scratch
 .checkpoints/
 .scratch/
+# R9 refresh_trades.py logs and filing caches
+/logs/

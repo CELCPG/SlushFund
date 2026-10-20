@@ -1,18 +1,19 @@
 import Link from 'next/link';
 import { cn } from '@/lib/cn';
-import { lateFilersEnabled } from '@/lib/v2/flags';
+import { lateFilersEnabled, mostActiveEnabled } from '@/lib/v2/flags';
 
 export const DATA_TABS = [
   { href: '/data', label: 'Overview' },
   { href: '/data/trades', label: 'Trades' },
   { href: '/data/contracts', label: 'Contracts' },
   { href: '/data/late-filers', label: 'Filed 45+ days after' },
+  { href: '/data/most-active-traders', label: 'Most active traders' },
   { href: '/data/status', label: 'Status' },
 ] as const;
 
 /** Tabs for the Data section, shown in the title band of /data and its explorers. */
 export default function DataSubNav({ current }: { current: (typeof DATA_TABS)[number]['href'] }) {
-  const tabs = DATA_TABS.filter((t) => t.href !== '/data/late-filers' || lateFilersEnabled());
+  const tabs = DATA_TABS.filter((t) => (t.href !== '/data/late-filers' || lateFilersEnabled()) && (t.href !== '/data/most-active-traders' || mostActiveEnabled()));
   return (
     <nav aria-label="Data section" className="mt-5 flex flex-wrap gap-1.5">
       {tabs.map((t) => (

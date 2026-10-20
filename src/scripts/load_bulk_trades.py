@@ -812,7 +812,10 @@ def build_all(cache_dir, matcher, ids, sb, prune):
 
 
 def run(years, check_only=False, limit=None, cache_dir=None, no_write=False, deadline_min=None, prune=False,
-        recapture=False):
+        recapture=False, doc_filter=None, filings_by_year=None, build=True):
+    # R9 (refresh_trades.py): doc_filter = only fetch / parse these DocIDs (the rest of the index is skipped);
+    # filings_by_year = index rows the caller already downloaded; build=False stops after the cache step (the caller
+    # then runs build_all itself). All three default to the old behaviour.
     matcher = load_matcher()
     print(f"Matcher: {sum(len(v) for v in matcher.by_state.values())} House terms indexed")
     deadline = time.monotonic() + deadline_min * 60 if deadline_min else None
@@ -835,7 +838,7 @@ def run(years, check_only=False, limit=None, cache_dir=None, no_write=False, dea
     fetch_pool = ThreadPoolExecutor(max_workers=FETCH_WINDOW)
     for year in years:
         try:
-            filings = get_ptr_filings(year)
+            filings = filings_by_year[year] if filings_by_year and year in filings_by_year else get_ptr_filings(year)
         except Exception as e:  # noqa: BLE001
             print(f"{year}: index unreachable — {e}")
             continue
@@ -887,7 +890,7 @@ def run(years, check_only=False, limit=None, cache_dir=None, no_write=False, dea
         with open(cache_path, "a", encoding="utf-8") as out:
             for n, f in enumerate(filings, 1):
                 doc = (f.get("DocID") or "").strip()
-                if doc in done:
+                if doc in done or (doc_filter is not None and doc not in doc_filter):
                     continue
                 if n % 100 == 0 and not gaming_ok():
                     print("  gaming mode on — checkpointed, stopping")
@@ -908,7 +911,7 @@ def run(years, check_only=False, limit=None, cache_dir=None, no_write=False, dea
 
     pool.shutdown()
     fetch_pool.shutdown()
-    if check_only:
+    if check_only or not build:
         return 0
     grand_total = build_all(cache_dir, matcher, ids, sb, prune)
     print(f"\n=== DONE: {grand_total} House trades written ===")

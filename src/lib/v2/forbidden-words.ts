@@ -10,7 +10,7 @@ export interface ForbiddenPhrase {
   /** RegExp source, matched with the `gi` flags. */
   re: string;
   /** Which part of A7b's list it comes from. */
-  from: 'late filers' | 'signals' | 'contractor' | 'A8 L3' | 'A8b W1' | 'A8c W2' | 'F3';
+  from: 'late filers' | 'signals' | 'contractor' | 'A8 L3' | 'A8b W1' | 'A8c W2' | 'F3' | 'A11' | 'G1' | 'G2';
 }
 
 export const FORBIDDEN_PHRASES: readonly ForbiddenPhrase[] = [
@@ -78,6 +78,39 @@ export const FORBIDDEN_PHRASES: readonly ForbiddenPhrase[] = [
   { re: String.raw`\b(?:missed|past|beyond) the (?:45[- ]day )?(?:deadline|limit)\b`, from: 'A8c W2' },
   // F3 (Apex): the score component is "Reported 45+ days after the trade" (+15), the measured fact, never "late".
   { re: String.raw`\breported late\b`, from: 'F3' },
+  // A11 (D9 President page forbidden list; applied site-wide). "late filer", "missed the deadline", "illegal", "fined",
+  // "penalty", "hid", "concealed", "conflict of interest", "suspicious" and "on time" are already above.
+  { re: String.raw`\bfiled late\b`, from: 'A11' },
+  { re: String.raw`\blate filings?\b`, from: 'A11' },
+  { re: String.raw`\boverdue\b`, from: 'A11' },
+  { re: String.raw`\bdelinquen(?:t|cy)\b`, from: 'A11' },
+  { re: String.raw`\bbr(?:oke|eak|eaking) the (?:STOCK Act|law)\b`, from: 'A11' },
+  { re: String.raw`\bpenali[sz](?:ed|e|es|ing)\b`, from: 'A11' },
+  { re: String.raw`\bpaid a fine\b`, from: 'A11' },
+  { re: String.raw`\binsiders?\b`, from: 'A11' },
+  { re: String.raw`\bprofit(?:ed|ing)\b`, from: 'A11' },
+  { re: String.raw`\bmet the deadline\b`, from: 'A11' },
+  // A11: the reviewer's note is quoted verbatim, never recast as a count, a dollar sum or a verdict.
+  { re: String.raw`\bpaid \$[\d,.]+\s*\w*\s+in (?:late )?fees?\b`, from: 'A11' },
+  { re: String.raw`\b[\d,]+ late fees\b`, from: 'A11' },
+  // A11: the 278-T doesn't show who decided a trade.
+  { re: String.raw`\bTrump (?:bought|sold|traded|purchased|decided)\b`, from: 'A11' },
+  // A11 N4: the column name never surfaces.
+  { re: String.raw`\bstock_act_late\b`, from: 'A11' },
+  // G2 (investigations-scope §3): timing is never presented as cause.
+  { re: String.raw`\b(?:shortly|soon) after\b`, from: 'G2' },
+  { re: String.raw`\bin exchange for\b`, from: 'G2' },
+  { re: String.raw`\bpay[- ]to[- ]play\b`, from: 'G2' },
+  { re: String.raw`\bquid pro quo\b`, from: 'G2' },
+  { re: String.raw`\bpayback\b`, from: 'G2' },
+  { re: String.raw`\bbought access\b`, from: 'G2' },
+  { re: String.raw`\bgrift(?:er|ers|ing)?\b`, from: 'G2' },
+  { re: String.raw`\bcashing in\b`, from: 'G2' },
+  // G1 report card (g1-report-card-method.md §2-3): no verdict ranking, no donor-ownership wording.
+  { re: String.raw`\bworst\b`, from: 'G1' },
+  { re: String.raw`\b(?:lining|line) (?:their|his|her) pockets?\b|\bin the pocket of\b|\bpockets?\b`, from: 'G1' },
+  { re: String.raw`\bowned by (?:donors|PACs|corporations|special interests|lobbyists|big)\b`, from: 'G1' },
+  { re: String.raw`\b(?:bought|paid) (?:and paid for|off)\b|\bbought by\b`, from: 'G1' },
 ];
 
 /**

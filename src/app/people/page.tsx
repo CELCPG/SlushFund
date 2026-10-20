@@ -11,6 +11,7 @@ import { fmtCount, fmtDate } from '@/lib/v2/format';
 import { getRoster, getTradeStats, partyName, seatLabel, type Member, type TradeStats } from '@/lib/v2/people';
 import { cleanQuery } from '@/lib/v2/queries';
 import { lookupZip, ZCTA_SOURCE, type DistrictCandidate } from '@/lib/v2/zip';
+import { MOST_ACTIVE_PATH, PRESIDENT_PATH, mostActiveEnabled, presidentPageEnabled } from '@/lib/v2/flags';
 
 export const metadata: Metadata = pageMetadata({
   path: '/people',
@@ -157,6 +158,28 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
         <SourceBar datasets={['members', 'house_trades', 'senate_trades']} className="mt-6" />
 
         {(zip || zipRaw) && <ZipResult zip={zip} raw={zipRaw} roster={roster} stats={stats} />}
+
+        {(presidentPageEnabled() || mostActiveEnabled()) && (
+          <section className="pt-8" aria-labelledby="ppl-more">
+            <h2 id="ppl-more" className="sr-only">More people pages</h2>
+            <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
+              {presidentPageEnabled() && (
+                <Link href={PRESIDENT_PATH} className="block rounded-2xl bg-card px-5 py-4 shadow-tile hover:bg-neutral-tint">
+                  <span className="block text-[12px] font-bold uppercase tracking-[0.06em] text-muted">Executive branch</span>
+                  <span className="block font-display text-[20px] font-extrabold">President Trump: securities transactions</span>
+                  <span className="block text-[14px] text-muted">Every transaction in his OGE Form 278-T reports, each linked to the report.</span>
+                </Link>
+              )}
+              {mostActiveEnabled() && (
+                <Link href={MOST_ACTIVE_PATH} className="block rounded-2xl bg-card px-5 py-4 shadow-tile hover:bg-neutral-tint">
+                  <span className="block text-[12px] font-bold uppercase tracking-[0.06em] text-muted">Congress</span>
+                  <span className="block font-display text-[20px] font-extrabold">Most active stock traders in Congress</span>
+                  <span className="block text-[14px] text-muted">Individual-stock transactions in the last 24 months, by member.</span>
+                </Link>
+              )}
+            </div>
+          </section>
+        )}
 
         <section className="pt-8" aria-labelledby="ppl-list">
           <Card>

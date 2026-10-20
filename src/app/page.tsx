@@ -13,6 +13,7 @@ import { fmtCount } from '@/lib/v2/format';
 import { getHomeFigures, getLatestFilings } from '@/lib/v2/home';
 import { HOME_HEADLINE, MEMBERS_TILE_COPY, MEMBERS_TILE_LEAD } from '@/lib/v2/home-copy';
 import { MONEY_TYPE_ORDER } from '@/lib/v2/money';
+import { MOST_ACTIVE_PATH, PRESIDENT_PATH, mostActiveEnabled, presidentPageEnabled } from '@/lib/v2/flags';
 
 // Homepage (D6a, Direction C): what SlushFund tracks, what's new, and three ways in. Every figure is
 // a live count from the database with its source, coverage and as-of date; a dataset that did not
@@ -140,6 +141,12 @@ export default async function Home() {
               <EmptyState title="The latest filings are unavailable right now" statuses={[house, senate]}>
                 The trade database did not answer, so no filings are shown.
               </EmptyState>
+            )}
+            {(presidentPageEnabled() || mostActiveEnabled()) && (
+              <p className="mt-4 flex flex-wrap gap-x-5 gap-y-1 border-t border-line pt-3 text-[14px]">
+                {presidentPageEnabled() && <Link href={PRESIDENT_PATH} className="font-semibold text-trades-ink hover:underline">President Trump&rsquo;s OGE Form 278-T reports →</Link>}
+                {mostActiveEnabled() && <Link href={MOST_ACTIVE_PATH} className="font-semibold text-trades-ink hover:underline">Most active stock traders in Congress →</Link>}
+              </p>
             )}
           </Card>
         </section>

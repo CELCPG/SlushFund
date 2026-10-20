@@ -68,6 +68,7 @@ _Last reviewed: 2026-05-21_
   python3 src/scripts/load_bulk_trades.py --all          # House 2016-2026
   python3 src/scripts/scrape_senate_ptr.py --all-senators --year 2025
   ```
+  **Repeatable refresh (R9, use this one):** `scripts\refresh-trades.cmd` (= `python src/scripts/refresh_trades.py`): new House Clerk and Senate eFD filings since `trade_source_status.newest_filed` minus 7 days, the touched members rebuilt with the R3/R4/R6 rules, `compute_conflicts.py` + `refresh_member_conflict_scores()`, log `logs/refresh-YYYY-MM-DD.jsonl`, one `sync_log` row. Idempotent; exit 0 ok / 1 failed / 3 gaming mode. `--dry-run` writes nothing. Test: `python src/scripts/test_refresh_trades.py`.
 - **Caveats:**
   - The community "House/Senate Stock Watcher" bulk datasets went offline (S3 403) — `load_bulk_trades.py` uses the official House Clerk bulk index instead.
   - Equities only: bond/CUSIP "tickers" are intentionally excluded.

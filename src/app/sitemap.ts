@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 import { hasPublishedCorrections } from '@/data/corrections';
-import { lateFilersEnabled } from '@/lib/v2/flags';
+import { GRADE_METHOD_PATH, MOST_ACTIVE_PATH, PRESIDENT_PATH, gradesEnabled, lateFilersEnabled, mostActiveEnabled, presidentPageEnabled } from '@/lib/v2/flags';
 
 // D5: the sitemap lists only pages that are live and verified. Gated legacy pages, the
 // withdrawn stories and the old vendor pages are out (see src/lib/v2/redirect-map.ts). Add
@@ -29,6 +29,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
   if (hasPublishedCorrections()) paths.push({ path: '/about/corrections', changeFrequency: 'weekly', priority: 0.6 });
   // The board of reports filed more than 45 days after the trade is off on the production deployment unless SHOW_LATE_FILERS=1 (D4 flag, F1).
   if (lateFilersEnabled()) paths.push({ path: '/data/late-filers', changeFrequency: 'daily', priority: 0.7 });
+  // D9 / D10, each behind its own flag (flags.ts): off on production until the Auditor's page check and Colin.
+  if (presidentPageEnabled()) paths.push({ path: PRESIDENT_PATH, changeFrequency: 'weekly', priority: 0.7 });
+  if (mostActiveEnabled()) paths.push({ path: MOST_ACTIVE_PATH, changeFrequency: 'daily', priority: 0.7 });
+  if (gradesEnabled()) paths.push({ path: GRADE_METHOD_PATH, changeFrequency: 'monthly', priority: 0.6 });
 
   return paths.map((p) => ({
     url: `${base}${p.path}`,

@@ -10,6 +10,11 @@ import QuarterChart from '@/components/v2/QuarterChart';
 import SourceBar from '@/components/v2/SourceBar';
 import { worstState } from '@/components/v2/SourceBarView';
 import TradesTable from '@/components/v2/TradesTable';
+import FundingPanel from '@/components/v2/FundingPanel';
+import ReportCard from '@/components/v2/ReportCard';
+import { getCampaignMoney } from '@/lib/v2/campaign-money';
+import { campaignMoneyEnabled, gradesEnabled } from '@/lib/v2/flags';
+import { getMemberCard } from '@/lib/v2/report-card';
 import { getDatasetStatuses } from '@/lib/v2/datasets';
 import { fmtCount, fmtDate, fmtUsdCompact, fmtUsd } from '@/lib/v2/format';
 import { instrumentKind, isListedApart } from '@/lib/v2/instruments';
@@ -97,6 +102,11 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
   const tradesState = worstState([house, senate]);
   const tradesAsOf = [house.lastUpdated, senate.lastUpdated].filter(Boolean).sort()[0] ?? null;
   const contractsOn = memberContractsEnabled();
+  const gradesOn = gradesEnabled();
+  const [card, money] = await Promise.all([
+    gradesOn && member.in_office === true ? getMemberCard(id) : Promise.resolve(null),
+    campaignMoneyEnabled() ? getCampaignMoney(id) : Promise.resolve({ state: 'missing' } as const),
+  ]);
   const contractors: TradedContractor[] | null = contractsOn && trades ? await getMemberContractors(trades) : null;
 
   // Newest first by the first report's filing date (R6a original_filed_date); flagged dates last.
@@ -256,6 +266,10 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
             {oneReportNote ? <>{fmtCount(oneReportNote.n)} of the {fmtCount(all.length)} transactions come from a single report{oneReportNote.filed ? ` filed ${fmtDate(oneReportNote.filed)}` : ''}; read it before comparing this member with others. </> : null}
           </div>
         )}
+
+        {/* ---------------------------------------------------------------- D10: grade (flag) and who funds them */}
+        {gradesOn && <ReportCard card={card} name={member.name} inOffice={inOffice} bioguide={id} unreadReports={unread ? unread.house_scanned + unread.senate_paper : 0} />}
+        <FundingPanel money={money} enabled={campaignMoneyEnabled()} name={member.name} />
 
         {/* ---------------------------------------------------------------- trades by quarter */}
         <section className="pt-8" aria-labelledby="p-quarters">
