@@ -25,7 +25,7 @@ import {
   GRADE_METHOD_PATH, MOST_ACTIVE_PATH, PRESIDENT_PATH, campaignMoneyEnabled, designPagesEnabled, gradesEnabled, hiddenByFlag, lateFilersEnabled, lateFilersPreview,
   mostActiveEnabled, presidentPageEnabled, readFailureInjected,
 } from '../src/lib/v2/flags.ts';
-import { GRADE_FIXED_LINE } from '../src/lib/v2/grade-method.ts';
+import { GRADE_FIXED_LINE, gradeClass, notGradedLine, unreadCaveat, unreadInWindow, windowStart } from '../src/lib/v2/grade-method.ts';
 import { hiddenPageMetadata } from '../src/lib/v2/hidden-page.ts';
 import { HONEYPOT_FIELD, RATE_LIMIT, REPLY_PROMISE, normalizePageUrl, reportErrorHref } from '../src/lib/v2/error-reports.ts';
 import { HOME_HEADLINE_TEXT, MEMBERS_TILE_COPY, MEMBERS_TILE_LEAD } from '../src/lib/v2/home-copy.ts';
@@ -395,12 +395,30 @@ await hit('/data/status', 200, {
   group: 'status and latest (D6b)',
 });
 await hit('/about/data-status', 301, { location: '/data/status', group: 'status and latest (D6b)' });
-await hit('/latest', 200, { bodyAll: ['New filings and awards', 'RSS feed', 'Awards have no chamber', 'data-kind="trade"', 'data-kind="award"', 'first reported'], notBody: ['being rebuilt', 'risk score', 'high-risk', 'flagged contracts', 'unavailable right now'], group: 'status and latest (D6b)' });
+// A12 M4: awards are dated by date_signed and DoD posts ~90 days late, so the newest award can be older than the 40th-newest trade
+// report (page 1) or the 50th (the feed). The merge in src/lib/v2/latest.ts is right either way, so an award is required on page 1 /
+// in the feed only when the newest award is dated on or after that cut-off. /latest?type=awards below is the award render check.
+// An award sorts before a trade of the same day, so "on or after the Nth-newest trade report's date" means it is inside the first N.
+const latestCut = { page1: false, feed: false, note: '' };
+try {
+  const [aw] = await restAll('awards?select=date_signed&date_signed=not.is.null&order=date_signed.desc&limit=1');
+  const trades = await restAll('congress_trades?select=original_filed_date&original_filed_date=not.is.null&order=original_filed_date.desc&limit=50');
+  const awardDate = aw?.date_signed ?? null;
+  const cut40 = trades[39]?.original_filed_date ?? null;
+  const cut50 = trades[49]?.original_filed_date ?? null;
+  latestCut.page1 = !!awardDate && (!cut40 || awardDate >= cut40);
+  latestCut.feed = !!awardDate && (!cut50 || awardDate >= cut50);
+  latestCut.note = `newest award ${awardDate}; 40th-newest trade report ${cut40}, 50th ${cut50}: award ${latestCut.page1 ? 'required' : 'not required'} on page 1, ${latestCut.feed ? 'required' : 'not required'} in the feed`;
+  gateRow('/latest award expectation (data-aware)', true, latestCut.note, 'status and latest (D6b)');
+} catch (e) {
+  gateRow('/latest award expectation (data-aware)', false, `could not read newest award / trade dates: ${e.message}`, 'status and latest (D6b)');
+}
+await hit('/latest', 200, { bodyAll: ['New filings and awards', 'RSS feed', 'Awards have no chamber', 'data-kind="trade"', ...(latestCut.page1 ? ['data-kind="award"'] : []), 'first reported'], notBody: ['being rebuilt', 'risk score', 'high-risk', 'flagged contracts', 'unavailable right now'], group: 'status and latest (D6b)' });
 await hit('/latest?chamber=House', 200, { body: 'data-kind="trade"', notBody: ['data-kind="award"', 'unavailable right now'], noindex: true, group: 'status and latest (D6b)' });
 await hit('/latest?type=awards', 200, { body: 'data-kind="award"', notBody: ['data-kind="trade"', 'unavailable right now'], noindex: true, group: 'status and latest (D6b)' });
 await hit('/latest?chamber=zz&type=zz&page=-3', 200, { notBody: ['unavailable right now'], group: 'status and latest (D6b) junk input' });
 await hit('/latest?page=99999', 200, { notBody: ['unavailable right now'], group: 'status and latest (D6b) junk input' });
-await hit('/latest.xml', 200, { ctype: 'rss', startsWith: '<?xml', bodyAll: ['<item>', 'slushfund:trade:', 'slushfund:award:', 'official record', '<category>Contract award</category>', '<category>Congressional trade report</category>'], notBody: ['withdrawn', '/investigations', '/blog', 'risk score', 'suspicious', 'stale_2y'], group: 'status and latest (D6b) rss' });
+await hit('/latest.xml', 200, { ctype: 'rss', startsWith: '<?xml', bodyAll: ['<item>', 'slushfund:trade:', ...(latestCut.feed ? ['slushfund:award:', '<category>Contract award</category>'] : []), 'official record', '<category>Congressional trade report</category>'], notBody: ['withdrawn', '/investigations', '/blog', 'risk score', 'suspicious', 'stale_2y'], group: 'status and latest (D6b) rss' });
 await hit('/api/latest', 503, { group: 'status and latest (D6b)' });
 // Reader wording for date_flag: one map, no raw token on a page. One real row per flag value.
 const FLAG_ROWS = [
@@ -1048,7 +1066,7 @@ const F3 = 'post-launch fixes (F3)';
         'The form asks for each transaction to be reported within 30 days of the filer learning of it, and no later than 45 days after it.',
         'counted to the date President Trump signed the report.',
         'We count calendar days and do not adjust for weekends or holidays. Filing extensions, if any were granted, are kept in the report file and are not shown on the posted report.',
-        'Not computed: this type of holding (U.S. Treasury securities, money-market and mutual funds) is not required on a 278-T.',
+        'transactions were not computed: this type of holding (U.S. Treasury securities, money-market and mutual funds) is not required on a 278-T.',
         'Reported values sum to', 'View report', 'Notification received over 30 days ago',
       ],
       notBody: ['JD Vance', 'Vance', 'late_basis', 'not_required_on_278T', 'stock trades'],
@@ -1081,6 +1099,29 @@ const F3 = 'post-launch fixes (F3)';
   if (gradesEnabled()) {
     await hit(GRADE_METHOD_PATH, 200, { bodyAll: [GRADE_FIXED_LINE, 'Would this member pass a congressional stock-trading ban today?'], group: G });
     await hit(member, 200, { bodyAll: ['Stock Trading Grade', GRADE_FIXED_LINE, 'Why this grade'], group: G });
+    // A12 M1: single companies filed as "Other" are scored; fund names cut off at 50 characters are not.
+    const cls = (asset_type, company_name, ticker = null) => gradeClass({ asset_type, company_name, ticker }, instrumentKind({ asset_type, company_name, transaction_type: 'BUY' }));
+    for (const [at, name, tk, want] of [
+      ['Other', 'Atlas Energy Solutions Inc. Common Stock', 'AESI', 'stock'], ['Other', 'SpaceX', 'SPCX', 'stock'], ['Other', 'Space Exploration Technologies Corp.', 'SPCX', 'stock'],
+      ['Other', 'Annaly Capital Management Inc', 'NLY', 'stock'], ['Other', 'Yum! Brands', 'YUM', 'stock'], ['Other', 'FIGMA INC CLASS A', 'FIG', 'stock'],
+      ['Other', 'Huntington Bancshares Incorporated - Depositary Shares L Preferred Stock', 'HBANZ', 'stock'], ['Other', 'Advanced Machine Intelligence Labs', 'AMI', 'stock'],
+      ['Other', 'WaterBridge Infrastructure LLC CL A', 'WBI', 'stock'], ['Other', 'VERSANT MEDIA GROUP INC CL A', 'VSNT', 'stock'],
+      ['Other', 'Gold bullion', null, 'excluded'], ['Other', 'Vanguard Total Stock Market ETF', 'VTI', 'excluded'],
+      ['Stock', 'First Trust Global Tactical Commodity Strategy Fun', 'FTGC', 'excluded'], ['Stock', 'Goldman Sachs Access Investment Grade Corporate Bo', 'GIGB', 'excluded'],
+      ['Stock', 'Invesco Optimum Yield Diversified Commodity Strate', 'PDBC', 'excluded'], ['Stock', 'Goldman Sachs Intl Small Cap Insights Fd Inst', 'GICIX', 'excluded'],
+      ['Stock', 'First Trust North American Energy Infrastructure F', 'EMLP', 'excluded'], ['Stock', 'KKR Real Estate Select Trust Class U', 'KRSOX', 'excluded'],
+      ['Stock', 'Apple Inc.', 'AAPL', 'stock'],
+    ]) { const got = cls(at, name, tk); row(`gradeClass(${at}: ${name})`, got === want, `got ${got}`, want); }
+    // A12 M2: an A with unread scanned/paper reports filed inside the window is "Not graded"; only the window's reports are counted.
+    const uw = JSON.parse(readFileSync(join(ROOT, 'src', 'data', 'unread-window.json'), 'utf8'));
+    const nKh = unreadInWindow(uw.K000389, windowStart(new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' })));
+    await hit('/people/K000389', 200, { bodyAll: [notGradedLine('Ro Khanna', nKh), 'What the filings we have read show'], notBody: ['points of 100', 'it may be lower than the filings would give', 'Grade A'], group: G });
+    const nDon = unreadInWindow(uw.D000032, windowStart(new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' })));
+    await hit('/people/D000032', 200, { bodyAll: [unreadCaveat(nDon), 'Why this grade'], notBody: ['it may be lower than the filings would give', 'Not graded'], group: G });
+    // A12 M3: the "Reported value" factor links the filings behind it (largest bands first, with the amount in the link name).
+    const roy = await fetch(base + '/people/R000614').then((r) => r.text());
+    const valueLinks = [...roy.matchAll(/aria-label="Filing: [^"]*, at least \$[\d,]+, opens/g)].length;
+    row('/people/R000614 value factor has filing links', valueLinks > 0 && valueLinks <= 5, `${valueLinks} links`, '1 to 5');
   } else {
     await hit(GRADE_METHOD_PATH, 404, { group: G });
     await hit(member, 200, { notBody: ['Stock Trading Grade'], group: G });
@@ -1088,7 +1129,7 @@ const F3 = 'post-launch fixes (F3)';
   // Who funds them: while F1's view is missing (or the flag is off) the panel says only "coming soon".
   let viewMissing = false;
   try { await restAll('member_campaign_money?select=bioguide_id&limit=1'); } catch { viewMissing = true; }
-  if (viewMissing || !campaignMoneyEnabled()) await hit(member, 200, { bodyAll: ['Who funds them', 'Campaign finance data: coming soon'], notBody: ['corporate and trade-association PACs'], group: G });
+  if (viewMissing || !campaignMoneyEnabled()) { await hit(member, 200, { notBody: ['Who funds them', 'Campaign finance data: coming soon', 'corporate and trade-association PACs'], group: G }); if (gradesEnabled()) await hit(GRADE_METHOD_PATH, 200, { notBody: ['Who funds them', '2026 campaign money'], group: G }); }
   else await hit(member, 200, { bodyAll: ['Who funds them', 'FEC, through'], group: G });
 }
 

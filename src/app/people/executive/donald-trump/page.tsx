@@ -72,6 +72,7 @@ export default async function PresidentPage({ searchParams }: { searchParams: Pr
   const over = trades.filter((t) => t.stock_act_late === true);
   const overReports = filings.filter((f) => f.over45 > 0);
   const notComputed = trades.filter((t) => t.stock_act_late == null).length;
+  const notComputedAllNotRequired = trades.filter((t) => t.stock_act_late == null).every((t) => t.late_basis === 'not_required_on_278T');
 
   // Filters (GET, no JS): report, type, asset class; sort by date or band; 50 per page.
   const fReport = byDoc.has(one(sp.report)) ? one(sp.report) : '';
@@ -90,7 +91,7 @@ export default async function PresidentPage({ searchParams }: { searchParams: Pr
 
   const columns: DataTableColumn[] = [
     { key: 'date', header: 'Trade date', mobile: 'subtitle', sortable: false },
-    { key: 'asset', header: 'Asset, as printed', mobile: 'title', sortable: false },
+    { key: 'asset', header: 'Asset (from the report)', mobile: 'title', sortable: false },
     { key: 'type', header: 'Type', sortable: false },
     { key: 'band', header: 'Amount (band)', sortable: false },
     { key: 'notified', header: 'Notification received over 30 days ago', sortable: false },
@@ -154,7 +155,7 @@ export default async function PresidentPage({ searchParams }: { searchParams: Pr
           <Card>
             <p className={lbl}>Transactions</p>
             <p className="font-display text-[34px] font-extrabold">{fmtCount(trades.length)}</p>
-            <p className="text-[14px] text-muted">{fmtCount(purchases.length)} purchases, {fmtCount(sales.length)} sales. By the asset as printed: {fmtCount(cls('stock'))} listed as stock, {fmtCount(cls('bond'))} as bonds (municipal and corporate), {fmtCount(cls('fund'))} as funds.</p>
+            <p className="text-[14px] text-muted">{fmtCount(purchases.length)} purchases, {fmtCount(sales.length)} sales. By the asset as printed: {fmtCount(cls('stock'))} listed as stock, {fmtCount(cls('bond'))} as bonds and other fixed-income securities (municipal, corporate, and perpetual or preferred), {fmtCount(cls('fund'))} as funds.</p>
           </Card>
           <Card>
             <p className={lbl}>Reported values sum to</p>
@@ -202,7 +203,13 @@ export default async function PresidentPage({ searchParams }: { searchParams: Pr
                 <b>{fmtCount(over.length)} transactions in {fmtCount(overReports.length)} of the {fmtCount(filings.length)} reports were reported more than 45 days after the trade date shown, counted to the date President Trump signed the report.</b>
               </p>
               <p className="text-[14px] text-muted">{DAYS_METHOD_SENTENCE} A gap over 45 days is a measured fact about two dates as printed, not a finding about the filer.</p>
-              {notComputed > 0 && <p className="text-[14px] text-muted">{fmtCount(notComputed)} transactions: {NOT_REQUIRED_SENTENCE}</p>}
+              {notComputed > 0 && (
+                <p className="text-[14px] text-muted">
+                  {notComputedAllNotRequired
+                    ? <>{fmtCount(notComputed)} transactions were not computed: this type of holding (U.S. Treasury securities, money-market and mutual funds) is not required on a 278-T.</>
+                    : <>{fmtCount(notComputed)} transactions were not computed.</>}
+                </p>
+              )}
             </div>
             <div className="mt-4 overflow-x-auto">
               <table className="w-full min-w-[520px] text-left text-[14.5px]">
@@ -285,8 +292,9 @@ export default async function PresidentPage({ searchParams }: { searchParams: Pr
             </p>
             <DataTable columns={columns} rows={tableRows} caption="President Trump's reported securities transactions, OGE Form 278-T" emptyMessage="No transactions match these filters." />
             <Pager page={page} pages={pages} href={pageHref} label="Transaction pages" />
-            <p className="mt-3 text-[12.5px] text-muted">
-              Source: OGE Form 278-T reports as posted by the U.S. Office of Government Ethics (extapps2.oge.gov), read line by line into our records and checked by eye on samples (A11). Asset classes are our reading of the asset text as printed. Lines on a 278-T marked as unsolicited or discretionary are shown as printed and not interpreted.
+            <p className="mt-3 text-[12.5px] text-muted">Shaded days: more than 45 days after the trade date.</p>
+            <p className="mt-1 text-[12.5px] text-muted">
+              Asset names are read from the report&rsquo;s text and can carry small spelling slips from that reading; the report linked on each row is the record. Source: OGE Form 278-T reports as posted by the U.S. Office of Government Ethics (extapps2.oge.gov), read line by line into our records and checked by eye on samples (A11). Asset classes are our reading of the asset text as printed. Lines on a 278-T marked as unsolicited or discretionary are shown as printed and not interpreted.
             </p>
           </Card>
         </section>

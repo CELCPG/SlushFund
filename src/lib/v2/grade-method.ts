@@ -52,7 +52,16 @@ export function inWindow(r: Pick<GradeRow, 'transaction_date' | 'date_flag'>, st
 const FUND_NAME = /\b(etfs?|etns?|funds?|spdr|ishares|proshares|direxion|index|portfolio|select sector|qqq|vaneck|wisdomtree|invesco db|ultrapro|2x|3x|bull|bear)\b/i;
 const NOT_SINGLE = /\b(treasury|t-bills?|treasuries|municipal|munis?|government money|money market)\b/i;
 /** Broad-fund tickers filed under "Stock" without a fund word in the name. */
-const FUND_TICKERS = new Set(['SPY', 'VOO', 'IVV', 'VTI', 'QQQ', 'DIA', 'IWM', 'VEA', 'VWO', 'EFA', 'AGG', 'BND', 'GLD', 'SLV', 'TLT', 'VNQ', 'VIG', 'SCHD', 'XLK', 'XLF', 'XLE', 'XLV', 'XLI', 'XLY', 'XLP', 'XLU', 'XLB', 'XLRE', 'XLC', 'SMH', 'SOXX', 'ARKK', 'VUG', 'VTV', 'IJH', 'IJR', 'RSP', 'MDY', 'TQQQ', 'SQQQ', 'SOXL', 'UPRO', 'SPXL']);
+const FUND_TICKERS = new Set(['SPY', 'VOO', 'IVV', 'VTI', 'QQQ', 'DIA', 'IWM', 'VEA', 'VWO', 'EFA', 'AGG', 'BND', 'GLD', 'SLV', 'TLT', 'VNQ', 'VIG', 'SCHD', 'XLK', 'XLF', 'XLE', 'XLV', 'XLI', 'XLY', 'XLP', 'XLU', 'XLB', 'XLRE', 'XLC', 'SMH', 'SOXX', 'ARKK', 'VUG', 'VTV', 'IJH', 'IJR', 'RSP', 'MDY', 'TQQQ', 'SQQQ', 'SOXL', 'UPRO', 'SPXL',
+  // A12 M1: funds whose filed names are cut off at 50 characters (so no "fund" word survives), and an interval fund / institutional share class.
+  'GIGB', 'FTGC', 'GEM', 'EMLP', 'PDBC', 'KRSOX', 'TPYP', 'GICIX']);
+/** A12 M1: a fund name cut off at 50 characters ends mid-word or mid-phrase ("…Strategy Fun", "…Corporate Bo", "…Commodity Strate", "…Infrastructure F", "…Fd Inst"). */
+const FUND_NAME_CUT = /(\bfun$|\bfd\b|\bstrate$|\bbo$|\b(?:infrastructure|strategy|equity|income|commodity|corporate|index|bond|etf)\s+[a-z]$)/i;
+/**
+ * A12 M1: single companies filed with asset type "Other" are scored as stock, not dropped: a share class, common or
+ * preferred stock, or a named operating company (SpaceX, Annaly, Yum! Brands, Advanced Machine Intelligence Labs).
+ */
+const SINGLE_COMPANY_OTHER = /(\bcommon stock\b|\bcl(?:ass)?\.? a\b|\bpreferred\b|^yum! brands\b|^annaly capital\b|\bspace exploration technologies\b|^spacex\b|\badvanced machine intelligence\b)/i;
 
 /**
  * kind is instrumentKind() from instruments.ts ('stock' | 'option' | 'other'), passed in so this file has no imports.
@@ -62,8 +71,11 @@ export function gradeClass(r: Pick<GradeRow, 'asset_type' | 'company_name' | 'ti
   const asset = (r.asset_type ?? '').trim().toLowerCase();
   if (kind === 'option') return 'option';
   if (asset === 'bond' || asset === 'corporate bond') return NOT_SINGLE.test(name) ? 'excluded' : 'bond';
-  if (kind !== 'stock') return 'excluded';
-  if (FUND_NAME.test(name) || NOT_SINGLE.test(name)) return 'excluded';
+  if (kind !== 'stock') {
+    if (asset === 'other' && SINGLE_COMPANY_OTHER.test(name) && !FUND_NAME.test(name) && !NOT_SINGLE.test(name)) return 'stock';
+    return 'excluded';
+  }
+  if (FUND_NAME.test(name) || FUND_NAME_CUT.test(name.trim()) || NOT_SINGLE.test(name)) return 'excluded';
   if (r.ticker && FUND_TICKERS.has(r.ticker.toUpperCase())) return 'excluded';
   return 'stock';
 }
@@ -119,10 +131,32 @@ export interface MemberActivity {
   reports: number;
 }
 
+export type Letter = 'A' | 'B' | 'C' | 'D' | 'F';
+
 export interface Grade {
   score: number;
-  letter: 'A' | 'B' | 'C' | 'D' | 'F';
+  /** 'NG' = not graded (A12 M2): the score is 0 only because the filings that could hold trades are unread. Never shown as a letter. */
+  letter: Letter | 'NG';
+  /** Reports filed inside the window that are scanned images or paper filings we have not read. */
+  unread: number;
   factors: Factor[];
+}
+
+/** Filing dates (YYYY-MM-DD) on or after the window start: the unread reports that could hold a trade inside the window. */
+export function unreadInWindow(filingDates: readonly string[] | undefined, start: string): number {
+  return (filingDates ?? []).filter((d) => d >= start).length;
+}
+
+const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
+
+/** A12 M2: the sentence on a "Not graded" card. */
+export function notGradedLine(name: string, n: number): string {
+  return `Not graded: ${cnt(n)} of ${name}’s reports filed in the last 24 months ${plural(n, 'is a scanned image or paper filing', 'are scanned images or paper filings')} we have not read yet, so we cannot say whether ${plural(n, 'it includes', 'they include')} individual-stock trades.`;
+}
+
+/** A12 M2: the caveat on a graded (B to F) card whose member has unread reports in the window. */
+export function unreadCaveat(n: number): string {
+  return `Grade based on the electronic filings we have read. ${cnt(n)} scanned or paper ${plural(n, 'report', 'reports')} from the last 24 months ${plural(n, 'is', 'are')} not read yet, so this count may be incomplete.`;
 }
 
 const usd = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
@@ -141,7 +175,7 @@ export function committeePoints(share: number): number {
 export function latePoints(n: number): number {
   return n === 0 ? 0 : n === 1 ? 3 : n <= 4 ? 6 : 10;
 }
-export function letterFor(score: number, transactions: number): Grade['letter'] {
+export function letterFor(score: number, transactions: number): Letter {
   if (transactions === 0 && score === 0) return 'A';
   return score <= 20 ? 'B' : score <= 40 ? 'C' : score <= 60 ? 'D' : 'F';
 }
@@ -182,19 +216,19 @@ export function activityOf(bioguide: string, rows: ClassifiedRow[]): MemberActiv
   };
 }
 
-function linksFor(rows: ClassifiedRow[], cap = 5): { links: FactorLink[]; more: number } {
+function linksFor(rows: ClassifiedRow[], cap = 5, withAmount = false): { links: FactorLink[]; more: number } {
   const seen = new Map<string, FactorLink>();
   for (const r of rows) {
     const url = reportUrl(r);
     if (!url || seen.has(url)) continue;
-    seen.set(url, { url, label: `${r.ticker || r.company_name || 'filing'}, traded ${r.transaction_date}` });
+    seen.set(url, { url, label: `${r.ticker || r.company_name || 'filing'}, traded ${r.transaction_date}${withAmount && r.amount_min != null ? `, at least ${usd(Number(r.amount_min))}` : ''}` });
   }
   const all = [...seen.values()];
   return { links: all.slice(0, cap), more: Math.max(0, all.length - cap) };
 }
 
 /** The grade with every point and its reason (G1 §1). rows = this member's classified rows in the window. */
-export function gradeOf(rows: ClassifiedRow[], a: MemberActivity): Grade {
+export function gradeOf(rows: ClassifiedRow[], a: MemberActivity, unread = 0): Grade {
   const scored = rows.filter((r) => r.cls === 'stock' || r.cls === 'option');
   const factors: Factor[] = [];
   const tx = txPoints(a.transactions);
@@ -209,7 +243,8 @@ export function gradeOf(rows: ClassifiedRow[], a: MemberActivity): Grade {
     key: 'value', label: 'Reported value (sum of the lowest amount in each band)', points: vp, max: 15, computed: a.transactions === 0 || a.valueMissing < a.transactions,
     value: a.transactions ? `at least ${usd(a.valueMin)}` : '$0',
     reason: `Each trade is disclosed as a range; adding the low end of every range gives at least ${usd(a.valueMin)}${a.valueMissing ? ` (${pl(a.valueMissing, 'row')} with no amount not added)` : ''}. Under $250,000 → 0 points, $250,000–$1 million → 5, $1–5 million → 10, $5 million or more → 15.`,
-    links: [], moreLinks: 0,
+    // A12 M3: the filings behind the value, largest bands first (every point is linked, G1 §1).
+    ...((x) => ({ links: x.links, moreLinks: x.more }))(linksFor([...scored].sort((p, q) => Number(q.amount_min ?? -1) - Number(p.amount_min ?? -1)), 5, true)),
   });
   const opt = scored.filter((r) => r.cls === 'option');
   factors.push({
@@ -245,10 +280,12 @@ export function gradeOf(rows: ClassifiedRow[], a: MemberActivity): Grade {
     ...((x) => ({ links: x.links, moreLinks: x.more }))(linksFor(scored.filter((r) => r.has_federal_contract === true))),
   });
   const score = factors.reduce((n, f) => n + f.points, 0);
-  return { score, letter: letterFor(score, a.transactions), factors };
+  const letter = letterFor(score, a.transactions);
+  // A12 M2: an A says "no individual-stock trades reported"; with unread filings in the window we cannot know that.
+  return { score, letter: letter === 'A' && unread > 0 ? 'NG' : letter, unread, factors };
 }
 
-export const GRADE_BANDS: { letter: Grade['letter']; range: string; meaning: string }[] = [
+export const GRADE_BANDS: { letter: Letter; range: string; meaning: string }[] = [
   { letter: 'A', range: '0 points', meaning: 'No individual-stock trades reported in the window.' },
   { letter: 'B', range: '1–20', meaning: '' },
   { letter: 'C', range: '21–40', meaning: '' },

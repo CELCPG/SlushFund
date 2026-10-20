@@ -6,7 +6,7 @@
 // Reads congress_trades and congress_members with the anon key from .env.local (read only).
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { activityOf, gradeClass, gradeOf, inWindow, windowStart } from '../src/lib/v2/grade-method.ts';
+import { activityOf, gradeClass, gradeOf, inWindow, unreadInWindow, windowStart } from '../src/lib/v2/grade-method.ts';
 import { instrumentKind } from '../src/lib/v2/instruments.ts';
 
 const ROOT = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
@@ -40,13 +40,15 @@ for (const r of trades) {
   list.push({ ...r, cls: gradeClass(r, instrumentKind(r)) });
   by.set(r.bio_guide_id, list);
 }
-const LETTERS = ['A', 'B', 'C', 'D', 'F'];
+// A12 M2: unread scanned/paper reports filed inside the window (src/data/unread-window.json); an A with any shows "Not graded" (NG).
+const unreadWin = JSON.parse(readFileSync(join(ROOT, 'src/data/unread-window.json'), 'utf8'));
+const LETTERS = ['A', 'NG', 'B', 'C', 'D', 'F'];
 const groups = new Map();
 const results = [];
 for (const m of roster) {
   const list = by.get(m.bioguide_id) ?? [];
   const a = activityOf(m.bioguide_id, list);
-  const g = gradeOf(list, a);
+  const g = gradeOf(list, a, unreadInWindow(unreadWin[m.bioguide_id], start));
   results.push({ m, a, g });
   for (const key of [`${m.party} · ${m.chamber}`, `${m.party} · both`, `all · ${m.chamber}`, 'all · both']) {
     const t = groups.get(key) ?? Object.fromEntries([...LETTERS.map((l) => [l, 0]), ['n', 0], ['notComputed', 0]]);
@@ -58,8 +60,8 @@ for (const m of roster) {
 const lines = [];
 lines.push(`Window ${start} to ${end} (trade dates). Rows read ${trades.length}; with a date note, not scored: ${flaggedOut}. Sitting members ${roster.length}.`);
 lines.push('');
-lines.push('| party · chamber | members | A | B | C | D | F | with a factor not computed |');
-lines.push('|---|---|---|---|---|---|---|---|');
+lines.push('| party · chamber | members | A | Not graded | B | C | D | F | with a factor not computed |');
+lines.push('|---|---|---|---|---|---|---|---|---|');
 for (const [k, t] of [...groups.entries()].sort((x, y) => x[0].localeCompare(y[0]))) {
   lines.push(`| ${k} | ${t.n} | ${LETTERS.map((l) => `${t[l]} (${t.n ? ((100 * t[l]) / t.n).toFixed(0) : 0}%)`).join(' | ')} | ${t.notComputed} |`);
 }
@@ -72,6 +74,19 @@ lines.push('');
 lines.push('| factor | members scoring >0 | points awarded | members "not computed" |');
 lines.push('|---|---|---|---|');
 for (const [k, v] of Object.entries(factorTotals)) lines.push(`| ${k} | ${v.members} | ${v.pts} | ${v.notComputed} |`);
+// Spot checks the Auditor asked for (A12 M1/M2): named members and the value top 10 (members with a scored transaction).
+const SPOT = ['James', 'Kennedy', 'Timmons', 'Roy', 'Boozman', 'Khanna', 'Dingell'];
+lines.push('');
+lines.push('Spot checks (letter · score · scored transactions · reported value at least · unread in window):');
+for (const r of results) if (SPOT.some((s) => new RegExp(`\\b${s}\\b`).test(r.m.name))) lines.push(`- ${r.m.name} (${r.m.party[0]}-${r.m.state}): ${r.g.letter} · ${r.g.score} pts · ${r.a.transactions} tx · $${r.a.valueMin.toLocaleString('en-US')} · unread ${r.g.unread}`);
+const topValue = results.filter((r) => r.a.transactions > 0).sort((x, y) => y.a.valueMin - x.a.valueMin).slice(0, 10);
+lines.push('');
+lines.push('Top 10 by reported value (sitting members): ' + topValue.map((r, i) => `#${i + 1} ${r.m.name} $${r.a.valueMin.toLocaleString('en-US')}`).join('; '));
+const ngList = results.filter((r) => r.g.letter === 'NG').sort((x, y) => y.g.unread - x.g.unread);
+lines.push('');
+lines.push(`Not graded (${ngList.length}): ` + ngList.map((r) => `${r.m.name} ${r.g.unread}`).join(', '));
+const caveat = results.filter((r) => r.g.letter !== 'NG' && r.g.unread > 0);
+lines.push(`Graded B to F with the unread caveat (${caveat.length}): ` + caveat.map((r) => `${r.m.name} ${r.g.letter} ${r.g.unread}`).join(', '));
 const out = lines.join('\n');
 console.log(out);
 if (process.argv[2]) writeFileSync(process.argv[2], out + '\n');

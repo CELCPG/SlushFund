@@ -19,7 +19,7 @@ export function RankBars({ rows, label, unit }: { rows: { key: string; name: str
           <li key={r.key} className="grid grid-cols-[minmax(0,190px)_1fr] items-center gap-3 text-[13px] max-md:grid-cols-[minmax(0,120px)_1fr]">
             <span className="truncate"><span className="font-mono text-muted">{i + 1}.</span> {r.name} <span className="text-muted">({r.tag})</span></span>
             <span className="flex min-w-0 items-center gap-2">
-              <span className="h-4 shrink-0 rounded-r-[4px] bg-trades" style={{ width: `${Math.max(1, (r.value / max) * 70)}%` }} />
+              <span className="h-4 min-w-[2px] shrink rounded-r-[4px] bg-trades" style={{ width: `${Math.max(1, (r.value / max) * 70)}%` }} />
               <span className="whitespace-nowrap font-mono text-[12px]">{r.display}</span>
             </span>
           </li>

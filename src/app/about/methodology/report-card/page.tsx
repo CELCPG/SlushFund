@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Caveat, MethodPage, MethodSection } from '@/components/v2/trust/Method';
-import { GRADE_METHOD_PATH, MOST_ACTIVE_PATH, gradesEnabled } from '@/lib/v2/flags';
+import { GRADE_METHOD_PATH, MOST_ACTIVE_PATH, campaignMoneyEnabled, gradesEnabled } from '@/lib/v2/flags';
 import { GRADE_BANDS, GRADE_FIXED_LINE, GRADE_WINDOW_MONTHS } from '@/lib/v2/grade-method';
 import { hiddenPageMetadata } from '@/lib/v2/hidden-page';
 import { pageMetadata } from '@/lib/v2/seo';
@@ -26,7 +26,7 @@ const TOC = [
   { id: 'points', label: 'Points' },
   { id: 'grades', label: 'Grades' },
   { id: 'nulls', label: 'Not computed' },
-  { id: 'funding', label: 'Who funds them' },
+  ...(campaignMoneyEnabled() ? [{ id: 'funding', label: 'Who funds them' }] : []),
   { id: 'limits', label: 'What it does not say' },
 ];
 
@@ -90,6 +90,7 @@ export default function ReportCardMethodology() {
         <ul className="space-y-1">
           {GRADE_BANDS.map((g) => <li key={g.letter}><b className="font-display text-[18px]">{g.letter}</b> · {g.range}{g.meaning ? `: ${g.meaning}` : ''}</li>)}
         </ul>
+        <p className="mt-3"><b>Not graded.</b> An A says no individual-stock trades were reported, which we cannot say when some of a member&rsquo;s reports from the last {GRADE_WINDOW_MONTHS} months are scanned images or paper filings we have not read yet. Those members show &ldquo;Not graded&rdquo; and the number of unread reports, not a letter. A member with trades in the filings we have read keeps the grade, with a note that the count may be incomplete.</p>
         <p className="mt-3">The thresholds were set before anyone looked at where members land. The distribution by party and chamber is reported as it comes out and the thresholds are never tuned to it.</p>
       </MethodSection>
 
@@ -97,16 +98,16 @@ export default function ReportCardMethodology() {
         <p>A factor that cannot be computed scores 0 and is labelled &ldquo;not computed&rdquo; on the card. It is never described as a clean result. Examples: committee data is not available for some dates (a new Congress had not yet published committee rosters), and our contract data starts on 2023-10-01.</p>
       </MethodSection>
 
-      <MethodSection id="funding" title="Who funds them (not graded)">
+      {campaignMoneyEnabled() && (<MethodSection id="funding" title="Who funds them (not graded)">
         <p>
-          Member pages also show where a member&rsquo;s 2026 campaign money came from, from the Federal Election Commission: small donors, larger individual gifts, corporate and trade-association PACs, labor PACs, leadership, party and other committees, and self-funding, plus outside spending for and against them. It is not graded: taking legal PAC money is not misconduct, and grading it would be an editorial verdict.
+          Member pages also show where a member&rsquo;s campaign committee money came from in the 2025&ndash;2026 FEC reporting cycle: small donors, larger individual gifts, corporate and trade-association PACs, labor PACs, leadership, party and other committees, and self-funding, plus outside spending for and against them. It is not graded: taking legal PAC money is not misconduct, and grading it would be an editorial verdict.
         </p>
-      </MethodSection>
+      </MethodSection>)}
 
       <MethodSection id="limits" title="What the grade does not say">
         <ul className="grid gap-3">
           <Caveat lead="Not a finding.">The grade measures reported trading and disclosure timing. It says nothing about why a member traded, what they knew, or whether any rule was broken.</Caveat>
-          <Caveat lead="Filings we have not read.">Some House reports are scanned images and some Senate reports were filed on paper; member pages say when that applies, and those trades are not in the grade, so it can be lower than the filings would give.</Caveat>
+          <Caveat lead="Filings we have not read.">Some House reports are scanned images and some Senate reports were filed on paper; member pages say when that applies, and those trades are not in the grade, so the count may be incomplete. Only reports filed in the last {GRADE_WINDOW_MONTHS} months are counted for this.</Caveat>
           <Caveat lead="Bands, not amounts.">Reported value adds the lowest amount of each disclosed range, so it is a floor.</Caveat>
         </ul>
         <p className="mt-3">See the grades in context on the <Link href={MOST_ACTIVE_PATH} className="underline">most active traders</Link> page and on each member&rsquo;s page.</p>

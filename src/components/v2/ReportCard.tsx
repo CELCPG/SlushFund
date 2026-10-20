@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Card, SectionHead } from '@/components/v2/PageBand';
 import { fmtDate } from '@/lib/v2/format';
-import { GRADE_FIXED_LINE } from '@/lib/v2/grade-method';
+import { GRADE_FIXED_LINE, notGradedLine, unreadCaveat } from '@/lib/v2/grade-method';
 import { GRADE_METHOD_PATH } from '@/lib/v2/flags';
 import type { MemberCard } from '@/lib/v2/report-card';
 
@@ -9,7 +9,8 @@ import type { MemberCard } from '@/lib/v2/report-card';
  * D10 Stock Trading Grade on a member page (G1 §1), behind gradesEnabled(). Every point is shown with its reason and
  * the filings behind it; a factor that can't be computed scores 0 and says "not computed", never "clean".
  */
-export default function ReportCard({ card, name, inOffice, bioguide, unreadReports = 0 }: { card: MemberCard | null; name: string; inOffice: boolean; bioguide: string; unreadReports?: number }) {
+export default function ReportCard({ card, name, inOffice, bioguide }: { card: MemberCard | null; name: string; inOffice: boolean; bioguide: string }) {
+  const notGraded = card?.grade.letter === 'NG';
   return (
     <section className="pt-8" aria-labelledby="p-grade" data-section="report-card">
       <Card>
@@ -24,14 +25,23 @@ export default function ReportCard({ card, name, inOffice, bioguide, unreadRepor
           <p className="rounded-2xl bg-stale-tint px-4 py-3 text-[14.5px] text-stale-ink">The grade is unavailable right now: the trade database did not answer.</p>
         ) : (
           <>
-            <div className="flex flex-wrap items-center gap-5">
-              <span aria-hidden className="grid h-[88px] w-[88px] place-items-center rounded-2xl bg-ink font-display text-[52px] font-extrabold text-white">{card.grade.letter}</span>
-              <p className="text-[16px]">
-                <span className="sr-only">Grade {card.grade.letter}. </span>
-                <b>{card.grade.score} points</b> of 100 (A = 0 points · B 1–20 · C 21–40 · D 41–60 · F 61 or more), for trades dated {fmtDate(card.win.start)} to {fmtDate(card.win.end)}.
-              </p>
-            </div>
-            <h3 className="mt-5 text-[15px] font-bold">Why this grade</h3>
+            {notGraded ? (
+              <div className="flex flex-wrap items-center gap-5" data-grade="not-graded">
+                <span aria-hidden className="grid h-[88px] min-w-[88px] place-items-center rounded-2xl bg-neutral-tint px-4 font-display text-[22px] font-extrabold leading-tight text-ink">Not graded</span>
+                <p className="max-w-[640px] text-[16px]">
+                  {notGradedLine(name, card.grade.unread)}
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center gap-5">
+                <span aria-hidden className="grid h-[88px] w-[88px] place-items-center rounded-2xl bg-ink font-display text-[52px] font-extrabold text-white">{card.grade.letter}</span>
+                <p className="text-[16px]">
+                  <span className="sr-only">Grade {card.grade.letter}. </span>
+                  <b>{card.grade.score} points</b> of 100 (A = 0 points · B 1–20 · C 21–40 · D 41–60 · F 61 or more), for trades dated {fmtDate(card.win.start)} to {fmtDate(card.win.end)}.
+                </p>
+              </div>
+            )}
+            <h3 className="mt-5 text-[15px] font-bold">{notGraded ? 'What the filings we have read show' : 'Why this grade'}</h3>
             <ul className="mt-2 divide-y divide-line">
               {card.grade.factors.map((f) => (
                 <li key={f.key} className="py-3">
@@ -57,10 +67,8 @@ export default function ReportCard({ card, name, inOffice, bioguide, unreadRepor
               Not scored: {card.activity.bonds} bond transaction{card.activity.bonds === 1 ? '' : 's'} (shown in the trade list, not scored in this version) and {card.activity.excluded} transaction{card.activity.excluded === 1 ? '' : 's'} in funds, ETFs, Treasuries, municipal securities and other assets a ban would allow.
               {card.win.flaggedOut ? ` Trades whose dates carry a date note are not scored.` : ''}
             </p>
-            {unreadReports > 0 && (
-              <p className="mt-3 rounded-2xl bg-stale-tint px-4 py-3 text-[14px] text-stale-ink">
-                {unreadReports} of this member&rsquo;s reports are scanned images or paper filings we have not read (see the note above). Trades in them are not in this grade, so it may be lower than the filings would give.
-              </p>
+            {!notGraded && card.grade.unread > 0 && (
+              <p className="mt-3 rounded-2xl bg-stale-tint px-4 py-3 text-[14px] text-stale-ink">{unreadCaveat(card.grade.unread)}</p>
             )}
             <p className="mt-3 rounded-2xl bg-neutral-tint px-4 py-3 text-[14px] font-semibold">{GRADE_FIXED_LINE}</p>
             <p className="mt-2 text-[13px]"><Link href={GRADE_METHOD_PATH} className="underline">The method, thresholds and code</Link></p>

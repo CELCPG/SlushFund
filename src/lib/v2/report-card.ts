@@ -3,8 +3,9 @@ import { supabase } from '@/lib/supabase';
 import { memo, readAll } from '@/lib/v2/reads';
 import { instrumentKind } from '@/lib/v2/instruments';
 import { getRoster, type Member } from '@/lib/v2/people';
+import unreadWindow from '@/data/unread-window.json';
 import {
-  activityOf, gradeClass, gradeOf, inWindow, windowStart, type ClassifiedRow, type Grade, type GradeRow, type MemberActivity,
+  activityOf, gradeClass, gradeOf, inWindow, unreadInWindow, windowStart, type ClassifiedRow, type Grade, type GradeRow, type MemberActivity,
 } from '@/lib/v2/grade-method';
 
 /**
@@ -71,6 +72,14 @@ export const getTradingWindow = memo(async (): Promise<TradingWindow | null> => 
   return { start, end, byMember, months: out, flaggedOut, rowsRead: rows.length };
 });
 
+/**
+ * A12 M2: scanned House and paper Senate reports we have not read that were filed on or after the window start
+ * (src/data/unread-window.json, scripts/build-unread-window.mjs), not the 2021-2026 totals the member note uses.
+ */
+export function unreadReportsInWindow(bioguide: string, win: Pick<TradingWindow, 'start'>): number {
+  return unreadInWindow((unreadWindow as Record<string, string[]>)[bioguide], win.start);
+}
+
 export interface LeaderRow extends MemberActivity {
   member: Member;
 }
@@ -103,5 +112,5 @@ export async function getMemberCard(bioguide: string): Promise<MemberCard | null
   if (!win) return null;
   const list = win.byMember.get(bioguide) ?? [];
   const activity = activityOf(bioguide, list);
-  return { win, activity, grade: gradeOf(list, activity) };
+  return { win, activity, grade: gradeOf(list, activity, unreadReportsInWindow(bioguide, win)) };
 }

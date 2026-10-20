@@ -268,8 +268,8 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
         )}
 
         {/* ---------------------------------------------------------------- D10: grade (flag) and who funds them */}
-        {gradesOn && <ReportCard card={card} name={member.name} inOffice={inOffice} bioguide={id} unreadReports={unread ? unread.house_scanned + unread.senate_paper : 0} />}
-        <FundingPanel money={money} enabled={campaignMoneyEnabled()} name={member.name} />
+        {gradesOn && <ReportCard card={card} name={member.name} inOffice={inOffice} bioguide={id} />}
+        {campaignMoneyEnabled() && <FundingPanel money={money} enabled name={member.name} />}
 
         {/* ---------------------------------------------------------------- trades by quarter */}
         <section className="pt-8" aria-labelledby="p-quarters">

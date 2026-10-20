@@ -13,7 +13,7 @@ import { GRADE_METHOD_PATH, MOST_ACTIVE_PATH, gradesEnabled, mostActiveEnabled }
 import { fmtCount, fmtDate, fmtUsd } from '@/lib/v2/format';
 import { GRADE_FIXED_LINE, gradeOf } from '@/lib/v2/grade-method';
 import { hiddenPageMetadata } from '@/lib/v2/hidden-page';
-import { getLeaderboard, type LeaderRow } from '@/lib/v2/report-card';
+import { getLeaderboard, unreadReportsInWindow, type LeaderRow } from '@/lib/v2/report-card';
 import { seatLabel } from '@/lib/v2/people';
 import { pageMetadata } from '@/lib/v2/seo';
 
@@ -94,10 +94,10 @@ export default async function MostActivePage({ searchParams }: { searchParams: P
     ...(grades ? [{ key: 'grade', header: 'Stock Trading Grade', sortable: false } as DataTableColumn] : []),
   ];
   const rows: DataTableRow[] = shown.map((r, i) => {
-    const g = grades && r.member.in_office ? gradeOf(board.win.byMember.get(r.bioguide) ?? [], r) : null;
+    const g = grades && r.member.in_office ? gradeOf(board.win.byMember.get(r.bioguide) ?? [], r, unreadReportsInWindow(r.bioguide, board.win)) : null;
     return {
       id: r.bioguide,
-      values: { rank: i + 1, member: r.member.name, tx: r.transactions, value: r.valueMin, late: r.lateReports, grade: g ? g.letter : null },
+      values: { rank: i + 1, member: r.member.name, tx: r.transactions, value: r.valueMin, late: r.lateReports, grade: g ? (g.letter === 'NG' ? 'Not graded' : g.letter) : null },
       cells: {
         member: (
           <span className="block min-w-0">
@@ -106,7 +106,7 @@ export default async function MostActivePage({ searchParams }: { searchParams: P
           </span>
         ),
         value: <span className="whitespace-nowrap font-mono">at least {fmtUsd(r.valueMin)}</span>,
-        ...(grades ? { grade: g ? <span className="font-display text-[18px] font-extrabold">{g.letter} <span className="font-mono text-[12px] font-normal text-muted">{g.score} pts</span></span> : <span className="text-[12.5px] text-muted">sitting members only</span> } : {}),
+        ...(grades ? { grade: g ? (g.letter === 'NG' ? <span className="text-[13.5px] font-semibold">Not graded <span className="font-normal text-muted">({g.unread} unread {g.unread === 1 ? 'report' : 'reports'})</span></span> : <span className="font-display text-[18px] font-extrabold">{g.letter} <span className="font-mono text-[12px] font-normal text-muted">{g.score} pts</span></span>) : <span className="text-[12.5px] text-muted">sitting members only</span> } : {}),
       },
     };
   });
