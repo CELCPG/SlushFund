@@ -213,6 +213,8 @@ html[data-theme='t1'] .sf-hero-figure { box-shadow: none; background: none; colo
 html[data-theme='t1'] .sf-kpi-value { color: var(--sf-accent); }
 html[data-theme='t1'] .bg-ink { background-color: var(--sf-accent); color: var(--sf-accent-ink); }
 html[data-theme='t1'] .bg-ink:hover { background-color: #FFFFFF; color: #0B0B0B; }
+/* D12c: the story kicker is brand red on the page color; red on near-black is under 4.5:1 (axe color-contrast), so T1 uses its accent. */
+html[data-theme='t1'] .sf-story-kicker { color: var(--sf-accent); }
 
 /* ── T2 "Tabloid ledger": newsprint, black slab headers and thick rules, Anton, one red accent for figures. ── */
 html[data-theme='t2'] {

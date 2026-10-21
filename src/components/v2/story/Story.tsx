@@ -22,13 +22,16 @@ export interface StoryMeta {
   audit: ReactNode;
 }
 
-export function StoryHeader({ kicker, headline, dek, meta }: { kicker: ReactNode; headline: ReactNode; dek: ReactNode; meta: StoryMeta }) {
+/** `byline` prints under the dek; `children` (D12: the caveat that rides with the dek's figure) sits between dek and byline. */
+export function StoryHeader({ kicker, headline, dek, meta, byline, children }: { kicker: ReactNode; headline: ReactNode; dek: ReactNode; meta: StoryMeta; byline?: ReactNode; children?: ReactNode }) {
   return (
     <header className="pb-8 pt-10 max-md:pt-6">
       <Wrap>
-        <p className="text-[13px] font-extrabold uppercase tracking-[0.08em] text-brand">{kicker}</p>
+        <p className="sf-story-kicker text-[13px] font-extrabold uppercase tracking-[0.08em] text-brand">{kicker}</p>
         <h1 style={{ fontFamily: SERIF }} className="mt-2 max-w-[900px] text-[48px] font-bold leading-[1.08] tracking-[-0.5px] max-md:text-[31px]">{headline}</h1>
         <p style={{ fontFamily: SERIF }} className="mt-4 max-w-[760px] text-[22px] leading-[1.45] text-muted max-md:text-[18px]">{dek}</p>
+        {children}
+        {byline && <p className="mt-4 text-[14px] font-semibold">{byline}</p>}
         <dl className="mt-6 grid max-w-[900px] grid-cols-4 gap-x-6 gap-y-3 border-y border-line py-3.5 text-[13.5px] max-md:grid-cols-2">
           {[
             ['Published', meta.published],
@@ -75,9 +78,9 @@ export function RailNote({ title, children }: { title: string; children: ReactNo
 }
 
 /** Footnote marker in the text: links down to the numbered source and back. */
-export function Cite({ n }: { n: number }) {
+export function Cite({ n, anchor = true }: { n: number; /** false on repeat uses of a note, so the back-link id stays unique. */ anchor?: boolean }) {
   return (
-    <sup id={`ref-${n}`} className="font-sans text-[0.62em] font-bold">
+    <sup id={anchor ? `ref-${n}` : undefined} className="font-sans text-[0.62em] font-bold">
       <a href={`#fn-${n}`} className="px-0.5 text-trades-ink hover:underline" aria-label={`Footnote ${n}`}>[{n}]</a>
     </sup>
   );

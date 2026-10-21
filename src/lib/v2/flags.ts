@@ -69,6 +69,15 @@ export function voterPagesEnabled(env: Env = process.env): boolean {
   return env.VERCEL_ENV !== 'production' || env.SHOW_VOTER_PAGES === '1';
 }
 
+/**
+ * D12: the four investigation posts under /investigations/<slug> (Musk / Bloomberg, Oracle / Bezos) and the entity CSV they link.
+ * Off on production until the Auditor's story check (A15) and Colin: SHOW_INVESTIGATIONS_V2=1. While off, /investigations shows
+ * its "no stories" page and every /investigations/<path> answers the site 404 (withdrawn slugs still answer 410 first).
+ */
+export function investigationsV2Enabled(env: Env = process.env): boolean {
+  return env.VERCEL_ENV !== 'production' || env.SHOW_INVESTIGATIONS_V2 === '1';
+}
+
 export const PRESIDENT_PATH = '/people/executive/donald-trump';
 export const MOST_ACTIVE_PATH = '/data/most-active-traders';
 export const GRADE_METHOD_PATH = '/about/methodology/report-card';
@@ -86,6 +95,7 @@ export function hiddenByFlag(pathname: string, env: Env = process.env): boolean 
   if (pathname === MOST_ACTIVE_PATH) return !mostActiveEnabled(env);
   if (pathname === GRADE_METHOD_PATH) return !gradesEnabled(env);
   if (pathname === VOTER_PATH || pathname.startsWith(`${VOTER_PATH}/`)) return !voterPagesEnabled(env);
+  if (pathname.startsWith('/investigations/')) return !investigationsV2Enabled(env);
   if (pathname === '/design' || pathname.startsWith('/design/')) return !designPagesEnabled(env);
   return false;
 }

@@ -1,7 +1,8 @@
 import { MetadataRoute } from 'next';
 import { hasPublishedCorrections } from '@/data/corrections';
-import { GRADE_METHOD_PATH, MOST_ACTIVE_PATH, PRESIDENT_PATH, VOTER_PATH, gradesEnabled, lateFilersEnabled, mostActiveEnabled, presidentPageEnabled, voterPagesEnabled } from '@/lib/v2/flags';
+import { GRADE_METHOD_PATH, MOST_ACTIVE_PATH, PRESIDENT_PATH, VOTER_PATH, gradesEnabled, investigationsV2Enabled, lateFilersEnabled, mostActiveEnabled, presidentPageEnabled, voterPagesEnabled } from '@/lib/v2/flags';
 import { STATE_CODES } from '@/lib/v2/explorer';
+import { STORIES, storyPath } from '@/lib/v2/story-figures';
 
 // D5: the sitemap lists only pages that are live and verified. Gated legacy pages, the
 // withdrawn stories and the old vendor pages are out (see src/lib/v2/redirect-map.ts). Add
@@ -39,6 +40,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     paths.push({ path: VOTER_PATH, changeFrequency: 'weekly', priority: 0.7 });
     for (const s of STATE_CODES) paths.push({ path: `${VOTER_PATH}/${s.toLowerCase()}`, changeFrequency: 'daily', priority: 0.6 });
   }
+  // D12 investigation posts (SHOW_INVESTIGATIONS_V2): both pairs, listed together (G8).
+  if (investigationsV2Enabled()) for (const s of STORIES) paths.push({ path: storyPath(s.slug), changeFrequency: 'weekly', priority: 0.7 });
 
   return paths.map((p) => ({
     url: `${base}${p.path}`,

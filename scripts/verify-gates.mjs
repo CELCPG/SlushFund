@@ -22,7 +22,7 @@ import {
 } from '../src/lib/v2/redirect-map.ts';
 import { LEGACY_AGENCIES, LEGACY_PEOPLE, LEGACY_VENDORS } from '../src/lib/v2/legacy-map.generated.ts';
 import {
-  GRADE_METHOD_PATH, MOST_ACTIVE_PATH, PRESIDENT_PATH, campaignMoneyEnabled, designPagesEnabled, gradesEnabled, hiddenByFlag, lateFilersEnabled, lateFilersPreview,
+  GRADE_METHOD_PATH, MOST_ACTIVE_PATH, PRESIDENT_PATH, campaignMoneyEnabled, designPagesEnabled, gradesEnabled, hiddenByFlag, investigationsV2Enabled, lateFilersEnabled, lateFilersPreview,
   mostActiveEnabled, presidentPageEnabled, readFailureInjected, VOTER_PATH, voterPagesEnabled,
 } from '../src/lib/v2/flags.ts';
 import { GRADE_FIXED_LINE, activityOf, gradeClass, inWindow, notGradedLine, unreadCaveat, unreadInWindow, windowStart } from '../src/lib/v2/grade-method.ts';
@@ -35,6 +35,8 @@ import { ALLOWED_VERBATIM, FORBIDDEN_PHRASES } from '../src/lib/v2/forbidden-wor
 import { shellPath } from '../src/components/v2/shell/nav.ts';
 import { instrumentKind } from '../src/lib/v2/instruments.ts';
 import { MONEY_TYPES } from '../src/lib/v2/money.ts';
+import * as SF from '../src/lib/v2/story-figures.ts';
+import { STORY_RESPONSES } from '../src/data/story-responses.ts';
 
 const ROOT = new URL('..', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
 const APP = join(ROOT, 'src', 'app');
@@ -57,6 +59,8 @@ const KEEP_DYNAMIC = new Map([
   ['/companies/:slug', '/companies/lockheed-martin-corp-zfn2jjxblzt3'],
   ['/agencies/:code', '/agencies/097'],
   ['/your-members/:state', '/your-members/vt'],
+  // D12 investigation posts, behind SHOW_INVESTIGATIONS_V2
+  ['/investigations/:slug', '/investigations/federal-money-musk-companies-fy2024-2026'],
 ]);
 // Public data routes that return raw rows from the audited loaders, or no figures of ours at all.
 const KEEP_ROUTES = new Map([
@@ -520,7 +524,8 @@ if (process.env.SHOW_DRAFT_CORRECTIONS !== '1') {
   await hit('/about/corrections', 200, { body: 'The corrections log opens with the rebuilt site', group: 'corrections draft hidden' });
   await hit('/sitemap.xml', 200, { notBody: '/about/corrections', group: 'corrections draft hidden' });
 }
-for (const [route, url] of KEEP_DYNAMIC) await hit(url, route.startsWith(VOTER_PATH) && !voterPagesEnabled() ? 404 : 200, { group: `keep (v2) ${route}` });
+const dynamicOff = (route) => (route.startsWith(VOTER_PATH) && !voterPagesEnabled()) || (route.startsWith('/investigations/') && !investigationsV2Enabled());
+for (const [route, url] of KEEP_DYNAMIC) await hit(url, dynamicOff(route) ? 404 : 200, { group: `keep (v2) ${route}` });
 await hit('/no-such-page-d5', 404, { body: 'find that page', notBody: 'live trades', group: 'keep (v2)' });
 await hit('/feed.xml', 200, { notBody: '<item>', group: 'keep (v2)' });
 await hit('/sitemap.xml', 200, { notBody: '/dashboard', group: 'keep (v2)' });
@@ -633,7 +638,7 @@ const sitemapXml = await (await fetch(base + '/sitemap.xml')).text();
 const sitemapPaths = [...sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname || '/');
 const WORDING_PATHS = [...new Set([
   ...sitemapPaths,
-  ...[...KEEP_DYNAMIC.values()].filter((u) => voterPagesEnabled() || !u.startsWith(VOTER_PATH)),
+  ...[...KEEP_DYNAMIC.entries()].filter(([r]) => !dynamicOff(r)).map(([, u]) => u),
   ...(voterPagesEnabled() ? [`${VOTER_PATH}?zip=00000`, `${VOTER_PATH}?zip=12ab`, `${VOTER_PATH}/ca?zip=94110`, `${VOTER_PATH}/dc`] : []),
   '/people/S001201', '/people/A000383', '/people/M001186',
   '/agencies', '/investigations', '/rebuilding', '/search?q=Warren', '/latest.xml',
@@ -1276,6 +1281,131 @@ const F3 = 'post-launch fixes (F3)';
         row(`/your-members/vt ${m.name}: transactions and value vs DB`, block.includes(tx) && block.includes(val), `want "${tx}", "${val}"`);
       }
     } catch (e) { row('/your-members/vt figures vs DB', false, `could not run: ${String(e.message).slice(0, 120)}`); }
+  }
+}
+
+// ---------------------------------------------------------------- D12: the four investigation posts (two matched pairs, G8)
+{
+  const G = 'D12 investigation posts';
+  const row = (path, ok, note, expect = 'ok') => { if (!ok) failed++; rows.push({ path, status: ok ? 'ok' : 'FAIL', expect, ok, note, group: G }); };
+  const page = async (p) => { const r = await fetch(base + p); const raw = await r.text(); return { status: r.status, raw, html: raw.replace(/<!-- -->/g, ''), text: visibleText(raw) }; };
+  const slugs = SF.STORIES.map((s) => s.slug);
+  // Flag: off on production until SHOW_INVESTIGATIONS_V2 is exactly '1'; every /investigations/<path> follows it, /investigations does not.
+  for (const path of [SF.storyPath(slugs[0]), SF.ENTITY_CSV_PATH]) {
+    for (const [env, want] of [[{}, false], [{ VERCEL_ENV: 'preview' }, false], [{ VERCEL_ENV: 'production' }, true], [{ VERCEL_ENV: 'production', SHOW_INVESTIGATIONS_V2: '1' }, false], [{ VERCEL_ENV: 'production', SHOW_INVESTIGATIONS_V2: 'true' }, true]]) {
+      row(`hiddenByFlag(${JSON.stringify(path)}, ${JSON.stringify(env)})`, hiddenByFlag(path, env) === want, '', String(want));
+    }
+  }
+  row('hiddenByFlag("/investigations", production)', hiddenByFlag('/investigations', { VERCEL_ENV: 'production' }) === false, 'the index stays', 'false');
+  row('no story slug is a withdrawn slug', slugs.every((s) => !WITHDRAWN_SLUGS.includes(s)), '');
+  row('slugs follow the neutral pattern federal-money-<subject>-fy2024-2026', slugs.every((s) => /^federal-money-[a-z-]+-fy2024-2026$/.test(s)), slugs.join(' '));
+  row('two pairs, each story paired with the other in its pair', SF.STORY_PAIRS.length === 2 && SF.STORY_PAIRS.every(([a, b]) => SF.storyBySlug(a)?.pair === b && SF.storyBySlug(b)?.pair === a), '');
+  // A13 / A13b forbidden phrasings are on the wording list (one test sentence each).
+  for (const t of ['SpaceX won $4 billion', 'more than the $10B+ figure', 'a contract worth $26.9 billion', 'the sum of ceilings', "Ellison's company", "Bezos's companies received", 'nearly as much as Oracle', 'within 10% of each other', 'more than Oracle', 'AWS is mostly sold through resellers', 'mostly data and research subscriptions', 'a no-bid deal']) {
+    row(`wording gate lists "${t}"`, FORBIDDEN_PHRASES.some((p) => new RegExp(p.re, 'gi').test(t)), 'forbidden-words.ts');
+  }
+  // Every audited sentence and fixed line is itself clean of the wording list.
+  const fixed = [...Object.values(SF.AUDITED).flatMap((o) => Object.entries(o).filter(([k]) => !k.endsWith('check')).map(([, v]) => v)), SF.CONTEXT_LINE, SF.NOT_CAUSE_LINE, SF.SELECTION_LINE, SF.ENTITY_RULE_LINE, ...SF.STORIES.flatMap((s) => [s.headline, s.description, ...SF.caveats(s), ...SF.whyLines(s, SF.storyBySlug(s.pair)), SF.preregLine(s)])];
+  const dirty = fixed.filter((t) => FORBIDDEN_PHRASES.some((p) => new RegExp(p.re, 'gi').test(t)));
+  row('audited sentences and fixed lines carry no forbidden phrase', dirty.length === 0, dirty.slice(0, 2).join(' | '));
+  // Live sentences rebuilt from REST with the pages' own code equal the audited text (a reload that moves a figure fails here).
+  for (const s of SF.STORIES) {
+    try {
+      const txns = await restAll(`subject_award_transactions?select=${SF.TXN_COLUMNS}&subject_group=eq.${s.group}&order=transaction_key`);
+      const summary = await restAll(`subject_money_summary?select=${SF.SUMMARY_COLUMNS}&subject_group=eq.${s.group}`);
+      const live = SF.storySentences(s.group, txns);
+      const drift = SF.driftOf(s.group, live);
+      row(`${s.group}: sentences from REST = audited text`, drift.length === 0, drift.length ? `drift in ${drift.join(', ')}: ${live[drift[0]]}` : `${txns.length} rows, retrieved ${SF.retrievedOf(txns)}`);
+      row(`${s.group}: subject_money_summary = transaction rows`, SF.viewMatches(txns, summary), `${summary.length} summary rows`);
+      row(`${s.group}: retrieval date = audited (${SF.AUDITED_RETRIEVED})`, SF.retrievedOf(txns) === SF.AUDITED_RETRIEVED, String(SF.retrievedOf(txns)));
+    } catch (e) { row(`${s.group}: sentences from REST`, false, `could not run: ${String(e.message).slice(0, 120)}`); }
+  }
+  const sm = await (await fetch(base + '/sitemap.xml')).text();
+  const index = await page('/investigations');
+  if (!investigationsV2Enabled()) {
+    for (const p of [...slugs.map(SF.storyPath), SF.ENTITY_CSV_PATH]) await hit(p, 404, { group: G });
+    row('sitemap has no story pages', slugs.every((s) => !sm.includes(s)), '');
+    row('/investigations shows the no-stories page and no story link', index.status === 200 && index.text.includes('No stories are published right now') && slugs.every((s) => !index.html.includes(s)), '');
+  } else {
+    row('sitemap lists the four story pages', slugs.every((s) => sm.includes(`slushfund.net${SF.storyPath(s)}<`)), '');
+    // Index: both pairs, grouped, each story linked once.
+    const pairs = [...index.html.matchAll(/data-story-pair="(\d)"([\s\S]*?)<\/ul>/g)].map((m) => [...m[2].matchAll(/href="\/investigations\/([^"]+)"/g)].map((x) => x[1]));
+    row('/investigations lists the two pairs, grouped', JSON.stringify(pairs) === JSON.stringify(SF.STORY_PAIRS), JSON.stringify(pairs));
+    const csv = await fetch(base + SF.ENTITY_CSV_PATH);
+    const csvText = await csv.text();
+    row(`${SF.ENTITY_CSV_PATH} 200, CSV with the decision columns`, csv.status === 200 && csvText.startsWith('subject_group,entity_name,uei,parent_uei') && csvText.split('\n').length > 70, `HTTP ${csv.status}, ${csvText.split('\n').length} lines`);
+    for (const s of SF.STORIES) {
+      const p = SF.storyPath(s.slug);
+      const pair = SF.storyBySlug(s.pair);
+      const pg = await page(p);
+      const t = pg.text;
+      const want = Object.entries(SF.AUDITED[s.group]).filter(([k]) => !k.endsWith('check')).map(([, v]) => v);
+      const missing = want.filter((x) => !t.includes(x));
+      row(`${p} 200`, pg.status === 200, `HTTP ${pg.status}`);
+      row(`${p} prints every audited sentence`, missing.length === 0, missing.length ? `missing: ${missing[0].slice(0, 90)}` : `${want.length} sentences`);
+      row(`${p} no "changed since the audit" note`, !pg.html.includes('Figures changed since the audit') && /data-drift=""/.test(pg.html), '');
+      const lines = [s.headline, SF.CONTEXT_LINE, SF.NOT_CAUSE_LINE, SF.ENTITY_RULE_LINE, SF.preregLine(s), ...SF.caveats(s), ...SF.whyLines(s, pair).filter((l) => !l.includes(pair.phrase)), `By ${SF.STORY_BYLINE}`];
+      const gone = lines.filter((x) => !t.includes(x));
+      row(`${p} headline, caveats, context line, why-lines, method lines, byline`, gone.length === 0, gone.length ? `missing: ${gone[0].slice(0, 90)}` : '');
+      row(`${p} links its matched counterpart`, pg.html.includes(`href="${SF.storyPath(pair.slug)}"`), pair.slug);
+      // Option A: the fixed response line for every company asked, until a verbatim reply is added.
+      for (const c of s.asked) {
+        const reply = STORY_RESPONSES[c.name];
+        row(`${p} response slot for ${c.name}`, reply ? t.includes(`${c.name} replied on ${reply.received}`) : t.includes(SF.askedLine(c.name)), reply ? 'reply printed' : SF.askedLine(c.name));
+      }
+      row(`${p} entity CSV linked as a download`, new RegExp(`href="${SF.ENTITY_CSV_PATH}" download`).test(pg.html), '');
+      row(`${p} corrections line and report-an-error link`, t.includes('Corrections to this story') && [...pg.html.matchAll(/<a\b[^>]*data-report-link[^>]*>/g)].some((m) => /href="\/report-an-error(?:\?from=[^"]*)?"/.test(m[0])), '');
+      row(`${p} the saved query names this group`, t.includes(`where subject_group = '${s.group}'`), '');
+      // G1: every external link is an official record (USAspending, SEC EDGAR); nothing from news sources.
+      const ext = [...pg.html.matchAll(/href="(https?:\/\/[^"]+)"/g)].map((m) => new URL(m[1].replace(/&amp;/g, '&')).host).filter((h) => h !== 'slushfund.net');
+      const off = [...new Set(ext)].filter((h) => !SF.OFFICIAL_HOSTS.includes(h));
+      row(`${p} external links are official records only`, off.length === 0, off.length ? off.join(', ') : `${ext.length} links`);
+      // Every printed sentence carries a footnote marker, and every footnote exists with at least one record link.
+      const sent = [...pg.html.matchAll(/data-sentence="([a-z0-9]+)"[^>]*>([\s\S]*?)<\/(?:p|span)>/g)];
+      const bare = sent.filter((m) => !/href="#fn-\d+"/.test(m[2])).map((m) => m[1]);
+      row(`${p} every sentence has a footnote marker`, sent.length > 0 && bare.length === 0, bare.length ? `no marker: ${[...new Set(bare)].join(', ')}` : `${sent.length} sentences`);
+      const refs = [...new Set([...pg.html.matchAll(/href="#fn-(\d+)"/g)].map((m) => m[1]))];
+      const noteHtml = (n) => { const i = pg.html.indexOf(`id="fn-${n}"`); if (i < 0) return ''; const j = pg.html.indexOf('id="fn-', i + 5); return pg.html.slice(i, j < 0 ? pg.html.indexOf('</ol>', i) : j); };
+      const notesOk = refs.every((n) => /href="https:\/\//.test(noteHtml(n))) && refs.every((n) => pg.html.includes(`id="ref-${n}"`));
+      row(`${p} each footnote has a record link and a back-link target`, refs.length > 0 && notesOk, `${refs.length} notes`);
+      // G3: amounts as recorded; no ceiling figure; G2: no dated pair on the share card.
+      row(`${p} no ceiling figure`, !/\$26\.9 billion|\$151 billion|ceiling of \$|ceilings? total/i.test(t), '');
+      if (s.group === 'bezos' || s.group === 'oracle') {
+        const other = s.group === 'bezos' ? 'Oracle' : 'Amazon';
+        row(`${p} never ranks Oracle against Amazon and Blue Origin`, !new RegExp(`(?:more|less|larger|smaller|bigger) than (?:${other})`, 'i').test(t) && !t.includes(SF.storyBySlug(s.pair).group === 'oracle' ? '$4.19 billion' : '$3.81 billion'), '');
+      }
+      if (s.group === 'bezos') {
+        const z5 = SF.AUDITED.bezos.z5;
+        const at = (k) => t.indexOf(SF.AUDITED.bezos[k]);
+        row(`${p} the novation sentence follows the dek and the not-competed split`, t.indexOf(z5) > at('z1') && t.indexOf(z5, at('z2')) > at('z2') && t.indexOf(z5, at('z2')) - at('z2') < SF.AUDITED.bezos.z2.length + 20, '');
+        row(`${p} Blue Origin Manufacturing and Honeybee are separate lines, not in the totals`, t.includes(SF.AUDITED.bezos.z6) && !pg.html.includes('data-recipient="RAR2RMTVZYX3"'), '');
+      }
+      if (s.group === 'musk') row(`${p} Starlink Technologies LLC is not presented as a SpaceX entity`, !pg.html.includes('data-recipient="NMSEZBYT6N85"') && t.includes('We do not present Starlink Technologies LLC (Hazleton, Pa.) as a SpaceX entity.'), '');
+      // D12c (A15 fixes). One date constant feeds the byline, the index cards and every "We asked ..." line.
+      row(`${p} byline and asked lines read INVESTIGATIONS_V2_DATE`, SF.STORY_PUBLISHED === SF.INVESTIGATIONS_V2_DATE && SF.ASKED_ON === SF.INVESTIGATIONS_V2_DATE && t.includes(`By ${SF.STORY_BYLINE} · ${SF.INVESTIGATIONS_V2_DATE}`) && s.asked.every((c) => STORY_RESPONSES[c.name] || t.includes(`We asked ${c.name} for comment on ${SF.INVESTIGATIONS_V2_DATE}`)), SF.INVESTIGATIONS_V2_DATE);
+      row(`${p} prints the G6 "why this subject" text`, t.includes(SF.SELECTION_LINE), 'pending Colin\'s OK');
+      const fixedWeak = Object.entries(SF.EVIDENCE_URL_FIX).filter(([uei]) => pg.html.includes(`>${uei}<`));
+      row(`${p} entity links for the A15 weak-link UEIs point at the parent's children list`, fixedWeak.every(([, url]) => pg.html.includes(`href="${url}"`)) && !/6d6462ae-83fb|2c023317-2253|0fe6fd21-17e1|9232b26d-789d|06e992bf-a6cf|9d3454b7-7047|bdd9b51c-085d|download\/transactions\/ \(/.test(pg.html), `${fixedWeak.length} UEIs`);
+      row(`${p} no "other firms" / "are separate companies" / "added during our completeness check" wording (A15 S-5 to S-7)`, !/other firms|are separate companies|added during our completeness check/.test(t), '');
+      if (s.group === 'musk') {
+        row(`${p} the type-table note names the $11.2 billion exception (A15 S-1)`, t.includes('the only figure that adds them is the $11.2 billion above, which says so') && !t.includes('are not added together in any total on this page'), '');
+        row(`${p} SpaceX Exhibit 21.1 sentence, linked to the SEC filing (A15 S-4)`, t.includes('lists X Corp., X.AI LLC, CTC Property LLC and SpaceX Services Inc. as significant subsidiaries') && pg.html.includes(`href="${SF.SPACEX_EX21}"`), '');
+        row(`${p} states the tie and the covers line names Exhibit 21.1 (A15 S-3)`, t.includes(s.tie) && t.includes('which SpaceX\'s SEC Exhibit 21.1 lists as subsidiaries') && pg.html.includes(`href="${SF.SPACEX_S1}"`) && pg.html.includes(`href="${SF.TESLA_10K}"`), '');
+      } else {
+        row(`${p} the type-table note keeps the "not added together" wording`, t.includes('are not added together in any total on this page'), '');
+      }
+      if (s.group === 'oracle') row(`${p} prints the IDV and assistance line (A15 P-1)`, t.includes(SF.AUDITED.oracle.o5), '');
+      const og = await fetch(base + p + '/opengraph-image');
+      row(`${p}/opengraph-image 200 png`, og.status === 200 && (og.headers.get('content-type') || '').includes('image/png'), `HTTP ${og.status}`);
+    }
+    row('/investigations index lines (A15 I-1, I-2)', index.text.includes('Stories return only after every figure is checked') && index.text.includes('Each sentence with a figure carries a numbered note to the records behind it: an award page, a recipient record or an SEC filing.') && !index.text.includes('one at a time'), '');
+    row('entity CSV carries the corrected links (no non-URL evidence)', !csvText.includes('(bezos_txn request') && Object.values(SF.EVIDENCE_URL_FIX).every((u) => csvText.includes(u)), '');
+    // G8: the same caveats, context line and method lines on both pages of each pair.
+    for (const [a, b] of SF.STORY_PAIRS) {
+      const A = SF.storyBySlug(a); const B = SF.storyBySlug(b);
+      const norm = (s) => SF.caveats(s).map((c) => c.replace(s.resold, '<resold>'));
+      row(`pair ${A.group}/${B.group}: identical caveats (reseller noun aside), context and method lines`, JSON.stringify(norm(A)) === JSON.stringify(norm(B)), '');
+    }
   }
 }
 

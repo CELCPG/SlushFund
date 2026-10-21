@@ -10,7 +10,7 @@ export interface ForbiddenPhrase {
   /** RegExp source, matched with the `gi` flags. */
   re: string;
   /** Which part of A7b's list it comes from. */
-  from: 'late filers' | 'signals' | 'contractor' | 'A8 L3' | 'A8b W1' | 'A8c W2' | 'F3' | 'A11' | 'G1' | 'G2' | 'G10';
+  from: 'late filers' | 'signals' | 'contractor' | 'A8 L3' | 'A8b W1' | 'A8c W2' | 'F3' | 'A11' | 'G1' | 'G2' | 'G10' | 'A13';
 }
 
 export const FORBIDDEN_PHRASES: readonly ForbiddenPhrase[] = [
@@ -115,6 +115,21 @@ export const FORBIDDEN_PHRASES: readonly ForbiddenPhrase[] = [
   { re: String.raw`\bbest\b`, from: 'G10' },
   { re: String.raw`\bvot(?:e|ing) (?:for|against)\b`, from: 'G10' },
   { re: String.raw`\bendors(?:e|ed|es|ing|ement|ements)\b`, from: 'G10' },
+  // D12 investigation posts (A13 §5, A13b §5 forbidden lists). "no-bid" and "no federal contracts" are already above.
+  // The old site's "$10B+" figure, never compared with ours (its period is unknown).
+  { re: String.raw`\$10\s?B\+|\$10 billion\s?\+|\$10 billion-plus`, from: 'A13' },
+  // A ceiling or award told as money won ("SpaceX won $X billion contract", "Ellison's company won $X billion").
+  { re: String.raw`\bwon (?:an? )?\$[\d.,]+`, from: 'A13' },
+  { re: String.raw`\bcontracts? worth (?:up to )?\$`, from: 'A13' },
+  { re: String.raw`\bsum of (?:the )?ceilings\b`, from: 'A13' },
+  // Persons are not recipients.
+  { re: String.raw`\b(?:Ellison|Bezos|Musk|Bloomberg)(?:'|’)s compan(?:y|ies)\b`, from: 'A13' },
+  // No sentence ranks Oracle against Amazon and Blue Origin (the order depends on the novation, A13b F2).
+  { re: String.raw`\bnearly as much\b|\bwithin (?:about )?10 ?(?:%|percent\b)|\bsimilar (?:amounts?|totals?)\b`, from: 'A13' },
+  { re: String.raw`\b(?:more|less) (?:money )?than (?:Oracle|Amazon|Blue Origin|SpaceX|Bloomberg)\b`, from: 'A13' },
+  // Unsourced characterizations (A13b §3, F3).
+  { re: String.raw`\bmostly sold through\b`, from: 'A13' },
+  { re: String.raw`\bmostly data and research subscriptions\b`, from: 'A13' },
 ];
 
 /**
