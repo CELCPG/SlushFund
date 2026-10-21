@@ -45,13 +45,13 @@ export default function MemberRecordPanel({
               <p className="mt-1 text-[14px] text-stale-ink">Unavailable right now: the trade database did not answer.</p>
             ) : g.letter === 'NG' ? (
               <>
-                <p className="mt-1 font-display text-[22px] font-extrabold">Not graded</p>
+                <p className="mt-1"><span className="sf-ng-cell font-display text-[22px] font-extrabold">Not graded</span></p>
                 <p className="mt-1 text-[13.5px]">{notGradedLine(m.name, g.unread)}</p>
               </>
             ) : (
               <>
                 <p className="mt-1 flex items-baseline gap-2">
-                  <span className="font-display text-[34px] font-extrabold leading-none"><span className="sr-only">Grade </span>{g.letter}</span>
+                  <span data-letter={g.letter} className="sf-grade-cell font-display text-[34px] font-extrabold leading-none"><span className="sr-only">Grade </span>{g.letter}</span>
                   <span className="font-mono text-[13.5px] text-muted">{g.score} points of 100</span>
                 </p>
                 {g.unread > 0 && <p className="mt-1 text-[13px] text-stale-ink">{unreadCaveat(g.unread)}</p>}

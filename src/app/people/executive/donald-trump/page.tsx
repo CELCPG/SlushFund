@@ -285,7 +285,7 @@ export default async function PresidentPage({ searchParams }: { searchParams: Pr
                   {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                 </select>
               </label>
-              <button type="submit" className="h-11 rounded-xl bg-trades px-4 text-[15px] font-semibold text-white hover:opacity-90">Show</button>
+              <button type="submit" className="h-11 rounded-xl bg-ink px-4 text-[15px] font-bold text-white hover:bg-deep">Show</button>
             </form>
             <p className="mb-3 text-[13.5px] text-muted" aria-live="polite">
               {fmtCount(rows.length)} of {fmtCount(trades.length)} transactions{fReport || fType || fClass ? <> · <Link href={`${PRESIDENT_PATH}#transactions`} className="underline">Clear filters</Link></> : null}

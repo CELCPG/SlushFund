@@ -296,3 +296,95 @@ html[data-theme='t2'] { --sf-rule: #FF4D4D; }
 /* Dark themes: white surfaces (the hero search box) keep dark text; the dark-indigo funding segment gets a light stand-in. */
 html:is([data-theme='t1'], [data-theme='t3']) .bg-white { --color-ink: #14142B; --color-muted: #4F5170; }
 html:is([data-theme='t1'], [data-theme='t3']) [style*='1D1A4E'] { background-color: #9C97E6 !important; }
+
+/* ── D16 polish pass (T1 only; styling, no words) ──
+   Surfaces: page #0B0B0B (bg) < card #161616 < inset #242424 (neutral-tint); header/footer are the only pure black.
+   Edges: one 1px --color-line rule on every card, tile and field (Tailwind inlines the light-theme --shadow-card, so
+   the cards kept a near-white hairline; that is overridden here). Primary buttons: one accent fill, dark text. */
+html[data-theme='t1'] {
+  scrollbar-color: #5C5C5C #0B0B0B;
+  scrollbar-width: thin;
+}
+html[data-theme='t1'] ::-webkit-scrollbar { width: 12px; height: 12px; }
+html[data-theme='t1'] ::-webkit-scrollbar-track { background: #0B0B0B; }
+html[data-theme='t1'] ::-webkit-scrollbar-thumb { background: #4A4A4A; border: 3px solid #0B0B0B; }
+html[data-theme='t1'] ::-webkit-scrollbar-thumb:hover { background: #6A6A6A; }
+html[data-theme='t1'] ::selection { background: var(--sf-accent); color: #0B0B0B; }
+
+/* The hero band is the page color, so tiles that straddle it no longer sit across a black/gray seam. */
+html[data-theme='t1'] .v2-band { background: var(--color-page); }
+html[data-theme='t1'] footer.bg-deep { background: #000000; box-shadow: inset 0 1px 0 var(--color-line); }
+
+html[data-theme='t1'] .shadow-card,
+html[data-theme='t1'] .shadow-tile:not(.sf-hero-figure) { box-shadow: 0 0 0 1px var(--color-line); }
+html[data-theme='t1'] .sf-kpi:not(.sf-hero-figure) { box-shadow: inset 0 6px 0 var(--sf-m, var(--color-ink)), 0 0 0 1px var(--color-line); }
+html[data-theme='t1'] a.shadow-tile:hover { box-shadow: 0 0 0 1px var(--sf-accent); background-color: var(--color-card); }
+
+/* Type: balanced headlines (no one-word last lines), tabular figures wherever numbers line up. */
+html[data-theme='t1'] :is(h1, h2, h3, .sf-section-title) { text-wrap: balance; }
+html[data-theme='t1'] :is(p, li, dd) { text-wrap: pretty; }
+html[data-theme='t1'] :is(table, .sf-kpi-value, .sf-rank, .sf-tick, .font-mono, dd) { font-variant-numeric: tabular-nums lining-nums; }
+html[data-theme='t1'] .sf-section-title { font-weight: 700; }
+html[data-theme='t1'] :is(h2, h3).font-display:not(.sf-section-title) { text-transform: uppercase; letter-spacing: 0.2px; }
+
+/* Primary buttons and fields: one treatment (accent fill, dark text, hard edge; 1px rule on fields). */
+html[data-theme='t1'] button.bg-brand,
+html[data-theme='t1'] button.bg-ink,
+html[data-theme='t1'] button[type='submit'] { background-color: var(--sf-accent); color: #0B0B0B; font-weight: 800; letter-spacing: 0.2px; }
+html[data-theme='t1'] button.bg-brand:hover,
+html[data-theme='t1'] button.bg-ink:hover,
+html[data-theme='t1'] button[type='submit']:hover { background-color: #FFFFFF; }
+html[data-theme='t1'] .bg-white button.bg-brand { box-shadow: inset 0 0 0 2px #0B0B0B; }
+html[data-theme='t1'] :is(select, input[type='text'], input[type='search'], input:not([type])) { border-radius: 0; }
+html[data-theme='t1'] [data-v2] :is(select, input:not([type='hidden'], [type='checkbox'], [type='radio'])) { box-shadow: 0 0 0 1px var(--color-line); }
+html[data-theme='t1'] [data-v2] :is(select, input):hover { box-shadow: 0 0 0 1px #6B6B6B; }
+/* Pills: hard edge to match the squares everywhere else. */
+html[data-theme='t1'] .rounded-full:not([class~='h-2'], [class~='h-1.5'], [class~='h-2.5'], [class~='h-[18px]']) { border-radius: 2px; }
+
+/* Charts: one tick size and tint, one gridline and axis weight. */
+html[data-theme='t1'] .sf-tick { font-size: 11.5px; color: var(--color-muted); }
+html[data-theme='t1'] .sf-grid { stroke-opacity: 0.18; }
+html[data-theme='t1'] .sf-axis { stroke-opacity: 0.5; }
+html[data-theme='t1'] .sf-rank-row { min-height: 24px; }
+html[data-theme='t1'] .sf-rank-n { color: var(--color-muted); }
+
+/* Grade badges: the same chip in every table and panel (letter + points on one baseline). D/F stay the loudest. */
+html[data-theme='t1'] .sf-grade-cell {
+  display: inline-flex; align-items: baseline; gap: 6px; padding: 1px 8px; line-height: 1.15;
+  background: var(--sf-badge-bg); color: var(--sf-badge-ink); --color-muted: var(--sf-badge-ink);
+}
+html[data-theme='t1'] .sf-grade-cell:is([data-letter='D'], [data-letter='F']) { font-size: 24px; }
+html[data-theme='t1'] .sf-ng-cell {
+  display: inline-block; padding: 1px 8px; line-height: 1.25; background: var(--color-neutral-tint); color: var(--color-ink);
+  box-shadow: inset 0 0 0 1px var(--color-line);
+}
+html[data-theme='t1'] .sf-ng-cell > span { color: var(--color-muted); }
+html[data-theme='t1'] [data-grade='not-graded'] > span:first-child { border-radius: 0; box-shadow: inset 0 0 0 1px var(--color-line); }
+
+/* Tables: heavier header rule, quiet row rules, row hover that stays inside the card's elevation. */
+html[data-theme='t1'] [data-v2] table thead th { border-bottom: 2px solid #5C5C5C; vertical-align: bottom; }
+html[data-theme='t1'] [data-v2] table tbody tr:hover { background-color: #1D1D1D; }
+html[data-theme='t1'] [data-v2] table td.text-right, html[data-theme='t1'] [data-v2] table th.text-right { padding-right: 14px; }
+
+/* Phones: sideways-scrolling regions get edge shadows (no JS) that show there is more to the side. */
+@media (max-width: 767px) {
+  html[data-theme='t1'] .overflow-x-auto {
+    background:
+      linear-gradient(to right, var(--color-card) 30%, rgba(22, 22, 22, 0)) left center / 28px 100% no-repeat local,
+      linear-gradient(to left, var(--color-card) 30%, rgba(22, 22, 22, 0)) right center / 28px 100% no-repeat local,
+      linear-gradient(to right, rgba(228, 255, 26, 0.45), rgba(228, 255, 26, 0)) left center / 10px 100% no-repeat scroll,
+      linear-gradient(to left, rgba(228, 255, 26, 0.45), rgba(228, 255, 26, 0)) right center / 10px 100% no-repeat scroll;
+  }
+  html[data-theme='t1'] [data-v2] :is(select, input:not([type='hidden'], [type='checkbox'], [type='radio'])) { min-height: 44px; }
+  html[data-theme='t1'] [data-v2] button[type='submit'] { min-height: 44px; }
+}
+
+/* Light fields on dark pages (ZIP boxes, filter inputs) become dark fields; the home search bar stays the one white
+   control, with hard corners and no inner ring. Fresh-status chip gets a dark-theme tint pair (was pale green on black). */
+html[data-theme='t1'] :is(input, select).bg-white { background-color: #0B0B0B; color: var(--color-ink); --color-ink: #F3F0E8; --color-muted: #BAB5AA; box-shadow: 0 0 0 1px var(--color-line); border-color: transparent; }
+html[data-theme='t1'] form[role='search'].bg-white { border-radius: 0; }
+html[data-theme='t1'] form[role='search'].bg-white :is(input, select) { box-shadow: none; border-radius: 0; }
+html[data-theme='t1'] [class~='bg-[#E3F4EA]'] { background-color: #0F3A24; color: #8FE8B4; }
+
+/* Keyboard focus stays the two-tone ring everywhere; the 1px field rules above must not replace its outer half. */
+html[data-theme='t1'] :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible { box-shadow: 0 0 0 6px var(--color-highlight) !important; }

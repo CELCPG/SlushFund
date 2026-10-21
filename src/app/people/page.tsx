@@ -163,7 +163,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
         {(presidentPageEnabled() || mostActiveEnabled() || voterPagesEnabled()) && (
           <section className="pt-8" aria-labelledby="ppl-more">
             <h2 id="ppl-more" className="sr-only">More people pages</h2>
-            <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-4">
               {voterPagesEnabled() && (
                 <Link href={VOTER_PATH} className="block rounded-2xl bg-card px-5 py-4 shadow-tile hover:bg-neutral-tint" data-link="voter-pages">
                   <span className="block text-[12px] font-bold uppercase tracking-[0.06em] text-muted">By state</span>
