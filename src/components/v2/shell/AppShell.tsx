@@ -4,13 +4,15 @@ import Wordmark from '@/components/v2/shell/Wordmark';
 import { HeaderSearchSlot, MobileMenu, NavLinks } from '@/components/v2/shell/HeaderNav';
 import ScrollRegions from '@/components/v2/shell/ScrollRegions';
 import ReportErrorLink from '@/components/v2/ReportErrorLink';
-import { FOOTER_LINKS } from '@/components/v2/shell/nav';
+import { FOOTER_LINKS, navItems } from '@/components/v2/shell/nav';
+import { electionCenterEnabled } from '@/lib/v2/flags';
 
 /**
  * v2 app shell: indigo header (wordmark, search, five sections, phone menu),
  * the page, and the footer. Replaces the old 5-dropdown Navbar.
  */
 export default function AppShell({ children }: { children: ReactNode }) {
+  const items = navItems(electionCenterEnabled());
   return (
     <div className="flex min-h-screen flex-col">
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-lg focus:bg-highlight focus:px-3 focus:py-2 focus:font-semibold focus:text-highlight-ink">
@@ -20,9 +22,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto flex h-[var(--header-h)] max-w-[1240px] items-center gap-6 px-8 max-md:gap-3 max-md:px-4">
           <Wordmark />
           <HeaderSearchSlot />
-          <NavLinks />
+          <NavLinks items={items} />
           <div className="ml-auto md:hidden" />
-          <MobileMenu />
+          <MobileMenu items={items} />
         </div>
       </header>
       {/* tabIndex -1: the skip link moves focus here, not just the scroll position. */}

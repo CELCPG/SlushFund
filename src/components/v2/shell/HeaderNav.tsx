@@ -4,14 +4,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useId, useRef, useState } from 'react';
 import { cn } from '@/lib/cn';
-import { NAV_ITEMS, isActive, shellPath } from '@/components/v2/shell/nav';
+import { NAV_ITEMS, isActive, shellPath, type NavItem } from '@/components/v2/shell/nav';
 
 /** Desktop section links with the current section highlighted. */
-export function NavLinks() {
+export function NavLinks({ items = NAV_ITEMS }: { items?: readonly NavItem[] }) {
   const pathname = shellPath(usePathname());
   return (
     <nav aria-label="Main" className="flex gap-1 max-md:hidden">
-      {NAV_ITEMS.map((item) => {
+      {items.map((item) => {
         const on = isActive(pathname, item.href);
         return (
           <Link
@@ -56,7 +56,7 @@ export function HeaderSearchSlot() {
 }
 
 /** Phone menu: burger button and a panel with search and the five sections. */
-export function MobileMenu() {
+export function MobileMenu({ items = NAV_ITEMS }: { items?: readonly NavItem[] }) {
   const pathname = shellPath(usePathname());
   // The menu is open for the path it was opened on, so navigating closes it.
   const [openOn, setOpenOn] = useState<string | null>(null);
@@ -94,7 +94,7 @@ export function MobileMenu() {
       >
         <HeaderSearch className="mb-3" />
         <nav aria-label="Main" className="grid gap-1">
-          {NAV_ITEMS.map((item) => {
+          {items.map((item) => {
             const on = isActive(pathname, item.href);
             return (
               <Link

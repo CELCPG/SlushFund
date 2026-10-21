@@ -154,6 +154,10 @@ export function notGradedLine(name: string, n: number): string {
   return `Not graded: ${cnt(n)} of ${name}’s reports filed in the last 24 months ${plural(n, 'is a scanned image or paper filing', 'are scanned images or paper filings')} we have not read yet, so we cannot say whether ${plural(n, 'it includes', 'they include')} individual-stock trades.`;
 }
 
+/** D17: the same sentence for a group of members (the Election Center's grade spread); same words as notGradedLine, plural. */
+export const NOT_GRADED_GROUP_LINE =
+  'Not graded: some of these members’ reports filed in the last 24 months are scanned images or paper filings we have not read yet, so we cannot say whether they include individual-stock trades.';
+
 /** A12 M2: the caveat on a graded (B to F) card whose member has unread reports in the window. */
 export function unreadCaveat(n: number): string {
   return `Grade based on the electronic filings we have read. ${cnt(n)} scanned or paper ${plural(n, 'report', 'reports')} from the last 24 months ${plural(n, 'is', 'are')} not read yet, so this count may be incomplete.`;

@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 import { hasPublishedCorrections } from '@/data/corrections';
-import { GRADE_METHOD_PATH, MOST_ACTIVE_PATH, PRESIDENT_PATH, VOTER_PATH, gradesEnabled, investigationsV2Enabled, lateFilersEnabled, mostActiveEnabled, presidentPageEnabled, voterPagesEnabled } from '@/lib/v2/flags';
+import { ELECTION_PATH, GRADE_METHOD_PATH, MOST_ACTIVE_PATH, electionCenterEnabled, PRESIDENT_PATH, VOTER_PATH, gradesEnabled, investigationsV2Enabled, lateFilersEnabled, mostActiveEnabled, presidentPageEnabled, voterPagesEnabled } from '@/lib/v2/flags';
 import { STATE_CODES } from '@/lib/v2/explorer';
 import { STORIES, storyPath } from '@/lib/v2/story-figures';
 
@@ -40,6 +40,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     paths.push({ path: VOTER_PATH, changeFrequency: 'weekly', priority: 0.7 });
     for (const s of STATE_CODES) paths.push({ path: `${VOTER_PATH}/${s.toLowerCase()}`, changeFrequency: 'daily', priority: 0.6 });
   }
+  // D17 Election Center (SHOW_ELECTION_CENTER).
+  if (electionCenterEnabled()) paths.push({ path: ELECTION_PATH, changeFrequency: 'daily', priority: 0.8 });
   // D12 investigation posts (SHOW_INVESTIGATIONS_V2): both pairs, listed together (G8).
   if (investigationsV2Enabled()) for (const s of STORIES) paths.push({ path: storyPath(s.slug), changeFrequency: 'weekly', priority: 0.7 });
 

@@ -7,6 +7,18 @@ export const NAV_ITEMS = [
   { href: '/about', label: 'About' },
 ] as const;
 
+export interface NavItem {
+  href: string;
+  label: string;
+}
+
+/** D17: "Election 2026" sits before About, only while the Election Center flag is on (nothing links to a 404). */
+export function navItems(electionCenterOn: boolean): readonly NavItem[] {
+  if (!electionCenterOn) return NAV_ITEMS;
+  const about = NAV_ITEMS.findIndex((i) => i.href === '/about');
+  return [...NAV_ITEMS.slice(0, about), { href: '/election-2026', label: 'Election 2026' }, ...NAV_ITEMS.slice(about)];
+}
+
 export const FOOTER_LINKS = [
   { href: '/about/methodology', label: 'Methods' },
   { href: '/about/corrections', label: 'Corrections' },

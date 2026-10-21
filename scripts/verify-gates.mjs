@@ -22,17 +22,18 @@ import {
 } from '../src/lib/v2/redirect-map.ts';
 import { LEGACY_AGENCIES, LEGACY_PEOPLE, LEGACY_VENDORS } from '../src/lib/v2/legacy-map.generated.ts';
 import {
-  GRADE_METHOD_PATH, MOST_ACTIVE_PATH, PRESIDENT_PATH, campaignMoneyEnabled, designPagesEnabled, gradesEnabled, hiddenByFlag, investigationsV2Enabled, lateFilersEnabled, lateFilersPreview,
+  ELECTION_PATH, GRADE_METHOD_PATH, MOST_ACTIVE_PATH, PRESIDENT_PATH, campaignMoneyEnabled, designPagesEnabled, electionCenterEnabled, gradesEnabled, hiddenByFlag, investigationsV2Enabled, lateFilersEnabled, lateFilersPreview,
   mostActiveEnabled, presidentPageEnabled, readFailureInjected, VOTER_PATH, voterPagesEnabled,
 } from '../src/lib/v2/flags.ts';
-import { GRADE_FIXED_LINE, activityOf, gradeClass, inWindow, notGradedLine, unreadCaveat, unreadInWindow, windowStart } from '../src/lib/v2/grade-method.ts';
+import { GRADE_FIXED_LINE, NOT_GRADED_GROUP_LINE, activityOf, gradeClass, gradeOf, inWindow, notGradedLine, unreadCaveat, unreadInWindow, windowStart } from '../src/lib/v2/grade-method.ts';
+import { ELECTION_DAY, MONEY_KEYS, averageLetter, daysUntil, moneyTotals } from '../src/lib/v2/election-calc.ts';
 import { VOTER_NOT_FINDING, VOTER_SCOPE, VOTER_TITLE, voterWhat } from '../src/lib/v2/voter-copy.ts';
 import { hiddenPageMetadata } from '../src/lib/v2/hidden-page.ts';
 import { HONEYPOT_FIELD, RATE_LIMIT, REPLY_PROMISE, normalizePageUrl, reportErrorHref } from '../src/lib/v2/error-reports.ts';
 import { HOME_HEADLINE_TEXT, MEMBERS_TILE_COPY, MEMBERS_TILE_LEAD } from '../src/lib/v2/home-copy.ts';
 import { DATE_FLAG_FALLBACK, DATE_FLAG_WORDING, LATENESS_BASIS_WORDING, dateFlagNote, latenessNote } from '../src/lib/v2/date-flags.ts';
 import { ALLOWED_VERBATIM, FORBIDDEN_PHRASES } from '../src/lib/v2/forbidden-words.ts';
-import { shellPath } from '../src/components/v2/shell/nav.ts';
+import { navItems, shellPath } from '../src/components/v2/shell/nav.ts';
 import { instrumentKind } from '../src/lib/v2/instruments.ts';
 import { MONEY_TYPES } from '../src/lib/v2/money.ts';
 import * as SF from '../src/lib/v2/story-figures.ts';
@@ -52,6 +53,8 @@ const KEEP_PAGES = new Set([
   '/people/executive/donald-trump', '/data/most-active-traders', '/about/methodology/report-card',
   // D11 voter pages, behind SHOW_VOTER_PAGES
   '/your-members',
+  // D17 Election Center, behind SHOW_ELECTION_CENTER
+  '/election-2026',
 ]);
 // Dynamic v2 pages, each with a real sample URL that must answer 200.
 const KEEP_DYNAMIC = new Map([
@@ -515,6 +518,7 @@ for (const p of KEEP_PAGES) {
   if (p === '/search') { await hit('/search?q=Warren', 200, { group: 'keep (v2)' }); continue; }
   if ((p === '/design' || p === '/design/story') && !designPagesEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // D8d L2
   if (p === '/data/late-filers' && !lateFilersEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // the board is off (production without SHOW_LATE_FILERS=1)
+  if (p === ELECTION_PATH && !electionCenterEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // D17: off on production without SHOW_ELECTION_CENTER=1
   if (p === VOTER_PATH && !voterPagesEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // D11: off on production without SHOW_VOTER_PAGES=1
   await hit(p, 200, { group: 'keep (v2)', noindex: p === '/design' || p === '/design/story' || p === '/rebuilding' });
 }
@@ -1281,6 +1285,113 @@ const F3 = 'post-launch fixes (F3)';
         row(`/your-members/vt ${m.name}: transactions and value vs DB`, block.includes(tx) && block.includes(val), `want "${tx}", "${val}"`);
       }
     } catch (e) { row('/your-members/vt figures vs DB', false, `could not run: ${String(e.message).slice(0, 120)}`); }
+  }
+}
+
+// ---------------------------------------------------------------- D17: Election Center (/election-2026)
+{
+  const G = 'D17 election center';
+  const row = (path, ok, note, expect = 'ok') => { if (!ok) failed++; rows.push({ path, status: ok ? 'ok' : 'FAIL', expect, ok, note, group: G }); };
+  // Flag: off on production until SHOW_ELECTION_CENTER is exactly '1'.
+  for (const [env, want] of [[{}, false], [{ VERCEL_ENV: 'preview' }, false], [{ VERCEL_ENV: 'production' }, true], [{ VERCEL_ENV: 'production', SHOW_ELECTION_CENTER: '1' }, false], [{ VERCEL_ENV: 'production', SHOW_ELECTION_CENTER: 'true' }, true]]) {
+    row(`hiddenByFlag(${JSON.stringify(ELECTION_PATH)}, ${JSON.stringify(env)})`, hiddenByFlag(ELECTION_PATH, env) === want, '', String(want));
+  }
+  row('hiddenByFlag("/election-2026-results", production)', hiddenByFlag('/election-2026-results', { VERCEL_ENV: 'production' }) === false, 'exact path only', 'false');
+  row('navItems(false) is the five sections; navItems(true) adds Election 2026 before About', navItems(false).length === 5 && !navItems(false).some((i) => i.href === ELECTION_PATH) && navItems(true).map((i) => i.href).join(',') === ['/investigations', '/people', '/companies', '/data', ELECTION_PATH, '/about'].join(','), '');
+  // Pure arithmetic.
+  row('daysUntil(Nov 3, Oct 20) = 14, same day 0, after -1', daysUntil(ELECTION_DAY, '2026-10-20') === 14 && daysUntil(ELECTION_DAY, ELECTION_DAY) === 0 && daysUntil(ELECTION_DAY, '2026-11-04') === -1, '');
+  row('averageLetter: A,A,B = A; A,B = A (3.5 rounds up); B,C = B; all NG = none; NG left out', averageLetter(['A', 'A', 'B'])?.letter === 'A' && averageLetter(['A', 'B'])?.letter === 'A' && averageLetter(['B', 'C'])?.letter === 'B' && averageLetter(['NG', 'NG']) === null && averageLetter(['F', 'NG'])?.letter === 'F', '');
+  const homeHtml = await (await fetch(base + '/')).text();
+  const smx = await (await fetch(base + '/sitemap.xml')).text();
+  const hasNav = homeHtml.includes(`href="${ELECTION_PATH}"`);
+  if (!electionCenterEnabled()) {
+    await hit(ELECTION_PATH, 404, { group: G });
+    await hit(`${ELECTION_PATH}?party=Democrat`, 404, { group: G });
+    row('sitemap has no election page', !smx.includes(`slushfund.net${ELECTION_PATH}`), '');
+    row('header has no Election 2026 link', !hasNav, '');
+  } else {
+    const page = await fetch(base + ELECTION_PATH);
+    const html = (await page.text()).replace(/<!-- -->/g, '').replace(/&#x27;/g, "'");
+    const text = visibleText(html);
+    const gradesOn = gradesEnabled();
+    const moneyOn = campaignMoneyEnabled();
+    const activeOn = mostActiveEnabled();
+    const voterOn = voterPagesEnabled();
+    const presOn = presidentPageEnabled();
+    row(`${ELECTION_PATH} answers 200`, page.status === 200, `status ${page.status}`);
+    row('sitemap lists the election page', smx.includes(`slushfund.net${ELECTION_PATH}<`), '');
+    row('header links Election 2026', hasNav && homeHtml.includes('Election 2026'), '');
+    row('title, scope line and countdown present', ['Election 2026: the records', 'it does not tell you how to vote', 'makes no claim about who is on your ballot', 'data-field="countdown"'].every((s) => text.includes(s) || html.includes(s)), '');
+    // Countdown = calendar days from today (New York) to Nov 3.
+    const todayNY = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+    const dd = daysUntil(ELECTION_DAY, todayNY);
+    const cdText = /data-field="countdown"[^>]*>([\s\S]*?)<\/p>/.exec(html)?.[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ') ?? '';
+    row(`countdown reads ${dd} days (today ${todayNY})`, dd > 1 ? cdText.includes(`${dd} days`) : dd === 1 ? cdText.includes('1 day') : dd === 0 ? cdText.includes('Election Day is today') : cdText.includes('Election Day was'), cdText.trim());
+    // Flag-off sections are left out and never linked.
+    row('grade spread only with SHOW_GRADES', gradesOn === html.includes('data-section="grade-spread"'), '');
+    row('money chart only with SHOW_CAMPAIGN_MONEY', moneyOn === html.includes('data-section="money"'), '');
+    row('leaderboard teaser only with SHOW_MOST_ACTIVE; no link to it otherwise', activeOn === html.includes('data-section="traders"') && (activeOn || !html.includes(`href="${MOST_ACTIVE_PATH}"`)), '');
+    row('President band only with SHOW_PRESIDENT_TRADES; no link otherwise', presOn === html.includes('data-section="president"') && (presOn || !html.includes(`href="${PRESIDENT_PATH}"`)), '');
+    row('state tiles link to voter pages only with SHOW_VOTER_PAGES', voterOn ? (html.match(new RegExp(`href="${VOTER_PATH}/[a-z]{2}"`, 'g')) ?? []).length === 56 : !html.includes(`href="${VOTER_PATH}`), '');
+    row('state grid has 56 tiles', (html.match(/data-state="[A-Z]{2}"/g) ?? []).length === 56 && /data-state-count="56"/.test(html), '');
+    row('no partisan colors: no red/blue party coding in the page markup', !/(?:republican|democrat)[^<]{0,40}(?:#(?:ff0000|0000ff|d62728|1f77b4)|text-(?:red|blue)-)/i.test(html), '');
+    try {
+      const today = todayNY;
+      const start = windowStart(today);
+      const roster = await restAll('congress_members?select=bioguide_id,party,state,chamber,name,in_office&in_office=eq.true&order=bioguide_id.asc');
+      const sitting = new Set(roster.map((m) => m.bioguide_id));
+      const tr = await restAll(`congress_trades?select=id,bio_guide_id,ticker,company_name,asset_type,option_type,transaction_type,transaction_date,amount_min,date_flag,stock_act_late,committee_conflict,has_federal_contract,disclosure_url,original_disclosure_url,original_source_doc_id,source_doc_id&transaction_date=gte.${start}&transaction_date=lte.${today}&order=id.asc`);
+      const inWin = tr.filter((r) => inWindow(r, start, today));
+      const unread = JSON.parse(readFileSync(join(ROOT, 'src', 'data', 'unread-window.json'), 'utf8'));
+      const by = new Map();
+      for (const r of inWin) { if (!r.bio_guide_id) continue; const l = by.get(r.bio_guide_id) ?? []; l.push({ ...r, cls: gradeClass(r, instrumentKind(r)) }); by.set(r.bio_guide_id, l); }
+      const graded = roster.map((m) => { const l = by.get(m.bioguide_id) ?? []; const a = activityOf(m.bioguide_id, l); return { ...m, letter: gradeOf(l, a, unreadInWindow(unread[m.bioguide_id], start)).letter, a }; });
+      row(`${ELECTION_PATH} trades KPI = all disclosed rows dated ${start} to ${today} (not date-noted)`, text.includes(`${inWin.length.toLocaleString('en-US')} transactions of every kind`), `DB ${inWin.length}`);
+      if (gradesOn) {
+        const L = ['A', 'B', 'C', 'D', 'F', 'NG'];
+        const want = (pred) => L.map((l) => `${l}:${graded.filter((m) => pred(m) && m.letter === l).length}`).join(',');
+        row('grade spread (All) = recomputed from the database', html.includes(`data-spread="${want(() => true)}"`), want(() => true));
+        for (const p of ['Democrat', 'Republican']) {
+          const h = (await (await fetch(`${base}${ELECTION_PATH}?party=${p}`)).text()).replace(/<!-- -->/g, '');
+          row(`grade spread (${p}) = recomputed`, h.includes(`data-spread="${want((m) => m.party === p)}"`), want((m) => m.party === p));
+        }
+        const gc = graded.filter((m) => m.letter !== 'NG').length;
+        row('Members graded KPI = sitting members with a letter', text.includes(`${gc.toLocaleString('en-US')} of ${graded.length.toLocaleString('en-US')} sitting members have a letter grade; ${(graded.length - gc).toLocaleString('en-US')} are not graded`), `${gc} of ${graded.length}`);
+        row('Not graded caveat printed verbatim', html.includes(NOT_GRADED_GROUP_LINE) && html.includes(GRADE_FIXED_LINE), '');
+        // State average letters.
+        const bad = [];
+        for (const st of [...new Set(roster.map((m) => m.state))]) {
+          const al = averageLetter(graded.filter((m) => m.state === st).map((m) => m.letter));
+          const blk = new RegExp(`data-state="${st}"[\\s\\S]*?data-avg-letter="([A-Z]|none)"`).exec(html)?.[1];
+          if ((al?.letter ?? 'none') !== blk) bad.push(`${st}: page ${blk}, want ${al?.letter ?? 'none'}`);
+        }
+        row('state tile average letters = recomputed', bad.length === 0, bad.slice(0, 5).join('; '));
+      }
+      if (activeOn) {
+        const rec = new Map();
+        for (const [id, l] of by) { if (!sitting.has(id) && !roster.some((m) => m.bioguide_id === id)) { /* former members are on the board too */ } const a = activityOf(id, l); if (a.transactions > 0) rec.set(id, a.transactions); }
+        const top = [...rec.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([, n]) => n);
+        const shown = [...html.matchAll(/class="sf-rank-value[^"]*">([\d,]+)/g)].map((m) => Number(m[1].replace(/,/g, '')));
+        row('leaderboard teaser: top-10 transaction counts = recomputed', shown.length === 10 && shown.every((n, i) => n === top[i]), `page ${shown.join(',')} want ${top.join(',')}`);
+      }
+      if (presOn) {
+        const pt = await restAll('executive_trades?select=id&office=eq.President&report_type=eq.278-T&order=id.asc');
+        row('President count = DB rows (office President, 278-T)', new RegExp(`data-field="president-count"[^>]*>${pt.length.toLocaleString('en-US')}<`).test(html), `DB ${pt.length}`);
+      }
+      // What's new: sitting members' first reports dated in the last 30 days.
+      const since = (() => { const [y, m, d] = today.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d - 30)).toISOString().slice(0, 10); })();
+      const nw = (await restAll(`congress_trades?select=id,bio_guide_id&original_filed_date=gte.${since}&original_filed_date=lte.${today}&order=id.asc`)).filter((r) => r.bio_guide_id && sitting.has(r.bio_guide_id));
+      const shownNew = /data-whats-new="(\d+)"/.exec(html)?.[1];
+      row(`What's new count = DB (first report ${since} to ${today}, sitting members)`, Number(shownNew ?? 0) === nw.length, `page ${shownNew ?? 0}, DB ${nw.length}`);
+      if (moneyOn) {
+        const money = await restAll('member_campaign_money?select=raised,shares_ok,pct_small_individual,pct_large_individual,pct_corporate_trade_pac,pct_labor_pac,pct_leadership_party_other,pct_self_funded,outside_support,outside_oppose&order=bioguide_id.asc');
+        const t = moneyTotals(money);
+        row('Campaign receipts KPI caption = DB sum of raised', text.includes(`$${Math.round(t.raised).toLocaleString('en-US')} in total receipts reported by ${t.members.toLocaleString('en-US')} members`), `DB $${Math.round(t.raised).toLocaleString('en-US')} over ${t.members}`);
+        const bad = MONEY_KEYS.filter((k) => !new RegExp(`data-money-part="${k}"[\\s\\S]*?<b[^>]*>${(t.byKey[k] / t.sharesRaised * 100).toFixed(1)}%<`).test(html));
+        row('money category shares = recomputed (receipts x each member share)', bad.length === 0, bad.join(',') || `${t.sharesMembers} of ${t.members} members, $${Math.round(t.sharesRaised).toLocaleString('en-US')}`);
+        row('outside spending = DB sums', text.includes(`${'$' + Math.round(t.outsideSupport).toLocaleString('en-US')} for these members, ${'$' + Math.round(t.outsideOppose).toLocaleString('en-US')} against`), '');
+      }
+    } catch (e) { row(`${ELECTION_PATH} figures vs DB`, false, `could not run: ${String(e.message).slice(0, 160)}`); }
   }
 }
 

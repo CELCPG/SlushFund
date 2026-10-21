@@ -10,7 +10,7 @@ import { fmtDate, fmtUsd } from '@/lib/v2/format';
  * committee whose receipts are the denominator. When a share is negative or the shares add to more than 100 (refunds or
  * giver-side reports that do not line up with the committee's own receipts) no share sentence or bar is printed.
  */
-const PARTS: { key: 'pct_small_individual' | 'pct_large_individual' | 'pct_corporate_trade_pac' | 'pct_labor_pac' | 'pct_leadership_party_other' | 'pct_self_funded'; label: string; color: string }[] = [
+export const PARTS: { key: 'pct_small_individual' | 'pct_large_individual' | 'pct_corporate_trade_pac' | 'pct_labor_pac' | 'pct_leadership_party_other' | 'pct_self_funded'; label: string; color: string }[] = [
   { key: 'pct_small_individual', label: 'Small donors (unitemized)', color: '#C2410C' },
   { key: 'pct_large_individual', label: 'Larger individual gifts (itemized)', color: '#E07B3F' },
   { key: 'pct_corporate_trade_pac', label: 'Corporate and trade-association PACs', color: '#1D1A4E' },

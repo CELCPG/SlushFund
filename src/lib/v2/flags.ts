@@ -78,6 +78,16 @@ export function investigationsV2Enabled(env: Env = process.env): boolean {
   return env.VERCEL_ENV !== 'production' || env.SHOW_INVESTIGATIONS_V2 === '1';
 }
 
+/**
+ * D17: the Election Center (/election-2026), the front door that pulls the grades, campaign money, trading board, voter pages and
+ * President page into one place. Off on production unless SHOW_ELECTION_CENTER=1 (Auditor GO first); each section also follows its
+ * own flag (grades, campaign money, leaderboard, voter pages, President), so the hub never shows or links what is still hidden.
+ */
+export function electionCenterEnabled(env: Env = process.env): boolean {
+  return env.VERCEL_ENV !== 'production' || env.SHOW_ELECTION_CENTER === '1';
+}
+
+export const ELECTION_PATH = '/election-2026';
 export const PRESIDENT_PATH = '/people/executive/donald-trump';
 export const MOST_ACTIVE_PATH = '/data/most-active-traders';
 export const GRADE_METHOD_PATH = '/about/methodology/report-card';
@@ -91,6 +101,7 @@ export const VOTER_PATH = '/your-members';
  */
 export function hiddenByFlag(pathname: string, env: Env = process.env): boolean {
   if (pathname === '/data/late-filers') return !lateFilersEnabled(env);
+  if (pathname === ELECTION_PATH) return !electionCenterEnabled(env);
   if (pathname === PRESIDENT_PATH) return !presidentPageEnabled(env);
   if (pathname === MOST_ACTIVE_PATH) return !mostActiveEnabled(env);
   if (pathname === GRADE_METHOD_PATH) return !gradesEnabled(env);
