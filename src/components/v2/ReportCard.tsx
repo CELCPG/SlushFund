@@ -33,8 +33,8 @@ export default function ReportCard({ card, name, inOffice, bioguide }: { card: M
                 </p>
               </div>
             ) : (
-              <div className="flex flex-wrap items-center gap-5">
-                <span aria-hidden className="grid h-[88px] w-[88px] place-items-center rounded-2xl bg-ink font-display text-[52px] font-extrabold text-white">{card.grade.letter}</span>
+              <div className="sf-grade-row flex flex-wrap items-center gap-5">
+                <span aria-hidden data-letter={card.grade.letter} className="sf-grade grid h-[88px] w-[88px] place-items-center rounded-2xl bg-ink font-display text-[52px] font-extrabold text-white">{card.grade.letter}</span>
                 <p className="text-[16px]">
                   <span className="sr-only">Grade {card.grade.letter}. </span>
                   <b>{card.grade.score} points</b> of 100 (A = 0 points · B 1–20 · C 21–40 · D 41–60 · F 61 or more), for trades dated {fmtDate(card.win.start)} to {fmtDate(card.win.end)}.

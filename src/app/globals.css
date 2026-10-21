@@ -137,3 +137,160 @@ main#main:focus { outline: none; box-shadow: none; }
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ─── D13 themes (SITE_THEME = t1 | t2 | t3; layout.tsx sets html[data-theme]) ───
+   Visuals only: tokens and a few hook classes (sf-*). No rule here adds or changes words; `content` is only ever ''.
+   `current` has no data-theme attribute, so none of this applies to it. Party is never a color in any theme.
+   Every text pair is checked in openclaw-shared/projects/slushfund/d13-design.md (axe + own contrast script). */
+
+/* Shared to all three themes: one big hero figure, strong F/D badges, heavier leaderboard bars, hard corners. */
+html[data-theme] {
+  --radius-card: 0px; --radius-tile: 0px; --radius-2xl: 0px; --radius-xl: 0px; --radius-lg: 0px;
+  --shadow-tile: none; --shadow-search: none;
+  font-synthesis-weight: none;
+}
+html[data-theme] .sf-hero-figure {
+  background: none; box-shadow: none; padding: 0; color: #FFFFFF; max-width: 900px;
+}
+html[data-theme] .sf-hero-figure .sf-kpi-value {
+  font-size: 132px; line-height: 0.95; letter-spacing: -1px; margin: 10px 0 8px; color: var(--sf-hero-num);
+}
+html[data-theme] .sf-hero-figure .sf-kpi-value + p { font-size: 20px; font-weight: 600; max-width: 720px; }
+@media (max-width: 767px) {
+  html[data-theme] .sf-hero-figure .sf-kpi-value { font-size: 76px; }
+  html[data-theme] .sf-hero-figure .sf-kpi-value + p { font-size: 16px; }
+}
+html[data-theme] .sf-kpi:not(.sf-hero-figure) .sf-kpi-value { font-size: 52px; line-height: 1; }
+@media (max-width: 639px) { html[data-theme] .sf-kpi:not(.sf-hero-figure) .sf-kpi-value { font-size: 38px; } }
+html[data-theme] .sf-kpi[data-money='contracts'] { --sf-m: var(--color-contracts); }
+html[data-theme] .sf-kpi[data-money='trades'] { --sf-m: var(--color-trades); }
+html[data-theme] .sf-kpi[data-money='campaign'] { --sf-m: var(--color-campaign); }
+html[data-theme] .sf-kpi[data-money='lobbying'] { --sf-m: var(--color-lobbying); }
+
+/* Grades: every letter is a hard square; D and F are the biggest thing in their section. */
+html[data-theme] .sf-grade { width: 104px; height: 104px; font-size: 64px; }
+html[data-theme] .sf-grade:is([data-letter='D'], [data-letter='F']) { width: 148px; height: 148px; font-size: 104px; line-height: 1; }
+html[data-theme] .sf-grade-row:has(.sf-grade:is([data-letter='D'], [data-letter='F'])) > p { font-size: 18px; }
+html[data-theme] .sf-grade-cell:is([data-letter='D'], [data-letter='F']) {
+  display: inline-block; padding: 1px 8px; font-size: 24px; line-height: 1.15;
+  background: var(--sf-badge-bg); color: var(--sf-badge-ink); --color-muted: var(--sf-badge-ink);
+}
+@media (max-width: 767px) {
+  html[data-theme] .sf-grade:is([data-letter='D'], [data-letter='F']) { width: 120px; height: 120px; font-size: 84px; }
+}
+
+/* Leaderboard top 25: thicker bars, bigger values. */
+html[data-theme] .sf-rank > li { font-size: 14px; }
+html[data-theme] .sf-rank-bar { height: 24px; border-radius: 0; background-color: var(--sf-bar); }
+html[data-theme] .sf-rank-value { font-size: 16px; font-weight: 700; color: var(--sf-figure); }
+html[data-theme] .sf-line { stroke: var(--sf-bar); stroke-width: 4; }
+
+/* ── T1 "Night Desk, dialed up": near-black, off-white, one acid-yellow accent for figures and grades, Oswald. ── */
+html[data-theme='t1'] {
+  color-scheme: dark;
+  --color-page: #0B0B0B; --color-card: #161616; --color-ink: #F3F0E8; --color-muted: #BAB5AA; --color-line: #3B3B3B;
+  --color-deep: #000000; --color-deep-2: #141414; --color-deep-glow: #000000; --color-on-deep: #D9D5CB;
+  --color-contracts-tint: #0D3236; --color-contracts-ink: #6FD6DE;
+  --color-trades-tint: #2B2150; --color-trades-ink: #BBA6FF;
+  --color-campaign-tint: #3E2010; --color-campaign-ink: #FFAD80;
+  --color-lobbying-tint: #3D1527; --color-lobbying-ink: #FF9CC0;
+  --color-stale-tint: #3A2A00; --color-stale-ink: #FFD47A; --color-down-tint: #3F1310; --color-down-ink: #FFB0A6;
+  --color-neutral-tint: #242424;
+  --font-display: var(--font-oswald), Impact, 'Arial Narrow', sans-serif;
+  --shadow-card: 0 0 0 2px #3B3B3B;
+  --sf-accent: #E4FF1A; --sf-accent-ink: #0B0B0B;
+  --sf-hero-num: var(--sf-accent); --sf-figure: var(--sf-accent); --sf-bar: var(--sf-accent);
+  --sf-badge-bg: var(--sf-accent); --sf-badge-ink: #0B0B0B;
+}
+html[data-theme='t1'] .v2-header { background: #000000; box-shadow: inset 0 -4px 0 var(--sf-accent); }
+html[data-theme='t1'] .v2-band { background: #000000; }
+html[data-theme='t1'] :is(h1, .sf-section-title) { text-transform: uppercase; letter-spacing: 0.2px; }
+html[data-theme='t1'] h1.font-display { font-size: 64px; line-height: 1.02; }
+@media (max-width: 767px) { html[data-theme='t1'] h1.font-display { font-size: 40px; } }
+html[data-theme='t1'] .sf-section-title { border-left: 8px solid var(--sf-accent); padding-left: 14px; }
+html[data-theme='t1'] .sf-kpi { background: var(--color-card); color: var(--color-ink); box-shadow: inset 0 6px 0 var(--sf-m, var(--color-ink)), 0 0 0 2px #3B3B3B; }
+html[data-theme='t1'] .sf-hero-figure { box-shadow: none; background: none; color: #FFFFFF; }
+html[data-theme='t1'] .sf-kpi-value { color: var(--sf-accent); }
+html[data-theme='t1'] .bg-ink { background-color: var(--sf-accent); color: var(--sf-accent-ink); }
+html[data-theme='t1'] .bg-ink:hover { background-color: #FFFFFF; color: #0B0B0B; }
+
+/* ── T2 "Tabloid ledger": newsprint, black slab headers and thick rules, Anton, one red accent for figures. ── */
+html[data-theme='t2'] {
+  --color-page: #F2EEE3; --color-card: #FFFFFF; --color-ink: #0A0A0A; --color-muted: #3D3D3D; --color-line: #C9C3B3;
+  --color-deep: #0A0A0A; --color-deep-2: #1A1A1A; --color-deep-glow: #0A0A0A; --color-on-deep: #E6E1D4;
+  --font-display: var(--font-anton), Impact, 'Arial Narrow', sans-serif;
+  --shadow-card: 0 0 0 3px #0A0A0A;
+  --sf-accent: #C8102E;
+  --sf-hero-num: #FF4D4D; --sf-figure: var(--sf-accent); --sf-bar: #0A0A0A;
+  --sf-badge-bg: #C8102E; --sf-badge-ink: #FFFFFF;
+}
+html[data-theme='t2'] .font-display { font-weight: 400; }
+html[data-theme='t2'] .v2-header { background: #0A0A0A; }
+html[data-theme='t2'] .v2-band { background: #0A0A0A; box-shadow: 0 6px 0 var(--color-page), 0 14px 0 #0A0A0A; margin-bottom: 14px; }
+html[data-theme='t2'] h1.font-display { font-size: 72px; line-height: 1; text-transform: uppercase; letter-spacing: 0.3px; }
+@media (max-width: 767px) { html[data-theme='t2'] h1.font-display { font-size: 42px; } }
+html[data-theme='t2'] .sf-section-title {
+  display: inline; background: #0A0A0A; color: #FFFFFF; padding: 2px 12px; line-height: 1.45;
+  text-transform: uppercase; letter-spacing: 0.4px; -webkit-box-decoration-break: clone; box-decoration-break: clone;
+}
+html[data-theme='t2'] .sf-kpi:not(.sf-hero-figure) { background: #FFFFFF; box-shadow: inset 0 10px 0 var(--sf-m, #0A0A0A), 0 0 0 3px #0A0A0A; }
+html[data-theme='t2'] .sf-kpi:not(.sf-hero-figure),
+html[data-theme='t2'] .sf-kpi:not(.sf-hero-figure) .text-white { color: var(--color-ink); }
+html[data-theme='t2'] .sf-kpi:not(.sf-hero-figure) :is(.bg-white\/20, .bg-black\/30) { background-color: #0A0A0A; color: #FFFFFF; }
+html[data-theme='t2'] .sf-kpi:not(.sf-hero-figure) .text-white:is(.bg-contracts, .bg-trades, .bg-campaign, .bg-lobbying) { color: #FFFFFF; }
+html[data-theme='t2'] .sf-kpi:not(.sf-hero-figure) .sf-kpi-value { color: var(--sf-accent); }
+/* Grade badges: solid squares, no rotation or stamp rings (Colin 10/20: weight, not theatre). D/F solid red, others solid black. */
+html[data-theme='t2'] .sf-grade { background: #0A0A0A; color: #FFFFFF; }
+html[data-theme='t2'] .sf-grade:is([data-letter='D'], [data-letter='F']) { background: var(--sf-accent); color: #FFFFFF; }
+html[data-theme='t2'] .sf-rank-bar { background-color: #0A0A0A; }
+
+/* ── T3 "Data desk": stark near-black, JetBrains Mono figures, dense tables, bold white rules. Monochrome: no
+   highlighter, no document motifs; white is the only emphasis and the money colors keep their one job. ── */
+html[data-theme='t3'] {
+  color-scheme: dark;
+  --color-page: #101112; --color-card: #17181A; --color-ink: #F2F2EF; --color-muted: #B0B2B5; --color-line: #3A3C40;
+  --color-deep: #000000; --color-deep-2: #0B0B0C; --color-deep-glow: #000000; --color-on-deep: #D4D5D7;
+  --color-contracts-tint: #0D3236; --color-contracts-ink: #6FD6DE;
+  --color-trades-tint: #2B2150; --color-trades-ink: #BBA6FF;
+  --color-campaign-tint: #3E2010; --color-campaign-ink: #FFAD80;
+  --color-lobbying-tint: #3D1527; --color-lobbying-ink: #FF9CC0;
+  --color-stale-tint: #3A2A00; --color-stale-ink: #FFD47A; --color-down-tint: #3F1310; --color-down-ink: #FFB0A6;
+  --color-neutral-tint: #2A2C2F;
+  --font-display: var(--font-space-grotesk), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+  --shadow-card: 0 0 0 1px #4A4D52;
+  --sf-hero-num: #FFFFFF; --sf-figure: #FFFFFF; --sf-bar: #F2F2EF;
+  --sf-badge-bg: #FFFFFF; --sf-badge-ink: #000000;
+  font-variant-numeric: tabular-nums;
+}
+html[data-theme='t3'] .v2-header { background: #000000; box-shadow: inset 0 -4px 0 #FFFFFF; }
+html[data-theme='t3'] .v2-band { background: #000000; }
+html[data-theme='t3'] h1.font-display { font-size: 60px; line-height: 1.04; letter-spacing: -1.2px; }
+@media (max-width: 767px) { html[data-theme='t3'] h1.font-display { font-size: 38px; letter-spacing: -0.6px; } }
+html[data-theme='t3'] .sf-section-head { border-top: 6px solid var(--color-ink); padding-top: 10px; }
+html[data-theme='t3'] .sf-section-title { letter-spacing: -0.6px; }
+html[data-theme='t3'] .sf-kpi { background: var(--color-card); color: var(--color-ink); box-shadow: inset 0 4px 0 var(--sf-m, var(--color-ink)), 0 0 0 1px #4A4D52; }
+html[data-theme='t3'] .sf-hero-figure { box-shadow: none; background: none; color: #FFFFFF; border-bottom: 6px solid #FFFFFF; padding-bottom: 14px; }
+html[data-theme='t3'] .sf-kpi-value, html[data-theme='t3'] .sf-rank-value {
+  font-family: var(--font-mono); font-weight: 700; letter-spacing: -2px; color: #FFFFFF;
+}
+html[data-theme='t3'] .sf-rank-value { letter-spacing: -0.3px; }
+html[data-theme='t3'] .sf-grade { background: transparent; color: var(--color-ink); box-shadow: inset 0 0 0 4px var(--color-ink); }
+html[data-theme='t3'] .sf-grade:is([data-letter='D'], [data-letter='F']) { background: #FFFFFF; color: #000000; box-shadow: none; }
+/* Dense tables: tighter rows, heavy header rule, figures right-aligned in mono (already) with tabular digits. */
+html[data-theme='t3'] [data-v2] table thead th { border-bottom: 3px solid var(--color-ink); color: var(--color-ink); padding-top: 6px; padding-bottom: 6px; }
+html[data-theme='t3'] [data-v2] table tbody :is(td, th) { padding-top: 7px; padding-bottom: 7px; }
+html[data-theme='t3'] .bg-ink { background-color: var(--color-ink); color: #000000; }
+html[data-theme='t3'] .bg-ink:hover { background-color: #FFFFFF; color: #000000; }
+
+/* Headline emphasis: a plain heavy underline in the theme ink instead of the marker swipe (same words, same element). */
+html[data-theme] .sf-headline-em {
+  background: none; text-decoration: underline; text-decoration-thickness: 0.09em; text-underline-offset: 0.14em;
+  text-decoration-color: var(--sf-rule, currentColor); text-decoration-skip-ink: none;
+}
+html[data-theme='t1'] { --sf-rule: var(--sf-accent); }
+html[data-theme='t2'] { --sf-rule: #FF4D4D; }
+
+/* Dark themes: white surfaces (the hero search box) keep dark text; the dark-indigo funding segment gets a light stand-in. */
+html:is([data-theme='t1'], [data-theme='t3']) .bg-white { --color-ink: #14142B; --color-muted: #4F5170; }
+html:is([data-theme='t1'], [data-theme='t3']) [style*='1D1A4E'] { background-color: #9C97E6 !important; }

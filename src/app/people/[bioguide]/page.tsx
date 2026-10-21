@@ -10,7 +10,7 @@ import QuarterChart from '@/components/v2/QuarterChart';
 import SourceBar from '@/components/v2/SourceBar';
 import { worstState } from '@/components/v2/SourceBarView';
 import TradesTable from '@/components/v2/TradesTable';
-import FundingPanel from '@/components/v2/FundingPanel';
+import FundingPanel, { CYCLE } from '@/components/v2/FundingPanel';
 import ReportCard from '@/components/v2/ReportCard';
 import { getCampaignMoney } from '@/lib/v2/campaign-money';
 import { campaignMoneyEnabled, gradesEnabled } from '@/lib/v2/flags';
@@ -108,6 +108,27 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
     campaignMoneyEnabled() ? getCampaignMoney(id) : Promise.resolve({ state: 'missing' } as const),
   ]);
   const contractors: TradedContractor[] | null = contractsOn && trades ? await getMemberContractors(trades) : null;
+
+  // D14: the tile says what the "Who funds them" panel below says, in the panel's words; flag off (or the view missing) keeps "Not loaded yet".
+  const campaignTile = (() => {
+    const base = { type: 'campaign' as const, label: 'Campaign money', source: 'FEC', sourceHref: '#p-funds' };
+    const unavailable = (reason: string) => <KpiTile {...base} value={null} caption="" asOf={null} state="unavailable" unavailableReason={reason} />;
+    if (!campaignMoneyEnabled() || money.state === 'missing') {
+      return <KpiTile type="campaign" label="Campaign money" value={null} caption="FEC receipts" source="FEC" asOf={null} state="not_loaded" unavailableReason="Not loaded yet (FEC)." />;
+    }
+    if (money.state === 'error') return unavailable('Campaign finance data is unavailable right now: the database did not answer.');
+    if (money.state === 'none') return unavailable(`No FEC candidate record confirmed for ${member.name} yet, so no campaign figures are shown.`);
+    const raised = money.row.raised == null ? 0 : Number(money.row.raised);
+    if (!(raised > 0)) return unavailable(`No receipts reported for the ${CYCLE} (FEC).`);
+    return (
+      <KpiTile
+        {...base}
+        value={fmtUsd(raised)}
+        caption={`campaign committee receipts, ${CYCLE}, through ${fmtDate(money.row.coverage_end) ?? 'the latest report'}`}
+        asOf={money.row.coverage_end}
+      />
+    );
+  })();
 
   // Newest first by the first report's filing date (R6a original_filed_date); flagged dates last.
   const filedKey = (t: { date_flag?: string | null; original_filed_date?: string | null; filed_date: string | null }) =>
@@ -235,16 +256,7 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
             state={contractsOn && contractors ? 'fresh' : 'not_loaded'}
             unavailableReason={contractsOn ? 'The contracts join did not load.' : 'Being checked: the stock-to-company links need share classes and ownership dates first.'}
           />
-          <KpiTile
-            type="campaign"
-            label="Campaign money"
-            value={null}
-            caption="FEC receipts"
-            source="FEC"
-            asOf={null}
-            state="not_loaded"
-            unavailableReason="Not loaded yet (FEC)."
-          />
+          {campaignTile}
           <KpiTile
             label="Committee seats"
             value={inOffice ? fmtCount(committees.length) : 'None'}

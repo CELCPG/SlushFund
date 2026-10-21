@@ -43,7 +43,7 @@ export default function KpiTile({
   const sub = m && !missing ? 'text-white' : 'text-muted';
 
   return (
-    <div className={cn('relative flex min-w-0 flex-col overflow-hidden rounded-tile p-5 pb-4 max-sm:rounded-2xl max-sm:p-3.5', tone, className)}>
+    <div data-money={type} className={cn('sf-kpi relative flex min-w-0 flex-col overflow-hidden rounded-tile p-5 pb-4 max-sm:rounded-2xl max-sm:p-3.5', tone, className)}>
       <div className="flex items-center gap-2">
         {m && missing && <MoneyIcon type={m.type} size="sm" />}
         {m && !missing && (
@@ -61,7 +61,7 @@ export default function KpiTile({
         </div>
       ) : (
         <>
-          <strong className="mt-2 mb-0.5 block font-display text-[40px] font-extrabold leading-[1.1] max-sm:text-[28px]">{value}</strong>
+          <strong className="sf-kpi-value mt-2 mb-0.5 block font-display text-[40px] font-extrabold leading-[1.1] max-sm:text-[28px]">{value}</strong>
           <p className={cn('text-sm max-sm:text-[12.5px]', m ? 'text-white' : 'text-muted')}>{caption}</p>
         </>
       )}
@@ -69,7 +69,7 @@ export default function KpiTile({
       {!missing && chart && <div className="mt-3">{chart}</div>}
 
       {state === 'stale' && !missing && (
-        <p className={cn('mt-2 inline-flex w-fit items-center gap-1.5 rounded-full px-2 py-0.5 text-[11.5px] font-semibold', m ? 'bg-white/20 text-white' : 'bg-stale-tint text-stale-ink')}>
+        <p className={cn('mt-2 inline-flex w-fit items-center gap-1.5 rounded-full px-2 py-0.5 text-[11.5px] font-semibold', m ? 'bg-black/30 text-white' : 'bg-stale-tint text-stale-ink')}>
           <span aria-hidden>●</span> Not recently updated
         </p>
       )}
@@ -77,7 +77,8 @@ export default function KpiTile({
       <div className={cn('mt-auto flex justify-between gap-2 pt-2.5 text-xs max-sm:flex-col max-sm:gap-0 max-sm:text-[11px]', sub)}>
         <span className="min-w-0 truncate">
           {sourceHref ? (
-            <a href={sourceHref} target="_blank" rel="noopener noreferrer" className="underline decoration-current/40 underline-offset-2 hover:decoration-current">{source}</a>
+            // A "#section" link stays on the page (D14: the campaign tile points at the panel below it).
+            <a href={sourceHref} {...(sourceHref.startsWith('#') ? {} : { target: '_blank', rel: 'noopener noreferrer' })} className="underline decoration-current/40 underline-offset-2 hover:decoration-current">{source}</a>
           ) : source}
         </span>
         <span className="whitespace-nowrap">{asOf ? `as of ${fmtDateShort(asOf)}` : missing ? '' : 'as-of unknown'}</span>

@@ -6,6 +6,7 @@ import { Card } from '@/components/v2/PageBand';
 import SimplePage from '@/components/v2/SimplePage';
 import DraftBlock from '@/components/v2/trust/DraftBlock';
 import { reportErrorHref } from '@/lib/v2/error-reports';
+import { campaignMoneyEnabled } from '@/lib/v2/flags';
 
 // D5 About. The founder note is Colin's to write (DraftBlock renders it everywhere except Vercel production).
 // Do not name the founder anywhere else. Error reports go to the built-in form (F1, HQ A-089): no email address.
@@ -27,7 +28,7 @@ export default function AboutPage() {
     <SimplePage
       eyebrow="About"
       title="A free, cross-party look at public money"
-      dek="SlushFund follows federal contracts and congressional stock trades through the people, companies and agencies involved. Campaign money and lobbying are planned and not loaded yet. Every number links to the official record it came from."
+      dek={`SlushFund follows federal contracts and congressional stock trades through the people, companies and agencies involved. ${campaignMoneyEnabled() ? 'Campaign money is shown on member pages; lobbying is planned and not loaded yet.' : 'Campaign money and lobbying are planned and not loaded yet.'} Every number links to the official record it came from.`}
     >
       <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] gap-4 max-lg:grid-cols-1">
         <div className="grid gap-4">

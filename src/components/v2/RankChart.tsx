@@ -14,13 +14,13 @@ export function RankBars({ rows, label, unit }: { rows: { key: string; name: str
           <tbody>{rows.map((r) => <tr key={r.key}><th scope="row">{r.name} ({r.tag})</th><td>{r.display}</td></tr>)}</tbody>
         </table>
       </div>
-      <ol aria-hidden className="space-y-1.5">
+      <ol aria-hidden className="sf-rank space-y-1.5">
         {rows.map((r, i) => (
           <li key={r.key} className="grid grid-cols-[minmax(0,190px)_1fr] items-center gap-3 text-[13px] max-md:grid-cols-[minmax(0,120px)_1fr]">
             <span className="truncate"><span className="font-mono text-muted">{i + 1}.</span> {r.name} <span className="text-muted">({r.tag})</span></span>
             <span className="flex min-w-0 items-center gap-2">
-              <span className="h-4 min-w-[2px] shrink rounded-r-[4px] bg-trades" style={{ width: `${Math.max(1, (r.value / max) * 70)}%` }} />
-              <span className="whitespace-nowrap font-mono text-[12px]">{r.display}</span>
+              <span className="sf-rank-bar h-4 min-w-[2px] shrink rounded-r-[4px] bg-trades" style={{ width: `${Math.max(1, (r.value / max) * 70)}%` }} />
+              <span className="sf-rank-value whitespace-nowrap font-mono text-[12px]">{r.display}</span>
             </span>
           </li>
         ))}
@@ -52,7 +52,7 @@ export function MonthLine({ points, label, lagFrom }: { points: { month: string;
         <line x1={P} x2={W - P} y1={H - P} y2={H - P} stroke="currentColor" strokeOpacity="0.3" />
         <text x={P} y={14} fontSize="11" fill="currentColor" opacity="0.7">{max.toLocaleString('en-US')}</text>
         {lagIdx > 0 && <rect x={x(lagIdx)} y={P / 2} width={W - P - x(lagIdx)} height={H - P - P / 2} fill="#FFE066" opacity="0.35" />}
-        <path d={d} fill="none" stroke="#6534D9" strokeWidth="2.5" vectorEffect="non-scaling-stroke" />
+        <path className="sf-line" d={d} fill="none" stroke="#6534D9" strokeWidth="2.5" vectorEffect="non-scaling-stroke" />
         {points.map((p, i) => (i % 3 === 0 || i === points.length - 1 ? <text key={p.month} x={x(i)} y={H - 8} fontSize="11" textAnchor="middle" fill="currentColor" opacity="0.7">{mon(p.month)}</text> : null))}
       </svg>
     </>

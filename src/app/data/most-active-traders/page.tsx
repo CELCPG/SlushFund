@@ -106,7 +106,7 @@ export default async function MostActivePage({ searchParams }: { searchParams: P
           </span>
         ),
         value: <span className="whitespace-nowrap font-mono">at least {fmtUsd(r.valueMin)}</span>,
-        ...(grades ? { grade: g ? (g.letter === 'NG' ? <span className="text-[13.5px] font-semibold">Not graded <span className="font-normal text-muted">({g.unread} unread {g.unread === 1 ? 'report' : 'reports'})</span></span> : <span className="font-display text-[18px] font-extrabold">{g.letter} <span className="font-mono text-[12px] font-normal text-muted">{g.score} pts</span></span>) : <span className="text-[12.5px] text-muted">sitting members only</span> } : {}),
+        ...(grades ? { grade: g ? (g.letter === 'NG' ? <span className="text-[13.5px] font-semibold">Not graded <span className="font-normal text-muted">({g.unread} unread {g.unread === 1 ? 'report' : 'reports'})</span></span> : <span data-letter={g.letter} className="sf-grade-cell font-display text-[18px] font-extrabold">{g.letter} <span className="font-mono text-[12px] font-normal text-muted">{g.score} pts</span></span>) : <span className="text-[12.5px] text-muted">sitting members only</span> } : {}),
       },
     };
   });

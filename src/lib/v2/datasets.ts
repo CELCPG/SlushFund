@@ -3,6 +3,7 @@ import { cache } from 'react';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
 import type { MoneyType } from '@/lib/v2/money';
 import unreadData from '@/data/unread-filings.json';
+import { campaignMoneyEnabled } from '@/lib/v2/flags';
 
 /**
  * Dataset registry and freshness, read from the database so the source bar
@@ -195,6 +196,21 @@ export const DATASETS: Record<DatasetKey, DatasetDef> = {
     latestRecordLabel: 'Latest filing',
   },
 };
+
+/**
+ * D14: with SHOW_CAMPAIGN_MONEY on, campaign money is loaded (F1's member_campaign_money), so its entry stops saying
+ * "not loaded yet". Wording matches the member-page panel; flag off keeps the entry above.
+ */
+const CAMPAIGN_LIVE: Partial<DatasetDef> = {
+  scope: 'Campaign committee receipts for members of Congress, 2025–26 FEC cycle, through the date of the latest report',
+  cadence: 'With each FEC bulk-data load',
+  staleAfterDays: 45,
+};
+
+/** The registry entry for one dataset, as it reads under the current flags. */
+export function datasetDef(key: DatasetKey): DatasetDef {
+  return key === 'campaign' && campaignMoneyEnabled() ? { ...DATASETS.campaign, ...CAMPAIGN_LIVE } : DATASETS[key];
+}
 
 /** /data/status: one row each, in reader order. The rest follow under "Supporting and not loaded". */
 export const STATUS_ORDER: DatasetKey[] = ['house_trades', 'senate_trades', 'contracts', 'company_tickers', 'committee_history', 'conflicts'];
@@ -483,6 +499,31 @@ async function readCompanyTickers(): Promise<Raw> {
   };
 }
 
+/** member_campaign_money (D14): rows are members with an FEC record; the newest report date stands for the load time. */
+async function readCampaign(): Promise<Raw> {
+  if (!campaignMoneyEnabled()) return { ...EMPTY, rowCount: 0 };
+  if (!supabase) return { ...EMPTY, failed: true };
+  const v = () => supabase!.from('member_campaign_money');
+  const [count, newest] = await Promise.all([
+    v().select('bioguide_id', { count: 'exact', head: true }),
+    v().select('coverage_end').not('coverage_end', 'is', null).order('coverage_end', { ascending: false }).limit(1),
+  ]);
+  // PGRST205 / 42P01: the view does not exist yet, which is "not loaded", not a failure.
+  const missing = (e: { code?: string } | null) => e?.code === 'PGRST205' || e?.code === '42P01';
+  if (missing(count.error) || missing(newest.error)) return { ...EMPTY, rowCount: 0 };
+  if (count.error || newest.error) return { ...EMPTY, failed: true };
+  const latest = first(newest, 'coverage_end');
+  return {
+    rowCount: count.count ?? null,
+    lastUpdated: latest,
+    updatedBasis: 'row_timestamps',
+    updatedColumn: 'coverage_end',
+    latestRecord: latest,
+    coverage: '2025–26 FEC cycle',
+    failed: false,
+  };
+}
+
 const READERS: Record<DatasetKey, () => Promise<Raw>> = {
   house_trades: () => readTrades('House_Clerk'),
   senate_trades: () => readTrades('Senate_EFD'),
@@ -492,8 +533,8 @@ const READERS: Record<DatasetKey, () => Promise<Raw>> = {
   company_tickers: readCompanyTickers,
   committee_history: readCommitteeHistory,
   conflicts: readConflicts,
-  // No loader yet: say so instead of showing anything.
-  campaign: async () => ({ ...EMPTY, rowCount: 0 }),
+  // Flag off: no loader is shown, so say so instead of showing anything.
+  campaign: readCampaign,
   lobbying: async () => ({ ...EMPTY, rowCount: 0 }),
 };
 
@@ -507,7 +548,7 @@ export function classify(def: DatasetDef, raw: Raw, now: number = Date.now()): P
 
 /** Freshness for one dataset. Deduplicated per request. Never throws. */
 export const getDatasetStatus = cache(async (key: DatasetKey): Promise<DatasetStatus> => {
-  const def = DATASETS[key];
+  const def = datasetDef(key);
   let raw: Raw;
   try {
     raw = await READERS[key]();

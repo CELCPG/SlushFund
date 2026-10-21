@@ -13,6 +13,7 @@ import { fmtCount } from '@/lib/v2/format';
 import { getHomeFigures, getLatestFilings } from '@/lib/v2/home';
 import { HOME_HEADLINE, MEMBERS_TILE_COPY, MEMBERS_TILE_LEAD } from '@/lib/v2/home-copy';
 import { MONEY_TYPE_ORDER } from '@/lib/v2/money';
+import { themed } from '@/lib/v2/theme';
 import { MOST_ACTIVE_PATH, PRESIDENT_PATH, mostActiveEnabled, presidentPageEnabled } from '@/lib/v2/flags';
 
 // Homepage (D6a, Direction C): what SlushFund tracks, what's new, and three ways in. Every figure is
@@ -72,16 +73,34 @@ export default async function Home() {
       ].filter(Boolean).join(' ') || undefined
     : undefined;
 
+  // D13: under a SITE_THEME (t1-t3) the trades tile moves into the hero as the one big figure, same words and source;
+  // on `current` it stays the middle tile.
+  const hero = themed() && fig.trades != null;
+  const tradesTile = (
+    <KpiTile
+      type="trades"
+      value={fmtCount(fig.trades?.total)}
+      caption="trades disclosed by members of Congress, on file: stocks, options and other assets"
+      source="House Clerk + Senate eFD"
+      sourceHref="/about/methodology/trades"
+      asOf={tradesAsOf}
+      state={fig.trades ? tradesState : 'unavailable'}
+      note={fig.trades ? `House ${fmtCount(fig.trades.house)} (filed ${house.coverage ?? 'dates unknown'}) · Senate ${fmtCount(fig.trades.senate)} (filed ${senate.coverage ?? 'dates unknown'})` : undefined}
+      className={hero ? 'sf-hero-figure' : undefined}
+    />
+  );
+
   return (
     <div data-v2>
       <PageBand overlap>
         <h1 className="mb-3.5 mt-[46px] max-w-[880px] font-display text-[56px] font-extrabold leading-[1.04] tracking-[-1.2px] max-md:mt-6 max-md:text-[34px]">
           {HOME_HEADLINE.lead}{' '}
-          <em className="bg-[linear-gradient(transparent_62%,rgba(255,90,110,.55)_62%)] not-italic">{HOME_HEADLINE.emphasis}</em>{HOME_HEADLINE.tail}
+          <em className="sf-headline-em bg-[linear-gradient(transparent_62%,rgba(255,90,110,.55)_62%)] not-italic">{HOME_HEADLINE.emphasis}</em>{HOME_HEADLINE.tail}
         </h1>
         <p className="mb-[26px] max-w-[720px] text-[19px] text-on-deep max-md:mb-5 max-md:text-base">
           The stock trades members of Congress disclose and the federal contracts agencies award, from the official filings. Every number shows its source and when it was last updated.
         </p>
+        {hero && <div className="mb-7 max-md:mb-5">{tradesTile}</div>}
         <BigSearch />
         <div className="mt-6 flex flex-wrap items-center gap-2 max-md:mt-5" aria-label="Color key">
           <span className="mr-1 text-sm font-semibold text-white">One color per kind of money, on every page:</span>
@@ -93,7 +112,7 @@ export default async function Home() {
       </PageBand>
 
       <Wrap>
-        <div className="-mt-20 grid grid-cols-3 gap-4 max-lg:gap-3 max-md:mt-4 max-md:grid-cols-1 max-md:gap-2.5">
+        <div className={`-mt-20 grid ${hero ? 'grid-cols-2' : 'grid-cols-3'} gap-4 max-lg:gap-3 max-md:mt-4 max-md:grid-cols-1 max-md:gap-2.5`}>
           <KpiTile
             label={MEMBERS_TILE_COPY[MEMBERS_TILE_LEAD].label}
             value={fmtCount(memberLead)}
@@ -104,16 +123,7 @@ export default async function Home() {
             state={memberLead == null ? 'unavailable' : mStatus.state}
             note={memberNote}
           />
-          <KpiTile
-            type="trades"
-            value={fmtCount(fig.trades?.total)}
-            caption="trades disclosed by members of Congress, on file: stocks, options and other assets"
-            source="House Clerk + Senate eFD"
-            sourceHref="/about/methodology/trades"
-            asOf={tradesAsOf}
-            state={fig.trades ? tradesState : 'unavailable'}
-            note={fig.trades ? `House ${fmtCount(fig.trades.house)} (filed ${house.coverage ?? 'dates unknown'}) · Senate ${fmtCount(fig.trades.senate)} (filed ${senate.coverage ?? 'dates unknown'})` : undefined}
-          />
+          {!hero && tradesTile}
           <KpiTile
             type="contracts"
             label="Non-competed contracts"

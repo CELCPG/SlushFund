@@ -1,15 +1,25 @@
 import type { Metadata } from 'next';
 import { SITE_DESCRIPTION } from '@/lib/v2/seo';
 import Script from 'next/script';
-import { Bricolage_Grotesque, DM_Mono, Inter } from 'next/font/google';
+import { Anton, Bricolage_Grotesque, DM_Mono, Inter, JetBrains_Mono, Oswald, Space_Grotesk } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 import AppShell from '@/components/v2/shell/AppShell';
+import { siteTheme } from '@/lib/v2/theme';
 
 // Direction C type: Bricolage Grotesque (headlines), Inter (body), DM Mono (figures).
 const display = Bricolage_Grotesque({ subsets: ['latin'], variable: '--font-bricolage', display: 'swap' });
 const body = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 const mono = DM_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-dm-mono', display: 'swap' });
+
+// D13 theme faces (SIL OFL 1.1, self-hosted by next/font). Not preloaded and only attached when SITE_THEME picks a theme.
+// display 'optional': unpreloaded, a 'swap' face arrives after first paint and re-wraps the uppercase headline (CLS 0.22
+// on the t1 homepage). Once a theme is picked: keep only its faces, set preload: true and display: 'swap'.
+const t1Display = Oswald({ subsets: ['latin'], weight: ['600', '700'], variable: '--font-oswald', display: 'optional', preload: false });
+const t2Display = Anton({ subsets: ['latin'], weight: '400', variable: '--font-anton', display: 'optional', preload: false });
+const t3Display = Space_Grotesk({ subsets: ['latin'], weight: ['700'], variable: '--font-space-grotesk', display: 'optional', preload: false });
+const t3Mono = JetBrains_Mono({ subsets: ['latin'], weight: ['500', '700'], variable: '--font-jetbrains', display: 'optional', preload: false });
+const THEME_FONTS = { t1: t1Display.variable, t2: t2Display.variable, t3: `${t3Display.variable} ${t3Mono.variable}` } as const;
 
 const DESCRIPTION = SITE_DESCRIPTION;
 
@@ -67,8 +77,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const snipcartKey = process.env.NEXT_PUBLIC_SNIPCART_API_KEY;
+  const theme = siteTheme();
+  const themeFonts = theme === 'current' ? '' : ` ${THEME_FONTS[theme]}`;
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
+    <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}${themeFonts}`} data-theme={theme === 'current' ? undefined : theme}>
       <head>
         {snipcartKey && (
           <link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.7.1/default/snipcart.css" />

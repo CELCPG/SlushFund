@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { FlagChip, MoneyChip } from '@/components/v2/MoneyChip';
 import { Card } from '@/components/v2/PageBand';
 import SimplePage from '@/components/v2/SimplePage';
-import { DATASETS, type DatasetKey } from '@/lib/v2/datasets';
+import { datasetDef, type DatasetKey } from '@/lib/v2/datasets';
 
 export const metadata: Metadata = pageMetadata({
   path: '/about/methodology',
@@ -82,7 +82,7 @@ export default function MethodologyPage() {
             <h2 id={sec.id} className="scroll-mt-6 font-display text-[24px] font-extrabold">{sec.title}</h2>
             <div className="mt-3 grid gap-4">
               {sec.keys.map((k) => {
-                const d = DATASETS[k];
+                const d = datasetDef(k);
                 return (
                   <div key={k}>
                     <div className="flex flex-wrap items-center gap-2">

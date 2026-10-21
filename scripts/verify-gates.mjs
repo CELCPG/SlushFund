@@ -667,7 +667,8 @@ await hit('/about/methodology/tickers', 200, {
   bodyAll: ['hand-built map links to a committee the member sat on', 'publishes no overall match rate'],
   notBody: ['independent audit is not finished', 'whose business sits under a committee', 'committee the member serves on'], group: D8E });
 await hit('/about/methodology', 200, { bodyAll: ['Official records first', 'labelled as ours'], notBody: ['nothing typed in by hand', 'the FEC, congress.gov'], group: D8E });
-await hit('/about', 200, { bodyAll: ['Campaign money and lobbying are planned and not loaded yet', 'congress-legislators'], notBody: ['the FEC and congress.gov'], group: D8E });
+// D14: with the campaign-money flag on the dek says campaign money is shown and only lobbying is not loaded.
+await hit('/about', 200, { bodyAll: [campaignMoneyEnabled() ? 'Campaign money is shown on member pages; lobbying is planned and not loaded yet' : 'Campaign money and lobbying are planned and not loaded yet', 'congress-legislators'], notBody: ['the FEC and congress.gov'], group: D8E });
 await hit('/latest', 200, { bodyAll: ['are not checked one by one before they appear here'], notBody: ['Everything here is unaudited'], group: D8E });
 await hit('/companies', 200, { bodyAll: ['foreign governments, funds and other organisations'], group: D8E });
 await hit('/people/T000278', 200, { bodyAll: ['An option is a contract tied to a stock'], notBody: ['An option is a bet', 'Self (incl. trusts/accounts)', 'a bet on'], group: D8E });
@@ -1152,6 +1153,31 @@ const F3 = 'post-launch fixes (F3)';
     const SH = ['pct_small_individual', 'pct_large_individual', 'pct_corporate_trade_pac', 'pct_labor_pac', 'pct_leadership_party_other', 'pct_self_funded'];
     const wrong = mcm.filter((r) => { const v = SH.map((k) => Number(r[k] ?? 0)); const printable = Number(r.raised) > 0 && v.every((x) => x >= 0) && v.reduce((a, b) => a + b, 0) <= 100.0001; return r.shares_ok !== printable || SH.some((k) => r[k] == null && Number(r.raised) > 0); });
     gateRow('member_campaign_money shares_ok', wrong.length === 0, wrong.length ? `${wrong.length} rows disagree, e.g. ${wrong.slice(0, 3).map((r) => r.name).join(', ')}` : `${mcm.length} rows: shares_ok matches the negative/over-100 rule, no empty share where receipts > 0`, FG);
+
+    // D14: the campaign-money tile says what the panel says; no "not loaded" label for campaign money anywhere while the flag is on.
+    const DG = 'campaign-money labels (D14)';
+    const usd = (n) => `$${Math.round(Number(n)).toLocaleString('en-US')}`;
+    const byId = new Map(mcm.length ? (await restAll('member_campaign_money?select=bioguide_id,raised,coverage_end')).map((r) => [r.bioguide_id, r]) : []);
+    for (const id of ['G000583', 'M001212', 'S001203']) {
+      const r = byId.get(id);
+      if (!r) { gateRow(`tile ${id}`, false, 'no member_campaign_money row to compare against', DG); continue; }
+      await hit(`/people/${id}`, 200, { bodyAll: [`${usd(r.raised)}</strong>`, 'campaign committee receipts, 2025–26 FEC cycle, through ', 'href="#p-funds"'], notBody: ['Not loaded yet (FEC)'], group: DG });
+    }
+    await hit('/people/B001328', 200, { bodyAll: ['Campaign money', 'No receipts reported for the 2025–26 FEC cycle (FEC).'], notBody: ['Not loaded yet (FEC)'], group: DG });
+    try {
+      const mem = await restAll('congress_members?select=bioguide_id&in_office=eq.true');
+      const none = mem.map((m) => m.bioguide_id).find((id) => !byId.has(id));
+      if (none) await hit(`/people/${none}`, 200, { bodyAll: ['No FEC candidate record confirmed for ', 'yet, so no campaign figures are shown.'], notBody: ['Not loaded yet (FEC)', 'campaign committee receipts, 2025–26'], group: DG });
+      else gateRow('tile for a member with no row', true, 'every sitting member has a row', DG);
+    } catch (e) { gateRow('tile for a member with no row', false, `could not run: ${String(e.message).slice(0, 120)}`, DG); }
+    const STALE = [/Not loaded yet \(FEC\)/i, /Campaign money\W{0,6}coming later/i, /Campaign money\W{0,6}not loaded yet/i, /Campaign money and lobbying are planned/i, /PAC and donor money to members \(not loaded yet\)/i];
+    for (const p of ['/', '/data', '/about', '/your-members', '/your-members/ca', '/data/status', '/about/methodology', '/people', '/people/G000583', '/people/M001212', '/people/S001203', '/people/B001328']) {
+      const v = await visible(p);
+      const bad = STALE.find((rx) => rx.test(v.text));
+      row(`${p} no stale campaign-money label`, v.status === 200 && !bad, bad ? `matches ${bad}` : `status ${v.status}`);
+    }
+    const home = await visible('/');
+    row('/ lobbying legend still says coming later', /Lobbying\W{0,6}coming later/i.test(home.text), 'lobbying is not loaded');
   }
 }
 

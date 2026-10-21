@@ -21,9 +21,9 @@ export function PageBand({ children, className, overlap = false }: { children: R
 /** Section heading: takeaway-first title, measure in the subtitle. */
 export function SectionHead({ title, sub, action, as: H = 'h2' }: { title: ReactNode; sub?: ReactNode; action?: ReactNode; as?: 'h2' | 'h3' }) {
   return (
-    <div className="mb-4 flex flex-wrap items-end justify-between gap-3.5">
+    <div className="sf-section-head mb-4 flex flex-wrap items-end justify-between gap-3.5">
       <div className="min-w-0">
-        <H className="m-0 font-display text-[32px] font-extrabold leading-[1.12] tracking-[-0.5px] max-md:text-[25px]">{title}</H>
+        <H className="sf-section-title m-0 font-display text-[32px] font-extrabold leading-[1.12] tracking-[-0.5px] max-md:text-[25px]">{title}</H>
         {sub && <p className="mt-1.5 text-muted">{sub}</p>}
       </div>
       {action}

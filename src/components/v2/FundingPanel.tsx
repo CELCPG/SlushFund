@@ -19,8 +19,7 @@ const PARTS: { key: 'pct_small_individual' | 'pct_large_individual' | 'pct_corpo
   { key: 'pct_self_funded', label: 'Self-funding', color: '#4F5170' },
 ];
 
-const CYCLE = '2025\u201326 FEC cycle';
-
+export const CYCLE = '2025\u201326 FEC cycle';
 export default function FundingPanel({ money, enabled, name }: { money: CampaignMoneyResult; enabled: boolean; name: string }) {
   const comingSoon = !enabled || money.state === 'missing';
   return (
