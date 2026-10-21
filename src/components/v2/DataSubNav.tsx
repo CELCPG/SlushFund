@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { cn } from '@/lib/cn';
-import { lateFilersEnabled, mostActiveEnabled } from '@/lib/v2/flags';
+import { analyticsHubEnabled, lateFilersEnabled, mostActiveEnabled, sectorHeatmapEnabled } from '@/lib/v2/flags';
 
 export const DATA_TABS = [
   { href: '/data', label: 'Overview' },
@@ -8,12 +8,14 @@ export const DATA_TABS = [
   { href: '/data/contracts', label: 'Contracts' },
   { href: '/data/late-filers', label: 'Filed 45+ days after' },
   { href: '/data/most-active-traders', label: 'Most active traders' },
+  { href: '/analytics', label: 'Analytics' },
+  { href: '/data/what-congress-trades', label: 'What Congress trades' },
   { href: '/data/status', label: 'Status' },
 ] as const;
 
 /** Tabs for the Data section, shown in the title band of /data and its explorers. */
 export default function DataSubNav({ current }: { current: (typeof DATA_TABS)[number]['href'] }) {
-  const tabs = DATA_TABS.filter((t) => (t.href !== '/data/late-filers' || lateFilersEnabled()) && (t.href !== '/data/most-active-traders' || mostActiveEnabled()));
+  const tabs = DATA_TABS.filter((t) => (t.href !== '/data/late-filers' || lateFilersEnabled()) && (t.href !== '/data/most-active-traders' || mostActiveEnabled()) && (t.href !== '/analytics' || analyticsHubEnabled()) && (t.href !== '/data/what-congress-trades' || sectorHeatmapEnabled()));
   return (
     <nav aria-label="Data section" className="mt-5 flex flex-wrap gap-1.5">
       {tabs.map((t) => (

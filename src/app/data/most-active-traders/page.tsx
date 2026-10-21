@@ -9,7 +9,7 @@ import { MonthLine, RankBars } from '@/components/v2/RankChart';
 import SourceBar from '@/components/v2/SourceBar';
 import { partyLetter } from '@/components/v2/TradesTable';
 import { STATE_CODES, buildHref, one, type SP } from '@/lib/v2/explorer';
-import { GRADE_METHOD_PATH, MOST_ACTIVE_PATH, gradesEnabled, mostActiveEnabled } from '@/lib/v2/flags';
+import { GRADE_METHOD_PATH, MOST_ACTIVE_PATH, SECTOR_HEATMAP_PATH, gradesEnabled, mostActiveEnabled, sectorHeatmapEnabled } from '@/lib/v2/flags';
 import { fmtCount, fmtDate, fmtUsd } from '@/lib/v2/format';
 import { GRADE_FIXED_LINE, gradeOf } from '@/lib/v2/grade-method';
 import { hiddenPageMetadata } from '@/lib/v2/hidden-page';
@@ -171,6 +171,7 @@ export default async function MostActivePage({ searchParams }: { searchParams: P
               </p>
               {grades && <p className="font-semibold text-ink">{GRADE_FIXED_LINE} <Link href={GRADE_METHOD_PATH} className="font-normal underline">Method</Link></p>}
               <p>These are counts from public filings. Ranking by them says how much a member reported, not why.</p>
+              {sectorHeatmapEnabled() && <p>Which sectors and tickers they traded: <Link href={SECTOR_HEATMAP_PATH} className="font-semibold text-trades-ink hover:underline">What Congress is trading</Link>.</p>}
             </div>
           </Card>
         </section>

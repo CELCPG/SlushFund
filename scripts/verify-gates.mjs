@@ -22,18 +22,25 @@ import {
 } from '../src/lib/v2/redirect-map.ts';
 import { LEGACY_AGENCIES, LEGACY_PEOPLE, LEGACY_VENDORS } from '../src/lib/v2/legacy-map.generated.ts';
 import {
-  ELECTION_PATH, GRADE_METHOD_PATH, MOST_ACTIVE_PATH, PRESIDENT_PATH, campaignMoneyEnabled, designPagesEnabled, electionCenterEnabled, gradesEnabled, hiddenByFlag, investigationsV2Enabled, lateFilersEnabled, lateFilersPreview,
-  mostActiveEnabled, presidentPageEnabled, readFailureInjected, VOTER_PATH, voterPagesEnabled,
+  ANALYTICS_PATH, ELECTION_PATH, GRADE_METHOD_PATH, GRAPHIC_SLUGS, GRAPHICS_PATH, MOST_ACTIVE_PATH, PRESIDENT_PATH, SECTOR_HEATMAP_PATH, analyticsHubEnabled, campaignMoneyEnabled, designPagesEnabled, electionCenterEnabled, graphicEnabled, gradesEnabled, hiddenByFlag, infographicsEnabled, investigationsV2Enabled, lateFilersEnabled, lateFilersPreview,
+  moneyTrailEnabled, mostActiveEnabled, presidentPageEnabled, readFailureInjected, sectorHeatmapEnabled, VOTER_PATH, voterPagesEnabled,
 } from '../src/lib/v2/flags.ts';
 import { GRADE_FIXED_LINE, NOT_GRADED_GROUP_LINE, activityOf, gradeClass, gradeOf, inWindow, notGradedLine, unreadCaveat, unreadInWindow, windowStart } from '../src/lib/v2/grade-method.ts';
 import { ELECTION_DAY, MONEY_KEYS, averageLetter, daysUntil, moneyTotals } from '../src/lib/v2/election-calc.ts';
 import { VOTER_NOT_FINDING, VOTER_SCOPE, VOTER_TITLE, voterWhat } from '../src/lib/v2/voter-copy.ts';
+import { TRAIL_CAPTION, TRAIL_COUNTS_LINE, TRAIL_NO_TRADES } from '../src/lib/v2/money-trail-copy.ts';
 import { hiddenPageMetadata } from '../src/lib/v2/hidden-page.ts';
 import { HONEYPOT_FIELD, RATE_LIMIT, REPLY_PROMISE, normalizePageUrl, reportErrorHref } from '../src/lib/v2/error-reports.ts';
 import { HOME_HEADLINE_TEXT, MEMBERS_TILE_COPY, MEMBERS_TILE_LEAD } from '../src/lib/v2/home-copy.ts';
 import { DATE_FLAG_FALLBACK, DATE_FLAG_WORDING, LATENESS_BASIS_WORDING, dateFlagNote, latenessNote } from '../src/lib/v2/date-flags.ts';
 import { ALLOWED_VERBATIM, FORBIDDEN_PHRASES } from '../src/lib/v2/forbidden-words.ts';
 import { navItems, shellPath } from '../src/components/v2/shell/nav.ts';
+import {
+  PRESIDENT_HUB_PATH, PRESIDENT_LARGEST_PATH, PRESIDENT_QUALITY_PATH, PRESIDENT_TIMING_PATH, presidentDeepDiveEnabled,
+} from '../src/lib/v2/flags.ts';
+import { COMPLIANCE_SENTENCE, binOf, computeHub, displayAsset, isPerpetual } from '../src/lib/v2/president-hub-core.ts';
+import { LARGEST_FLOOR, VERIFIED_LARGEST, isCheckedAgainstPage } from '../src/lib/v2/president-largest-verified.ts';
+import { AUDITS, HISTORY } from '../src/lib/v2/president-audit-record.ts';
 import { instrumentKind } from '../src/lib/v2/instruments.ts';
 import { MONEY_TYPES } from '../src/lib/v2/money.ts';
 import * as SF from '../src/lib/v2/story-figures.ts';
@@ -51,10 +58,18 @@ const KEEP_PAGES = new Set([
   '/data/trades', '/data/contracts', '/data/late-filers', '/data/status', '/latest', '/report-an-error',
   // D9 / D10, each behind its flag (flags.ts)
   '/people/executive/donald-trump', '/data/most-active-traders', '/about/methodology/report-card',
+  // D15 President section, behind SHOW_PRESIDENT_DEEPDIVE
+  '/president', '/president/timing', '/president/largest', '/president/data-quality',
+  // D19 analytics hub, behind SHOW_ANALYTICS_HUB
+  '/analytics',
+  // D18 sector heatmap, behind SHOW_SECTOR_HEATMAP
+  '/data/what-congress-trades',
   // D11 voter pages, behind SHOW_VOTER_PAGES
   '/your-members',
   // D17 Election Center, behind SHOW_ELECTION_CENTER
   '/election-2026',
+  // D20 infographic index, behind SHOW_INFOGRAPHICS
+  '/graphics',
 ]);
 // Dynamic v2 pages, each with a real sample URL that must answer 200.
 const KEEP_DYNAMIC = new Map([
@@ -62,6 +77,8 @@ const KEEP_DYNAMIC = new Map([
   ['/companies/:slug', '/companies/lockheed-martin-corp-zfn2jjxblzt3'],
   ['/agencies/:code', '/agencies/097'],
   ['/your-members/:state', '/your-members/vt'],
+  // D20 graphics, behind SHOW_INFOGRAPHICS and the flag of the feature each one draws
+  ['/graphics/:slug', '/graphics/grading-congress'],
   // D12 investigation posts, behind SHOW_INVESTIGATIONS_V2
   ['/investigations/:slug', '/investigations/federal-money-musk-companies-fy2024-2026'],
 ]);
@@ -519,7 +536,11 @@ for (const p of KEEP_PAGES) {
   if ((p === '/design' || p === '/design/story') && !designPagesEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // D8d L2
   if (p === '/data/late-filers' && !lateFilersEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // the board is off (production without SHOW_LATE_FILERS=1)
   if (p === ELECTION_PATH && !electionCenterEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // D17: off on production without SHOW_ELECTION_CENTER=1
+  if (p === ANALYTICS_PATH && !analyticsHubEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // D19: off on production without SHOW_ANALYTICS_HUB=1
   if (p === VOTER_PATH && !voterPagesEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // D11: off on production without SHOW_VOTER_PAGES=1
+  if ((p === PRESIDENT_HUB_PATH || p.startsWith(`${PRESIDENT_HUB_PATH}/`)) && !presidentDeepDiveEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // D15: off on production without SHOW_PRESIDENT_DEEPDIVE=1
+  if (p === SECTOR_HEATMAP_PATH && !sectorHeatmapEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // D18: off on production without SHOW_SECTOR_HEATMAP=1
+  if (p === GRAPHICS_PATH && !infographicsEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // D20: off on production without SHOW_INFOGRAPHICS=1
   await hit(p, 200, { group: 'keep (v2)', noindex: p === '/design' || p === '/design/story' || p === '/rebuilding' });
 }
 // The draft corrections entry must not render while its status is 'draft' and the preview flag is off.
@@ -528,7 +549,7 @@ if (process.env.SHOW_DRAFT_CORRECTIONS !== '1') {
   await hit('/about/corrections', 200, { body: 'The corrections log opens with the rebuilt site', group: 'corrections draft hidden' });
   await hit('/sitemap.xml', 200, { notBody: '/about/corrections', group: 'corrections draft hidden' });
 }
-const dynamicOff = (route) => (route.startsWith(VOTER_PATH) && !voterPagesEnabled()) || (route.startsWith('/investigations/') && !investigationsV2Enabled());
+const dynamicOff = (route) => (route.startsWith(VOTER_PATH) && !voterPagesEnabled()) || (route.startsWith(GRAPHICS_PATH) && !graphicEnabled('grading-congress')) || (route.startsWith('/investigations/') && !investigationsV2Enabled());
 for (const [route, url] of KEEP_DYNAMIC) await hit(url, dynamicOff(route) ? 404 : 200, { group: `keep (v2) ${route}` });
 await hit('/no-such-page-d5', 404, { body: 'find that page', notBody: 'live trades', group: 'keep (v2)' });
 await hit('/feed.xml', 200, { notBody: '<item>', group: 'keep (v2)' });
@@ -648,11 +669,15 @@ const WORDING_PATHS = [...new Set([
   '/agencies', '/investigations', '/rebuilding', '/search?q=Warren', '/latest.xml',
   '/latest?type=awards', '/latest?chamber=Senate', '/data/trades?instrument=option', '/data/contracts?fy=2026',
   ...FLAG_ROWS.map(([, u]) => u),
+  ...(infographicsEnabled() ? [GRAPHICS_PATH] : []),
+  ...GRAPHIC_SLUGS.filter((g) => graphicEnabled(g)).flatMap((g) => [`${GRAPHICS_PATH}/${g}`, `${GRAPHICS_PATH}/${g}?card=1`]),
   '/analysis/conflicts',
   '/report-an-error', '/report-an-error?sent=1', '/report-an-error?from=%2Fpeople%2FG000583&error=message',
   ...(lateFilersEnabled() ? ['/data/late-filers?chamber=Senate&over=365&members=all', '/data/late-filers?msort=reports&rsort=recent&page=2'] : []),
   ...(presidentPageEnabled() ? [`${PRESIDENT_PATH}?class=bond&sort=band`, `${PRESIDENT_PATH}?class=fund`, `${PRESIDENT_PATH}?sort=band&page=2`] : []),
   ...(mostActiveEnabled() ? [`${MOST_ACTIVE_PATH}?sort=value`, `${MOST_ACTIVE_PATH}?sort=late&all=1`] : []),
+  ...(analyticsHubEnabled() ? [ANALYTICS_PATH] : []),
+  ...(sectorHeatmapEnabled() ? [`${SECTOR_HEATMAP_PATH}?months=6&measure=net`, `${SECTOR_HEATMAP_PATH}?months=12&sector=ai-tech`, `${SECTOR_HEATMAP_PATH}?sector=unclassified`] : []),
 ])];
 if (sitemapPaths.length < 10) { failed++; rows.push({ path: '/sitemap.xml', status: sitemapPaths.length, expect: '>= 10 URLs', ok: false, note: 'sitemap read for the wording gate', group: 'wording gate (D8a)' }); }
 for (const p of WORDING_PATHS) await wordingGate(p);
@@ -1054,12 +1079,242 @@ const F3 = 'post-launch fixes (F3)';
   rows.push({ path: 'wording gate lists "reported late"', status: listed ? 'ok' : 'FAIL', expect: 'ok', ok: listed, note: 'forbidden-words.ts', group: F3 });
 }
 
+// ---------------------------------------------------------------- D15: the President section (/president and three sub-pages)
+{
+  const G = 'D15 President section';
+  const row = (path, ok, note = '', expect = 'ok') => { if (!ok) failed++; rows.push({ path, status: ok ? 'ok' : 'FAIL', expect, ok, note, group: G }); };
+  const PAGES = [PRESIDENT_HUB_PATH, PRESIDENT_TIMING_PATH, PRESIDENT_LARGEST_PATH, PRESIDENT_QUALITY_PATH];
+  // Flag: off on production until SHOW_PRESIDENT_DEEPDIVE is exactly '1'; the D9 page keeps its own flag.
+  for (const path of PAGES) {
+    for (const [env, want] of [[{}, false], [{ VERCEL_ENV: 'preview' }, false], [{ VERCEL_ENV: 'production' }, true], [{ VERCEL_ENV: 'production', SHOW_PRESIDENT_DEEPDIVE: '1' }, false], [{ VERCEL_ENV: 'production', SHOW_PRESIDENT_DEEPDIVE: 'true' }, true]]) {
+      row(`hiddenByFlag(${JSON.stringify(path)}, ${JSON.stringify(env)})`, hiddenByFlag(path, env) === want, '', String(want));
+    }
+  }
+  row('hiddenByFlag(D9 page, production + SHOW_PRESIDENT_DEEPDIVE=1) stays on its own flag', hiddenByFlag('/people/executive/donald-trump', { VERCEL_ENV: 'production', SHOW_PRESIDENT_DEEPDIVE: '1' }) === true);
+  row('hiddenByFlag("/presidential") is not caught by the /president prefix', hiddenByFlag('/presidential', { VERCEL_ENV: 'production' }) === false);
+  // Nav: "The President" appears only with the flag, right after People; the five other sections are untouched.
+  const navOff = navItems(false).map((n) => n.href);
+  const navOn = navItems(true).map((n) => n.href);
+  row('nav without the flag has the five sections and no /president', navOff.length === 5 && !navOff.includes('/president'), navOff.join(' '));
+  row('nav with the flag adds "The President" right after People', navOn.length === 6 && navOn[navOn.indexOf('/people') + 1] === '/president' && navItems(true).find((n) => n.href === '/president')?.label === 'The President', navOn.join(' '));
+  // Perpetuals rule (A11b N5): the display helper never prints the broker placeholder maturity.
+  for (const [asset, want] of [
+    ['Fifth 6.9802% 12/31/49', 'Fifth 6.9802% (perpetual)'], ['GOLDMAN SACHS GROUP INC PERP 7.5000% 12/31/49', 'GOLDMAN SACHS GROUP INC PERP 7.5000%'],
+    ['US BANCORP ALT TIER I PERP 5.3000% 12/31/49', 'US BANCORP ALT TIER I PERP 5.3000%'], ['JPMORGAN CHASE & CO ALT TIER 3.6500%', 'JPMORGAN CHASE & CO ALT TIER 3.6500% (perpetual)'],
+    ['US TREASUR NT 4% DUE 07/31/30', 'US TREASUR NT 4% DUE 07/31/30'],
+  ]) {
+    const got = displayAsset({ asset, instrument_class: 'bond' });
+    row(`displayAsset(${JSON.stringify(asset)})`, got === want && !/12\/31\/(49|2049)/.test(got), got);
+  }
+  // The bin edges: 45 days or fewer vs more than 45 never share a bin.
+  row('day bins split exactly at 45', binOf(45) === 'd45' && binOf(46) === 'd60' && binOf(30) === 'd30' && binOf(31) === 'd45' && binOf(181) === 'd181' && binOf(295) === 'd181');
+  // D15 M1 (audit): the D9 list uses displayAsset too, so no rendered transaction row prints the broker placeholder maturity.
+  if (presidentPageEnabled()) {
+    try {
+      const bonds = await restAll('executive_trades?select=asset,instrument_class&office=eq.President&report_type=eq.278-T&instrument_class=eq.bond');
+      const placeholder = bonds.filter((r) => isPerpetual(r) && /12\/31\/(?:49|2049)/.test(r.asset));
+      const pagesN = Math.max(1, Math.ceil(bonds.length / 50));
+      let bad = 0; let perpShown = 0; let wells = false; let fetched = 0;
+      for (let p = 1; p <= pagesN; p++) {
+        const r = await fetch(`${base}${PRESIDENT_PATH}?class=bond${p > 1 ? `&page=${p}` : ''}`);
+        const t = visibleText((await r.text()).replace(/<!-- -->/g, ''));
+        fetched += r.status === 200 ? 1 : 0;
+        if (/12\/31\/(?:49|2049)/.test(t)) bad += 1;
+        perpShown += (t.match(/\(perpetual\)/g) ?? []).length;
+        if (t.includes('WELLS FARGO & CO PERP GG NT 6.1250%')) wells = true;
+      }
+      row(`${PRESIDENT_PATH} (D9 list) never prints a perpetual's placeholder maturity: ${placeholder.length} such lines in the DB, ${pagesN} bond pages read`, fetched === pagesN && bad === 0 && placeholder.length > 0, `${bad} pages with 12/31/49, ${fetched}/${pagesN} fetched`);
+      row(`${PRESIDENT_PATH} (D9 list) shows "(perpetual)" on perpetual lines whose text has no PERP, and the stripped PERP lines read as printed`, perpShown > 0 && wells, `${perpShown} "(perpetual)" labels; Wells Fargo PERP line without date: ${wells}`);
+    } catch (e) { row(`${PRESIDENT_PATH} (D9 list) perpetual display`, false, String(e)); }
+  }
+
+  if (presidentDeepDiveEnabled()) {
+    const visible = async (p) => { const r = await fetch(base + p); return { status: r.status, text: visibleText((await r.text()).replace(/<!-- -->/g, '')), html: '' }; };
+    const htmlOf = async (p) => (await fetch(base + p)).text().then((t) => t.replace(/<!-- -->/g, ''));
+    try {
+      const et = (await restAll('executive_trades?select=*&office=eq.President&report_type=eq.278-T')).map((r) => ({ ...r }));
+      const cov = await restAll('executive_filings?select=*');
+      const byDoc = new Map();
+      for (const r of et) {
+        const f = byDoc.get(r.source_doc_id) ?? { docId: r.source_doc_id, url: r.disclosure_url, fileName: '', signed: null, amendedOn: null, transactions: 0, firstTrade: null, lastTrade: null, over45: 0, notComputed: 0, longestGap: null };
+        f.transactions += 1; if (r.stock_act_late === true) f.over45 += 1; if (r.stock_act_late == null) f.notComputed += 1;
+        if (r.days_to_file != null && (f.longestGap == null || r.days_to_file > f.longestGap)) f.longestGap = r.days_to_file;
+        const s = r.original_filed_date ?? r.filed_date; if (s && (!f.signed || s < f.signed)) f.signed = s;
+        byDoc.set(r.source_doc_id, f);
+      }
+      const hub = computeHub(et, [...byDoc.values()], cov);
+      const feeCovers = cov.filter((c) => c.reviewer_comment_kind === 'late_fee_note' && c.reviewer_comment);
+      const [hubV, timV, larV, qV] = await Promise.all(PAGES.map(visible));
+      const texts = { [PRESIDENT_HUB_PATH]: hubV, [PRESIDENT_TIMING_PATH]: timV, [PRESIDENT_LARGEST_PATH]: larV, [PRESIDENT_QUALITY_PATH]: qV };
+      for (const p of PAGES) {
+        const v = texts[p];
+        row(`${p} answers 200`, v.status === 200 && v.text.length > 500, `status ${v.status}`);
+        row(`${p} has no "option(s)"`, !/\boptions?\b/i.test(v.text), '');
+        // JSX can drop the space after an expression ("168bond lines"); a number glued to a word is a copy bug.
+        const glued = /(?<![\w#.$%/-])\d[\d,]*[A-Za-z]{3,}\b/.exec(v.text);
+        row(`${p} has no number glued to a word`, !glued, glued ? `"${glued[0]}" in "…${v.text.slice(Math.max(0, glued.index - 30), glued.index + 40)}…"` : '');
+        row(`${p} no single dollar total`, !/\btotal(?:ing|led)? \$|\bworth \$/i.test(v.text), '');
+        row(`${p} never prints a perpetual's placeholder maturity`, !/12\/31\/(?:49|2049)/.test(v.text) && !/\bdue 12\/31/i.test(v.text), '');
+        row(`${p} says "securities transactions", never "stock trades" / "late filer" / "on time"`, !/stock trades|late filer|\bon[- ]time\b|\bfiled late\b|\bwere late\b/i.test(v.text), '');
+        row(`${p} shows no internal column or Vice President name`, !/late_basis|not_required_on_278T|stock_act_late|\bVance\b/.test(v.text), '');
+        // A11: a fee note is only ever next to the signed compliance opinion.
+        const fees = (v.text.match(/Filer paid late fee/g) ?? []).length;
+        const opinions = (v.text.split(COMPLIANCE_SENTENCE).length - 1);
+        let adjacent = true;
+        for (const c of feeCovers) {
+          for (let i = v.text.indexOf(c.reviewer_comment); i !== -1; i = v.text.indexOf(c.reviewer_comment, i + 1)) {
+            if (!v.text.slice(i, i + c.reviewer_comment.length + 420).includes('signed opinion that the filer is in compliance')) adjacent = false;
+          }
+        }
+        row(`${p} fee notes are verbatim and each sits beside the compliance opinion`, adjacent && opinions >= (fees > 0 ? 1 : 0) && (p === PRESIDENT_HUB_PATH || p === PRESIDENT_TIMING_PATH ? feeCovers.every((c) => v.text.includes(c.reviewer_comment)) : true), `${fees} mentions of the note text, ${opinions} opinion sentences`);
+      }
+      // Audit round 2 (M3, S4): the generic fee-note quote is always followed by the compliance sentence within 300 characters, on every page that prints it.
+      for (const p of PAGES) {
+        const t = texts[p].text;
+        const at = [...t.matchAll(/Filer paid late fee\(s\)/g)].map((m) => m.index);
+        const ok = at.every((i) => t.slice(i, i + 300).includes(COMPLIANCE_SENTENCE));
+        row(`${p} generic fee-note quote is followed by the compliance sentence within 300 characters`, ok && (p !== PRESIDENT_HUB_PATH && p !== PRESIDENT_TIMING_PATH || at.length > 0), `${at.length} generic quotes`);
+      }
+      // Audit round 2 (S5): "one report that day" only where the day has exactly one report; multi-report days say "1 of N reports that day".
+      const dayCount = (d) => hub.perReport.filter((r) => r.signed === d).length;
+      const singles = hub.perReport.filter((r) => dayCount(r.signed) === 1).length;
+      const oneMentions = (timV.text.match(/one report that day/g) ?? []).length;
+      const multiFirsts = hub.perReport.filter((r) => dayCount(r.signed) > 1 && !/\(\d\)/.test(r.label));
+      row(`${PRESIDENT_TIMING_PATH} "one report that day" appears only for days with a single report`, (singles === 0 ? oneMentions === 0 : oneMentions > 0 && oneMentions % singles === 0 && oneMentions / singles <= 2) && multiFirsts.every((r) => timV.text.includes(`1 of ${dayCount(r.signed)} reports that day`)), `${oneMentions} mentions, ${singles} single-report days, ${multiFirsts.length} multi-report days`);
+      // Hub: the live big number and its sentence, the stat band, the fee panel.
+      const sig = (d) => (d ? new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', year: 'numeric' }) : '');
+      row(`${PRESIDENT_HUB_PATH} figures vs DB: total, reports, over-45 sentence, classes`,
+        [`President Trump reported ${nfmt(hub.total)} securities transactions in ${nfmt(hub.reports)} periodic transaction reports (OGE Form 278-T) signed between ${sig(hub.firstSigned)} and ${sig(hub.lastSigned)}`,
+          `${nfmt(hub.over45)} transactions in ${nfmt(hub.over45Reports)} of the ${nfmt(hub.reports)} reports were reported more than 45 days after the trade date shown, counted to the date President Trump signed the report.`,
+          `${nfmt(hub.classes.stock)} stock`, `${nfmt(hub.classes.bond)} bond`, `${nfmt(hub.classes.fund)} fund`,
+          `On ${nfmt(feeCovers.length)} of the ${nfmt(hub.reports)} reports, the reviewing official wrote in the comments box:`].every((w) => hubV.text.includes(w)),
+        `total ${hub.total}, over45 ${hub.over45} in ${hub.over45Reports} of ${hub.reports}, ${feeCovers.length} fee notes`);
+      row(`${PRESIDENT_HUB_PATH} owners: printed as the data has them (${hub.owners.map((o) => `${o.value} ${o.count}`).join(', ')})`, hub.owners.every((o) => hubV.text.includes(`${o.value} ${nfmt(o.count)}`)));
+      const hubHtml = await htmlOf(PRESIDENT_HUB_PATH);
+      const oge = [...hubHtml.matchAll(/href="(https:\/\/extapps2\.oge\.gov\/[^"]+)"/g)].map((m) => m[1].replace(/&amp;/g, '&'));
+      row(`${PRESIDENT_HUB_PATH} OGE source links: one per report (plus cover-page links on the fee notes)`, new Set(oge.map((u) => u.split('#')[0])).size === hub.reports && [PRESIDENT_TIMING_PATH, PRESIDENT_LARGEST_PATH, PRESIDENT_QUALITY_PATH, '/people/executive/donald-trump', '/about/methodology/trades'].every((p) => hubHtml.includes(`href="${p}`)), `${new Set(oge.map((u) => u.split('#')[0])).size} distinct reports linked`);
+      // Timing: the same sentences, the 278-T exemption, histogram sums, one table row per report.
+      const histSum = hub.hist.reduce((n, b) => n + b.count, 0);
+      const histOver = hub.hist.filter((b) => b.over45).reduce((n, b) => n + b.count, 0);
+      row(`${PRESIDENT_TIMING_PATH} histogram adds up to the computed rows and the over-45 bins to the over-45 count`, histSum === hub.computed && histOver === hub.over45 && histSum + hub.notComputed === hub.total, `bins ${histSum}, over 45 ${histOver}, not computed ${hub.notComputed}, total ${hub.total}`);
+      row(`${PRESIDENT_TIMING_PATH} figures vs DB: over-45 sentence, 45-or-fewer, exemption`,
+        [`${nfmt(hub.over45)} transactions in ${nfmt(hub.over45Reports)} of the ${nfmt(hub.reports)} reports were reported more than 45 days after the trade date shown`,
+          `${nfmt(hub.atOrUnder45)} transactions were reported 45 days or fewer after the trade date shown`,
+          `Why ${nfmt(hub.notComputed)} transactions have no gap`, 'Not computed: this type of holding (U.S. Treasury securities, money-market and mutual funds) is not required on a 278-T.',
+          'We count calendar days and do not adjust for weekends or holidays.'].every((w) => timV.text.includes(w)));
+      row(`${PRESIDENT_TIMING_PATH} every one of the ${hub.reports} reports has a table row`, hub.perReport.every((r) => timV.text.includes(r.fileName ? r.fileName : sig(r.signed))) || hub.perReport.every((r) => timV.text.includes(sig(r.signed))));
+      row(`all not-computed rows are the 278-T exemption (late_basis not_required_on_278T), none of them stock`, et.filter((r) => r.stock_act_late == null).every((r) => r.late_basis === 'not_required_on_278T' && r.instrument_class !== 'stock'), `${hub.notComputed} rows`);
+      // Largest: the live rows, each compared with its page, each linking to its page.
+      const topLive = et.filter((r) => Number(r.amount_min ?? 0) >= LARGEST_FLOOR);
+      const unverified = topLive.filter((r) => !isCheckedAgainstPage({ ...r, asset: r.asset }));
+      row(`${PRESIDENT_LARGEST_PATH} every displayed row equals a line compared with its page image (A11b hard rule)`, unverified.length === 0 && topLive.length === VERIFIED_LARGEST.length, `${topLive.length} live rows at the top band, ${VERIFIED_LARGEST.length} recorded, ${unverified.length} not compared`);
+      const larHtml = await htmlOf(PRESIDENT_LARGEST_PATH);
+      row(`${PRESIDENT_LARGEST_PATH} lists ${topLive.length} rows, none marked "not yet compared", each with a page link`,
+        larV.text.includes(`${nfmt(topLive.length)} transactions in the highest band`) && !larHtml.includes('data-unchecked') && !larHtml.includes('data-section="unchecked"') && topLive.every((r) => larHtml.includes(`#page=${r.page_number}`) && larV.text.includes(`line #${r.row_number_printed}`)),
+        topLive.map((r) => `${r.source_doc_id.slice(0, 8)} p${r.page_number} #${r.row_number_printed}`).join('; '));
+      // The DataTable renders each row twice (table at 640px and up, card list below), so the table's row headers are the count.
+      const larRows = (larHtml.slice(0, larHtml.indexOf('id="bands"')).match(/<th scope="row"/g) ?? []).length; // the table above the bands chart
+      row(`${PRESIDENT_LARGEST_PATH} shows exactly ${topLive.length} transaction rows (no row below the top band)`, larRows === topLive.length && (larV.text.match(/page \d+, line #\d+/g) ?? []).length === 2 * topLive.length, `${larRows} table rows, ${(larV.text.match(/page \d+, line #\d+/g) ?? []).length} page-and-line mentions (table + phone cards)`);
+      // Data quality: live counts, the audit files by name, the perpetual rule.
+      const perp = et.filter((r) => isPerpetual(r)).length;
+      row(`${PRESIDENT_QUALITY_PATH} figures vs DB: perpetual count, 278-T exemption count, classes, restated lines`,
+        [`${nfmt(perp)} bond lines are perpetual fixed-income securities`, `${nfmt(hub.notComputed)} lines now carry a blank gap`, `${nfmt(hub.classes.stock)} stock, ${nfmt(hub.classes.bond)} bond and ${nfmt(hub.classes.fund)} fund lines`, `${nfmt(hub.restatedLines)} lines are the replacement lines`].every((w) => qV.text.includes(w)), `${perp} perpetuals`);
+      row(`perpetual rule reproduces the 168 perpetual securities A11b counted`, perp === 168, `${perp} (PERP / ALT TIER / placeholder maturity, bond class)`);
+      row(`${PRESIDENT_QUALITY_PATH} names both audit files and dates`, AUDITS.every((a) => qV.text.includes(a.file)) && qV.text.includes('Oct 19, 2026'), AUDITS.map((a) => a.file).join(', '));
+      row(`${PRESIDENT_QUALITY_PATH} audit-record figures printed as recorded (39 / 1,379 / 8 shifted rows / Meta #42)`, [`${nfmt(HISTORY.bondLineFixes)} lines were corrected`, `${nfmt(HISTORY.reclassified)} lines changed class`, `printed lines #${HISTORY.shiftedRows.from} to #${HISTORY.shiftedRows.to} (${HISTORY.shiftedRows.count} lines)`, `Meta Platforms line (#${HISTORY.metaLine.printed})`].every((w) => qV.text.includes(w)));
+      // Cross-link from the D9 page, and the people index card keeps working.
+      if (presidentPageEnabled()) await hit(PRESIDENT_PATH, 200, { bodyAll: ['The President: disclosure timing, the largest transactions and how the data was built'], group: G });
+    } catch (e) { row('D15 figures vs DB', false, `could not run: ${String(e.message).slice(0, 160)}`); }
+    // Sub-page query strings and trailing noise answer the page, never an error.
+    for (const q of ['?x=1', '?sort=zz&page=-3']) await hit(PRESIDENT_HUB_PATH + q, 200, { notBody: ['Figures unavailable'], group: G });
+    // Header: the nav item shows on every page (desktop and phone menus render the same list).
+    const home = await htmlOf('/');
+    row('header nav shows "The President" while the flag is on', home.includes('href="/president"') && home.includes('The President'));
+    await hit('/president/nope', 404, { group: G });
+  } else {
+    for (const p of PAGES) await hit(p, 404, { group: G });
+    const home = await htmlOf0('/');
+    row('header nav has no "The President" while the flag is off', !home.includes('href="/president"'));
+  }
+  async function htmlOf0(p) { return (await fetch(base + p)).text(); }
+}
+// ---------------------------------------------------------------- D19: analytics hub (/analytics)
+{
+  const G = 'D19 analytics hub';
+  const row = (path, ok, note, expect = 'ok') => { if (!ok) failed++; rows.push({ path, status: ok ? 'ok' : 'FAIL', expect, ok, note, group: G }); };
+  // Flag: off on production until SHOW_ANALYTICS_HUB is exactly '1'; on in dev and previews.
+  for (const [env, want] of [[{}, false], [{ VERCEL_ENV: 'preview' }, false], [{ VERCEL_ENV: 'production' }, true], [{ VERCEL_ENV: 'production', SHOW_ANALYTICS_HUB: '1' }, false], [{ VERCEL_ENV: 'production', SHOW_ANALYTICS_HUB: 'true' }, true]]) {
+    const got = hiddenByFlag(ANALYTICS_PATH, env);
+    row(`hiddenByFlag(${JSON.stringify(ANALYTICS_PATH)}, ${JSON.stringify(env)})`, got === want, '', String(want));
+  }
+  const restCount = async (path) => {
+    const { url, key } = anonCreds();
+    const res = await fetch(`${url}/rest/v1/${path}`, { headers: { apikey: key, Authorization: `Bearer ${key}`, Prefer: 'count=exact', Range: '0-0', 'Range-Unit': 'items' } });
+    if (!res.ok) throw new Error(`${path.split('?')[0]} -> ${res.status}`);
+    return Number((res.headers.get('content-range') ?? '').split('/')[1]);
+  };
+  const sm = await (await fetch(base + '/sitemap.xml')).text();
+  if (analyticsHubEnabled()) {
+    await hit(ANALYTICS_PATH, 200, {
+      bodyAll: ['What we hold', 'Reports filed per month', 'Days from trade to report', 'Campaign receipts', 'Our own pipeline', 'Download the rows', 'Show the numbers', 'never zero', 'not a finding about any filer'],
+      notBody: ['unavailable right now'],
+      group: G,
+    });
+    row('sitemap lists /analytics', sm.includes(`slushfund.net${ANALYTICS_PATH}<`), '');
+    const html = (await (await fetch(base + ANALYTICS_PATH)).text()).replace(/<!-- -->/g, '');
+    const vis = visibleText(html);
+    row(`${ANALYTICS_PATH} visible text has no NaN, undefined or null`, !/\b(?:NaN|undefined|null)\b/.test(vis), '');
+    row(`${ANALYTICS_PATH} has an Analytics tab in the Data nav`, html.includes('href="/analytics"'), '');
+    row(`${ANALYTICS_PATH} charts carry a text table each`, (html.match(/Show the numbers/g) ?? []).length >= 2, `${(html.match(/Show the numbers/g) ?? []).length} tables`);
+    row(`${ANALYTICS_PATH} every focusable chart mark has an aria-label`, !/<(?:rect|div)(?![^>]*aria-label)[^>]*role="img"[^>]*tabindex="0"/.test(html) && !/<(?:rect|div)(?![^>]*aria-label)[^>]*tabindex="0"[^>]*role="img"/.test(html), '');
+    // Figures against the database (anon): the coverage band counts.
+    try {
+      const want = [
+        ['house_trades', await restCount('congress_trades?select=id&source_system=eq.House_Clerk')],
+        ['senate_trades', await restCount('congress_trades?select=id&source_system=eq.Senate_EFD')],
+        ['members', await restCount('congress_members?select=id&in_office=eq.true')],
+        ['contracts', await restCount('awards?select=id')],
+        ...(presidentPageEnabled() ? [['exec', await restCount('executive_trades?select=id')]] : []),
+        ...(campaignMoneyEnabled() ? [['fec', await restCount('member_campaign_money?select=bioguide_id')]] : []),
+        ...(investigationsV2Enabled() ? [['subject', await restCount('subject_award_transactions?select=transaction_key')]] : []),
+      ];
+      for (const [k, n] of want) {
+        const m = new RegExp(`data-figure="${k}">([0-9,]+)<`).exec(html);
+        row(`${ANALYTICS_PATH} coverage figure ${k} equals the database count (${nfmt(n)})`, !!m && num(m[1]) === n, m ? `page ${m[1]}` : 'figure not found');
+      }
+    } catch (e) { row('/analytics coverage figures vs DB', false, `could not run: ${String(e.message).slice(0, 120)}`); }
+    // A section behind another feature's flag follows that flag.
+    row('grades section follows SHOW_GRADES', gradesEnabled() === vis.includes('Stock Trading Grades: snapshot'), '');
+    row('grades gated: "Not public yet." card present exactly when SHOW_GRADES is off', gradesEnabled() === !html.includes('data-figure="grades-gated"'), '');
+    // Fix round: the no-date member is disclosed under the quarter bars; the current month is labelled partial.
+    if (campaignMoneyEnabled()) {
+      try {
+        const { url, key } = anonCreds();
+        const r = await fetch(`${url}/rest/v1/fec_member_money_mv?select=bioguide_id&coverage_end=is.null`, { headers: { apikey: key, Authorization: `Bearer ${key}` } });
+        const nd = r.ok ? (await r.json()).length : -1;
+        const shown = html.includes('data-figure="money-nodate"');
+        row('campaign receipts: no-date members disclosed under the quarter bars when > 0', nd >= 0 && shown === (nd > 0), `no-date ${nd}, line ${shown ? 'shown' : 'absent'}`);
+      } catch (e) { row('campaign receipts: no-date line', false, `could not run: ${String(e.message).slice(0, 120)}`); }
+    }
+    const curMon = new Date().toISOString().slice(0, 7);
+    const monShort = new Date(`${curMon}-15T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', year: '2-digit', timeZone: 'UTC' });
+    row('disclosure table labels the current month "(partial)"', html.includes(`${monShort} (partial)`), monShort);
+    row('campaign section follows SHOW_CAMPAIGN_MONEY', campaignMoneyEnabled() === !vis.includes('Campaign finance data is not public on this site yet'), '');
+    row('President link follows SHOW_PRESIDENT_TRADES', presidentPageEnabled() === html.includes(`href="${PRESIDENT_PATH}"`), '');
+  } else {
+    await hit(ANALYTICS_PATH, 404, { notBody: ['What we hold'], group: G });
+    row('sitemap has no /analytics', !sm.includes(`slushfund.net${ANALYTICS_PATH}`), '');
+    const nav = await (await fetch(base + '/data/status')).text();
+    row('Data nav has no Analytics tab', !nav.includes('href="/analytics"'), '');
+  }
+}
+
 // ---------------------------------------------------------------- D9 / D10: President page, leaderboard, grades, who funds them
 {
   const G = 'D9/D10 pages';
   const row = (path, ok, note, expect = 'ok') => { if (!ok) failed++; rows.push({ path, status: ok ? 'ok' : 'FAIL', expect, ok, note, group: G }); };
   // Flags: each page is off on production until its own switch is exactly '1'.
-  for (const [path, sw] of [[PRESIDENT_PATH, 'SHOW_PRESIDENT_TRADES'], [MOST_ACTIVE_PATH, 'SHOW_MOST_ACTIVE'], [GRADE_METHOD_PATH, 'SHOW_GRADES']]) {
+  for (const [path, sw] of [[PRESIDENT_PATH, 'SHOW_PRESIDENT_TRADES'], [MOST_ACTIVE_PATH, 'SHOW_MOST_ACTIVE'], [GRADE_METHOD_PATH, 'SHOW_GRADES'], [SECTOR_HEATMAP_PATH, 'SHOW_SECTOR_HEATMAP']]) {
     for (const [env, want] of [[{}, false], [{ VERCEL_ENV: 'preview' }, false], [{ VERCEL_ENV: 'production' }, true], [{ VERCEL_ENV: 'production', [sw]: '1' }, false], [{ VERCEL_ENV: 'production', [sw]: 'true' }, true]]) {
       const got = hiddenByFlag(path, env);
       row(`hiddenByFlag(${JSON.stringify(path)}, ${JSON.stringify(env)})`, got === want, '', String(want));
@@ -1111,6 +1366,12 @@ const F3 = 'post-launch fixes (F3)';
     await hit(MOST_ACTIVE_PATH, 200, { bodyAll: ['Most active stock traders in Congress', 'at least $', 'All congressional trades per month', 'not a finding about the filer'], group: G });
     for (const q of ['?sort=value&chamber=Senate', '?sort=late&party=Democrat&state=CA&all=1', '?sort=zz&chamber=Mars&party=Green&state=ZZ']) await hit(MOST_ACTIVE_PATH + q, 200, { notBody: ['unavailable right now'], group: G });
   } else await hit(MOST_ACTIVE_PATH, 404, { group: G });
+  // D18: sector heatmap. Flag on: the page, its filters, a sector drill-down and junk parameters; flag off: the site 404.
+  if (sectorHeatmapEnabled()) {
+    await hit(SECTOR_HEATMAP_PATH, 200, { bodyAll: ['What Congress is trading', 'Most-bought tickers', 'Most-sold tickers', 'Unclassified', 'Ranges, not amounts', 'not a finding about the filer', 'Purchases and sales per month'], notBody: ['unavailable right now'], group: G });
+    for (const q of ['?months=3', '?months=6&measure=net', '?sector=unclassified', '?months=99&measure=zz&sector=zz']) await hit(SECTOR_HEATMAP_PATH + q, 200, { notBody: ['unavailable right now'], group: G });
+    await hit(`${SECTOR_HEATMAP_PATH}?months=12&sector=ai-tech`, 200, { bodyAll: ['AI / Tech:', 'Members with the most transactions here'], group: G });
+  } else await hit(SECTOR_HEATMAP_PATH, 404, { group: G });
   const member = '/people/G000583';
   if (gradesEnabled()) {
     await hit(GRADE_METHOD_PATH, 200, { bodyAll: [GRADE_FIXED_LINE, 'Would this member pass a congressional stock-trading ban today?'], group: G });
@@ -1187,6 +1448,73 @@ const F3 = 'post-launch fixes (F3)';
     }
     const home = await visible('/');
     row('/ lobbying legend still says coming later', /Lobbying\W{0,6}coming later/i.test(home.text), 'lobbying is not loaded');
+  }
+}
+
+// ---------------------------------------------------------------- D21: "Follow the money" (member page graphic + compact voter-page variant)
+{
+  const G = 'money trail (D21)';
+  const row = (path, ok, note, expect = 'ok') => { if (!ok) failed++; rows.push({ path, status: ok ? 'ok' : 'FAIL', expect, ok, note, group: G }); };
+  const count = (s, needle) => s.split(needle).length - 1;
+  const SHARES_NOT_SHOWN = 'Shares not shown: in this period, refunds or giver-side reports do not line up with the campaign’s own total receipts. See the FEC record.';
+  const FUNDING_NO_RECEIPTS = 'No receipts reported for the 2025–26 FEC cycle (FEC).';
+  // The page's HTML without the RSC payload scripts (they repeat every string), so counts are of what the page prints.
+  const text = async (p) => (await fetch(base + p).then((r) => r.text())).replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<!-- -->/g, '').replace(/&#x27;/g, "'").replace(/&amp;/g, '&');
+  // Flag: off on production until SHOW_MONEY_TRAIL is exactly '1'.
+  for (const [env, want] of [[{}, true], [{ VERCEL_ENV: 'preview' }, true], [{ VERCEL_ENV: 'production' }, false], [{ VERCEL_ENV: 'production', SHOW_MONEY_TRAIL: '1' }, true], [{ VERCEL_ENV: 'production', SHOW_MONEY_TRAIL: 'true' }, false]]) {
+    row(`moneyTrailEnabled(${JSON.stringify(env)})`, moneyTrailEnabled(env) === want, '', String(want));
+  }
+  row('caption is the exact sentence set in the brief', TRAIL_CAPTION === 'Money in and disclosed trades shown side by side from public records. Nothing here shows a payment to or from any company, or any coordination. Filings list assets, not reasons.', '');
+  const MEMBERS = [
+    ['G000583', 'a member with trades'],
+    ['O000172', 'a zero-trade member (graded)'],
+    ['K000389', 'a Not-graded member (zero trades, unread filings)'],
+    ['S001203', 'a shares-suppressed member'],
+    ['T000165', 'a shares-suppressed member with zero trades'],
+    ['B001328', 'a member with no receipts'],
+  ];
+  if (moneyTrailEnabled()) {
+    const moneyOn = campaignMoneyEnabled();
+    for (const [id, what] of MEMBERS) {
+      const t = await text(`/people/${id}`);
+      const ok = t.includes('data-section="money-trail"') && count(t, TRAIL_CAPTION) === 1 && t.includes('The numbers behind this graphic') && t.includes('id="p-trail"');
+      row(`/people/${id} ${what}: graphic + caption exactly once`, ok, `caption x${count(t, TRAIL_CAPTION)}`);
+      const from = t.indexOf('data-section="money-trail"');
+      row(`/people/${id} no accusation wording`, from >= 0 && !/\b(bribe|kickback|quid pro quo|corrupt|paid off|payoff|buy(?:ing)? influence)\b/i.test(t.slice(from, from + 60000)), '');
+    }
+    const trade = await text('/people/G000583');
+    row('/people/G000583 right panel counts line + sector table', trade.includes(TRAIL_COUNTS_LINE) && trade.includes('Disclosed trades by sector') && /stock purchases and sales/.test(trade), '');
+    const tt = trade.slice(trade.indexOf('Disclosed trades by sector,'));
+    row('/people/G000583 ribbons are counts: no dollar figure in the sector table', tt.length > 0 && !tt.slice(0, tt.indexOf('</table>')).includes('$'), '');
+    const zero = await text('/people/O000172');
+    row('/people/O000172 zero-trade message', zero.includes(TRAIL_NO_TRADES), '');
+    const ng = await text('/people/K000389');
+    row('/people/K000389 zero trades + unread-filings caveat', ng.includes(TRAIL_NO_TRADES) && /scanned image or paper filing|scanned images or paper filings/.test(ng.slice(ng.indexOf('data-section="money-trail"'))), '');
+    const sup = await text('/people/S001203');
+    const supTrail = sup.slice(sup.indexOf('data-section="money-trail"'));
+    if (moneyOn) row('/people/S001203 shares-suppressed: panel wording replaces the money-in ribbons', supTrail.includes(SHARES_NOT_SHOWN) && !supTrail.includes('Left ribbons are dollars'), '');
+    const nr = await text('/people/B001328');
+    if (moneyOn) row('/people/B001328 no receipts: the panel wording', nr.slice(nr.indexOf('data-section="money-trail"')).includes(FUNDING_NO_RECEIPTS), '');
+    // Compact variant on the voter page: money in only, one caption per member card, no trade panel, link to the member page.
+    if (voterPagesEnabled() && moneyOn) {
+      const v = await text('/your-members/vt');
+      const cards = count(v, 'data-member="');
+      const compact = count(v, 'data-section="money-trail-compact"');
+      row('/your-members/vt compact variant on every member card', cards > 0 && compact === cards, `${compact} of ${cards}`);
+      row('/your-members/vt caption once per card', count(v, TRAIL_CAPTION) === cards, `${count(v, TRAIL_CAPTION)} captions`);
+      row('/your-members/vt compact variant has no trade panel', !v.includes('Disclosed trades by sector') && /#p-trail"/.test(v), '');
+      const ca = await text('/your-members/ca');
+      row('/your-members/ca compact variant on every member card', count(ca, 'data-section="money-trail-compact"') === count(ca, 'data-member="') && count(ca, TRAIL_CAPTION) === count(ca, 'data-member="'), '');
+    }
+  } else {
+    for (const [id, what] of MEMBERS.slice(0, 3)) {
+      const t = await text(`/people/${id}`);
+      row(`/people/${id} flag off: no graphic, no caption (${what})`, !t.includes('Follow the money') && !t.includes('data-section="money-trail"') && !t.includes(TRAIL_CAPTION), '');
+    }
+    if (voterPagesEnabled()) {
+      const v = await text('/your-members/vt');
+      row('/your-members/vt flag off: no compact variant, no caption', !v.includes('money-trail-compact') && !v.includes(TRAIL_CAPTION), '');
+    }
   }
 }
 
@@ -1516,6 +1844,96 @@ const F3 = 'post-launch fixes (F3)';
       const A = SF.storyBySlug(a); const B = SF.storyBySlug(b);
       const norm = (s) => SF.caveats(s).map((c) => c.replace(s.resold, '<resold>'));
       row(`pair ${A.group}/${B.group}: identical caveats (reseller noun aside), context and method lines`, JSON.stringify(norm(A)) === JSON.stringify(norm(B)), '');
+    }
+  }
+}
+
+// ---------------------------------------------------------------- D20: shareable infographics (/graphics)
+{
+  const G = 'D20 infographics';
+  const row = (path, ok, note, expect = 'ok') => { if (!ok) failed++; rows.push({ path, status: ok ? 'ok' : 'FAIL', expect, ok, note, group: G }); };
+  const UNDER = { 'grading-congress': 'SHOW_GRADES', 'where-the-money-comes-from': 'SHOW_CAMPAIGN_MONEY', 'trading-while-disclosing': 'SHOW_LATE_FILERS', 'the-presidents-trades': 'SHOW_PRESIDENT_TRADES' };
+  const SRC = { 'grading-congress': 'Source: House/Senate PTRs via SlushFund.net', 'where-the-money-comes-from': 'Source: Federal Election Commission bulk data via SlushFund.net', 'trading-while-disclosing': 'Source: House/Senate PTRs via SlushFund.net', 'the-presidents-trades': 'Source: OGE Form 278-T reports' };
+  // Flag matrix: SHOW_INFOGRAPHICS alone never opens a graphic whose own feature flag is off; each path, its card and its share image follow the same rule.
+  for (const slug of GRAPHIC_SLUGS) {
+    const paths = [GRAPHICS_PATH + '/' + slug, GRAPHICS_PATH + '/' + slug + '/opengraph-image'];
+    for (const path of paths) {
+      for (const [env, want] of [
+        [{}, false], [{ VERCEL_ENV: 'preview' }, false], [{ VERCEL_ENV: 'production' }, true],
+        [{ VERCEL_ENV: 'production', SHOW_INFOGRAPHICS: '1' }, true], [{ VERCEL_ENV: 'production', [UNDER[slug]]: '1' }, true],
+        [{ VERCEL_ENV: 'production', SHOW_INFOGRAPHICS: '1', [UNDER[slug]]: '1' }, false], [{ VERCEL_ENV: 'production', SHOW_INFOGRAPHICS: 'true', [UNDER[slug]]: '1' }, true],
+      ]) row('hiddenByFlag(' + JSON.stringify(path) + ', ' + JSON.stringify(env) + ')', hiddenByFlag(path, env) === want, '', String(want));
+    }
+  }
+  for (const [env, want] of [[{}, false], [{ VERCEL_ENV: 'production' }, true], [{ VERCEL_ENV: 'production', SHOW_INFOGRAPHICS: '1' }, false], [{ VERCEL_ENV: 'production', SHOW_INFOGRAPHICS: 'true' }, true]]) {
+    row('hiddenByFlag("/graphics", ' + JSON.stringify(env) + ')', hiddenByFlag(GRAPHICS_PATH, env) === want, '', String(want));
+  }
+  row('hiddenByFlag("/graphicsx", production) is false (prefix is per path segment)', hiddenByFlag('/graphicsx', { VERCEL_ENV: 'production' }) === false, '', 'false');
+  row('an unknown /graphics/<slug> follows only SHOW_INFOGRAPHICS (then answers 404 itself)', hiddenByFlag('/graphics/nope', { VERCEL_ENV: 'production', SHOW_INFOGRAPHICS: '1' }) === false, '', 'false');
+
+  const sm = await (await fetch(base + '/sitemap.xml')).text();
+  const smHas = (p) => sm.includes('slushfund.net' + p + '<');
+  const png = async (p) => { const r = await fetch(base + p); const b = Buffer.from(await r.arrayBuffer()); return { status: r.status, ctype: r.headers.get('content-type') || '', w: b.length > 24 ? b.readUInt32BE(16) : 0, h: b.length > 24 ? b.readUInt32BE(20) : 0, bytes: b.length }; };
+
+  // Fix round: the footer carries one 'Graphics' link, rendered through the same flag function as the index, so it is on exactly when /graphics is.
+  for (const fp of ['/', '/about']) {
+    const fh = await (await fetch(base + fp)).text();
+    const fm = /<nav aria-label="Footer">[\s\S]*?<\/nav>/.exec(fh);
+    const hasLink = !!fm && fm[0].includes('href="' + GRAPHICS_PATH + '"');
+    const inHeader = /<header[\s\S]*?<\/header>/.test(fh) && /<header[\s\S]*?<\/header>/.exec(fh)[0].includes('href="' + GRAPHICS_PATH + '"');
+    row(fp + ' footer links ' + GRAPHICS_PATH + (infographicsEnabled() ? ' (flag on)' : ' only when SHOW_INFOGRAPHICS is on (flag off: absent)'), !!fm && hasLink === infographicsEnabled() && !inHeader, hasLink ? 'link present' : 'link absent');
+  }
+
+  if (!infographicsEnabled()) {
+    for (const p of [GRAPHICS_PATH, GRAPHICS_PATH + '/', ...GRAPHIC_SLUGS.flatMap((g) => [GRAPHICS_PATH + '/' + g, GRAPHICS_PATH + '/' + g + '?card=1', GRAPHICS_PATH + '/' + g + '/opengraph-image'])]) await hit(p.replace(/\/$/, ''), 404, { group: G });
+    row('sitemap has no graphics', !sm.includes('slushfund.net' + GRAPHICS_PATH), '');
+  } else {
+    const idx = await (await fetch(base + GRAPHICS_PATH)).text();
+    await hit(GRAPHICS_PATH, 200, { bodyAll: ['Graphics', 'carries its source'], noindex: process.env.VERCEL_ENV !== 'production', group: G });
+    row('sitemap lists /graphics', smHas(GRAPHICS_PATH), '');
+    for (const slug of GRAPHIC_SLUGS) {
+      const on = graphicEnabled(slug);
+      const p = GRAPHICS_PATH + '/' + slug;
+      row('index links ' + slug + ' only when that graphic is public', idx.includes('href="' + p + '"') === on, on ? 'on' : 'off');
+      row('sitemap lists ' + slug + ' only when public; never the ?card=1 variant', smHas(p) === on && !sm.includes(p + '?card'), '');
+      if (!on) {
+        for (const x of [p, p + '?card=1', p + '/opengraph-image']) await hit(x, 404, { group: G });
+        continue;
+      }
+      const page = await fetch(base + p);
+      const html = (await page.text()).replace(/<!-- -->/g, '').replace(/&#x27;/g, "'");
+      const text = html.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<style[\s\S]*?<\/style>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+      row(p + ' 200', page.status === 200, 'HTTP ' + page.status);
+      row(p + ' has one h1, the Download PNG button, the embed code box and the data table', (html.match(/<h1[ >]/g) ?? []).length === 1 && html.includes('Download PNG') && html.includes('Embed code') && html.includes('The data behind this') && /<table/.test(html), '');
+      row(p + ' graphic is one labelled svg (role=img, aria-label) with its own provenance: source, retrieval date, slushfund.net address', /<svg[^>]+id="gfx-svg"[^>]+role="img"[^>]+aria-label="[^"]{40,}/.test(html) && text.includes(SRC[slug]) && /Data retrieved [A-Z][a-z]{2} \d{1,2}, \d{4}/.test(text) && text.includes('slushfund.net/graphics/' + slug), '');
+      row(p + ' embed code is an iframe of the ?card=1 address', html.includes('&lt;iframe src="https://slushfund.net/graphics/' + slug + '?card=1"') || html.includes('<iframe src="https://slushfund.net/graphics/' + slug + '?card=1"') || html.includes('iframe src=&quot;https://slushfund.net/graphics/' + slug + '?card=1&quot;'), '');
+      row(p + ' prints no NaN, undefined, null or zero-for-missing', !/\b(NaN|undefined|null)\b/.test(text) && !/\$0(?![\d,.])/.test(text), '');
+      row(p + ' og:image is its own square card route', html.includes('/graphics/' + slug + '/opengraph-image') && /property="og:image:width" content="1200"/.test(html) && /property="og:image:height" content="1200"/.test(html), '');
+      row(p + ' canonical is the plain address', html.includes('<link rel="canonical" href="https://slushfund.net' + p + '"'), '');
+      // The card variant: the graphic alone, noindex, same canonical, no page chrome, never in the sitemap.
+      const cardRes = await fetch(base + p + '?card=1');
+      const card = (await cardRes.text()).replace(/<!-- -->/g, '');
+      row(p + '?card=1 200: the svg alone (data-gfx-card), no table, no button, noindex, canonical = plain address', cardRes.status === 200 && card.includes('data-gfx-card') && /<svg[^>]+id="gfx-svg"/.test(card) && !card.includes('The data behind this') && !card.includes('Download PNG') && /name="robots" content="noindex/.test(card) && card.includes('<link rel="canonical" href="https://slushfund.net' + p + '"'), 'HTTP ' + cardRes.status);
+      const og = await png(p + '/opengraph-image');
+      row(p + '/opengraph-image 200 png 1200x1200', og.status === 200 && og.ctype.includes('image/png') && og.w === 1200 && og.h === 1200 && og.bytes > 20000, og.status + ' ' + og.w + 'x' + og.h + ' ' + og.bytes + ' bytes');
+    }
+    if (graphicEnabled('where-the-money-comes-from')) {
+      const mt = (await (await fetch(base + GRAPHICS_PATH + '/where-the-money-comes-from')).text()).replace(/<!-- -->/g, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+      row('/graphics/where-the-money-comes-from: remainder footnote is in the page caption and inside the svg', (mt.match(/Last group is total receipts minus the six above; it is not an FEC category\./g) ?? []).length >= 2, '');
+    }
+    // Content rows tied to figures (recomputed independently in scripts/d20-recompute.mjs): the report's own sentences.
+    if (graphicEnabled('the-presidents-trades')) {
+      const t = (await (await fetch(base + GRAPHICS_PATH + '/the-presidents-trades')).text()).replace(/<!-- -->/g, '').replace(/&#x27;/g, "'").replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+      row('/graphics/the-presidents-trades: the fee-note quote uses curly double quotes (no backtick, no straight or single quote) in the page text and the svg aria-label', !t.includes('Filer paid late fee(s)') || (t.includes('“Filer paid late fee(s).”') && !/[`‘’]Filer paid late fee/.test(t)), '');
+      row('/graphics/the-presidents-trades: "securities transactions", never "stock trades"; the fee-note quote sits next to the compliance sentence', t.includes('securities transactions') && !/stock trades/i.test(t) && (!t.includes('Filer paid late fee(s)') || /Filer paid late fee\(s\)\.[^.]{0,6}\s*(?:Every report also carries the agency ethics official|[^]{0,400}?Every report also carries the agency ethics official)/.test(t)), '');
+    }
+    if (graphicEnabled('trading-while-disclosing')) {
+      const t = (await (await fetch(base + GRAPHICS_PATH + '/trading-while-disclosing')).text()).replace(/<!-- -->/g, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+      row('/graphics/trading-while-disclosing: "reported more than 45 days after the trade" and the 30 and 45 marks, no "late"/"on time" verdicts', t.includes('reported more than 45 days after the trade') && t.includes('30 DAYS') && t.includes('45 DAYS') && !/\bon[- ]time\b|\bfiled late\b|\breported late\b/i.test(t), '');
+    }
+    if (graphicEnabled('grading-congress')) {
+      const t = (await (await fetch(base + GRAPHICS_PATH + '/grading-congress')).text()).replace(/<!-- -->/g, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+      row('/graphics/grading-congress: color is by grade only (no party word in the graphic or its caption)', !/\b(Democrat|Republican|Democratic|GOP)\b/.test(t), '');
     }
   }
 }

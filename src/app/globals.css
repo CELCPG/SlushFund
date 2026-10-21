@@ -185,6 +185,11 @@ html[data-theme] .sf-rank-bar { height: 24px; border-radius: 0; background-color
 html[data-theme] .sf-rank-value { font-size: 16px; font-weight: 700; color: var(--sf-figure); }
 html[data-theme] .sf-line { stroke: var(--sf-bar); stroke-width: 4; }
 
+/* D15 /president bars (HBars): the highlighted bar takes the theme bar color; the muted bar is the muted text color at reduced strength. Hard edges in every theme. */
+.pres-bar { background-color: var(--sf-bar, #6534D9); border-radius: 0 4px 4px 0; }
+.pres-bar-mute { background-color: var(--color-muted); opacity: 0.55; border-radius: 0 4px 4px 0; }
+html[data-theme] :is(.pres-bar, .pres-bar-mute) { height: 24px; border-radius: 0; }
+
 /* ── T1 "Night Desk, dialed up": near-black, off-white, one acid-yellow accent for figures and grades, Oswald. ── */
 html[data-theme='t1'] {
   color-scheme: dark;
@@ -388,3 +393,28 @@ html[data-theme='t1'] [class~='bg-[#E3F4EA]'] { background-color: #0F3A24; color
 
 /* Keyboard focus stays the two-tone ring everywhere; the 1px field rules above must not replace its outer half. */
 html[data-theme='t1'] :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible { box-shadow: 0 0 0 6px var(--color-highlight) !important; }
+/* D19: focus marks for the /analytics charts (a focused column or bar reads out its values via aria-label). */
+.sf-hit:focus { outline: none; }
+.sf-hit:focus-visible { fill: currentColor; fill-opacity: 0.12; }
+.sf-hit-bar:focus-visible { outline: 3px solid currentColor; outline-offset: 2px; }
+
+/* ─── D20 infographics (/graphics) ───
+   The two faces the graphic's SVG text names (the same TTF files the share card uses, copied to public/fonts so the page and the
+   Download PNG button can load them). ?card=1 shows the graphic alone: chrome hidden, dark canvas. */
+@font-face { font-family: 'SFDisplay'; font-weight: 800; font-display: swap; src: url('/fonts/BricolageGrotesque-ExtraBold.ttf') format('truetype'); }
+@font-face { font-family: 'SFBody'; font-weight: 600; font-display: swap; src: url('/fonts/Inter-SemiBold.ttf') format('truetype'); }
+html:has([data-gfx-card]), html:has([data-gfx-card]) body { background: #0B0B0B !important; }
+html:has([data-gfx-card]) :is(header.v2-header, footer, a[href='#main']) { display: none !important; }
+html:has([data-gfx-card]) main { background: #0B0B0B; }
+[data-gfx-card] { max-width: 1200px; margin: 0 auto; }
+[data-gfx-card] svg { display: block; width: 100%; height: auto; }
+.gfx-figure svg { box-shadow: 0 0 0 1px var(--color-line); }
+@media print {
+  @page { margin: 10mm; }
+  html:has(.gfx-page) :is(header.v2-header, footer, a[href='#main']), .gfx-hide-print { display: none !important; }
+  .gfx-page, .gfx-page main { background: #fff !important; }
+  .gfx-page section[aria-label='The graphic'] { display: block !important; padding: 0 !important; }
+  .gfx-page .gfx-figure { width: 100%; max-width: 180mm; margin: 0 auto; }
+  .gfx-page .gfx-figure svg { width: 100%; max-height: 270mm; box-shadow: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; break-inside: avoid; }
+  .gfx-page [data-section='caption'], .gfx-page [data-section='caption'] + p { display: none !important; }
+}

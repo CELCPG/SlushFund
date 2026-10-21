@@ -13,8 +13,11 @@ import TradesTable from '@/components/v2/TradesTable';
 import FundingPanel, { CYCLE } from '@/components/v2/FundingPanel';
 import ReportCard from '@/components/v2/ReportCard';
 import { getCampaignMoney } from '@/lib/v2/campaign-money';
-import { campaignMoneyEnabled, gradesEnabled } from '@/lib/v2/flags';
-import { getMemberCard } from '@/lib/v2/report-card';
+import MoneyTrail from '@/components/v2/MoneyTrail';
+import { campaignMoneyEnabled, gradesEnabled, moneyTrailEnabled, sectorHeatmapEnabled } from '@/lib/v2/flags';
+import { windowStart } from '@/lib/v2/grade-method';
+import { trailTrades } from '@/lib/v2/money-trail';
+import { getMemberCard, todayNY, unreadReportsInWindow } from '@/lib/v2/report-card';
 import { getDatasetStatuses } from '@/lib/v2/datasets';
 import { fmtCount, fmtDate, fmtUsdCompact, fmtUsd } from '@/lib/v2/format';
 import { instrumentKind, isListedApart } from '@/lib/v2/instruments';
@@ -107,6 +110,7 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
     gradesOn && member.in_office === true ? getMemberCard(id) : Promise.resolve(null),
     campaignMoneyEnabled() ? getCampaignMoney(id) : Promise.resolve({ state: 'missing' } as const),
   ]);
+  const trailEnd = todayNY();
   const contractors: TradedContractor[] | null = contractsOn && trades ? await getMemberContractors(trades) : null;
 
   // D14: the tile says what the "Who funds them" panel below says, in the panel's words; flag off (or the view missing) keeps "Not loaded yet".
@@ -282,6 +286,20 @@ export default async function PersonPage({ params, searchParams }: { params: Pro
         {/* ---------------------------------------------------------------- D10: grade (flag) and who funds them */}
         {gradesOn && <ReportCard card={card} name={member.name} inOffice={inOffice} bioguide={id} />}
         {campaignMoneyEnabled() && <FundingPanel money={money} enabled name={member.name} />}
+        {moneyTrailEnabled() && (
+          <MoneyTrail
+            member={{
+              id,
+              name: member.name,
+              detail: `${partyName(member.party)} · ${seatLabel(member)}`,
+              grade: card ? (card.grade.letter === 'NG' ? 'Not graded' : `Grade ${card.grade.letter}`) : null,
+            }}
+            money={money}
+            trades={trades ? trailTrades(trades, trailEnd) : null}
+            unread={unreadReportsInWindow(id, { start: windowStart(trailEnd) })}
+            heatmap={sectorHeatmapEnabled()}
+          />
+        )}
 
         {/* ---------------------------------------------------------------- trades by quarter */}
         <section className="pt-8" aria-labelledby="p-quarters">

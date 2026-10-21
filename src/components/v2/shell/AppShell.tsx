@@ -5,14 +5,14 @@ import { HeaderSearchSlot, MobileMenu, NavLinks } from '@/components/v2/shell/He
 import ScrollRegions from '@/components/v2/shell/ScrollRegions';
 import ReportErrorLink from '@/components/v2/ReportErrorLink';
 import { FOOTER_LINKS, navItems } from '@/components/v2/shell/nav';
-import { electionCenterEnabled } from '@/lib/v2/flags';
+import { GRAPHICS_PATH, electionCenterEnabled, infographicsEnabled, presidentDeepDiveEnabled } from '@/lib/v2/flags';
 
 /**
  * v2 app shell: indigo header (wordmark, search, five sections, phone menu),
  * the page, and the footer. Replaces the old 5-dropdown Navbar.
  */
 export default function AppShell({ children }: { children: ReactNode }) {
-  const items = navItems(electionCenterEnabled());
+  const items = navItems(presidentDeepDiveEnabled(), electionCenterEnabled());
   return (
     <div className="flex min-h-screen flex-col">
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-lg focus:bg-highlight focus:px-3 focus:py-2 focus:font-semibold focus:text-highlight-ink">
@@ -54,6 +54,11 @@ function Footer() {
                 <Link href={l.href} className="inline-flex min-h-6 items-center font-semibold text-white hover:underline">{l.label}</Link>
               </li>
             ))}
+            {infographicsEnabled() && (
+              <li>
+                <Link href={GRAPHICS_PATH} className="inline-flex min-h-6 items-center font-semibold text-white hover:underline">Graphics</Link>
+              </li>
+            )}
             <li>
               <ReportErrorLink className="inline-flex min-h-6 items-center font-semibold text-white hover:underline" />
             </li>

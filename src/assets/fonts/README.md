@@ -6,3 +6,5 @@ Satori and needs TTF files on disk. Pages load the same families through
 - `Inter-SemiBold.ttf`: Inter 600, SIL Open Font License 1.1 (https://fonts.google.com/specimen/Inter/license)
 
 Downloaded from fonts.gstatic.com on 2026-10-03.
+
+D20 (infographics): the same two files are copied to public/fonts/ so the graphic's SVG text (font families SFDisplay and SFBody in globals.css) and the Download PNG button can load them.

@@ -12,11 +12,21 @@ export interface NavItem {
   label: string;
 }
 
-/** D17: "Election 2026" sits before About, only while the Election Center flag is on (nothing links to a 404). */
-export function navItems(electionCenterOn: boolean): readonly NavItem[] {
-  if (!electionCenterOn) return NAV_ITEMS;
-  const about = NAV_ITEMS.findIndex((i) => i.href === '/about');
-  return [...NAV_ITEMS.slice(0, about), { href: '/election-2026', label: 'Election 2026' }, ...NAV_ITEMS.slice(about)];
+/** D15: "The President" sits after People, and only while SHOW_PRESIDENT_DEEPDIVE is on (flags.ts presidentDeepDiveEnabled). */
+export const PRESIDENT_NAV_ITEM: NavItem = { href: '/president', label: 'The President' };
+
+/** D15+D17: flag-gated nav items; nothing links to a 404 while its flag is off. */
+export function navItems(showPresident: boolean, electionCenterOn = false): readonly NavItem[] {
+  let items: readonly NavItem[] = NAV_ITEMS;
+  if (showPresident) {
+    const i = items.findIndex((n) => n.href === '/people');
+    items = [...items.slice(0, i + 1), PRESIDENT_NAV_ITEM, ...items.slice(i + 1)];
+  }
+  if (electionCenterOn) {
+    const about = items.findIndex((n) => n.href === '/about');
+    items = [...items.slice(0, about), { href: '/election-2026', label: 'Election 2026' }, ...items.slice(about)];
+  }
+  return items;
 }
 
 export const FOOTER_LINKS = [

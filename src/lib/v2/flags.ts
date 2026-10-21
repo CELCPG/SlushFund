@@ -40,6 +40,15 @@ export function presidentPageEnabled(env: Env = process.env): boolean {
   return env.VERCEL_ENV !== 'production' || env.SHOW_PRESIDENT_TRADES === '1';
 }
 
+/**
+ * D15: the President section (/president, /president/timing, /president/largest, /president/data-quality) and its
+ * "The President" nav item, built only from executive_trades and executive_filings. Off on production until the Auditor's
+ * page check: SHOW_PRESIDENT_DEEPDIVE=1. While off, every /president path answers the site 404 and the nav item is absent.
+ */
+export function presidentDeepDiveEnabled(env: Env = process.env): boolean {
+  return env.VERCEL_ENV !== 'production' || env.SHOW_PRESIDENT_DEEPDIVE === '1';
+}
+
 /** D10: the leaderboard /data/most-active-traders. Same pattern: off on production unless SHOW_MOST_ACTIVE=1. */
 export function mostActiveEnabled(env: Env = process.env): boolean {
   return env.VERCEL_ENV !== 'production' || env.SHOW_MOST_ACTIVE === '1';
@@ -88,8 +97,65 @@ export function electionCenterEnabled(env: Env = process.env): boolean {
 }
 
 export const ELECTION_PATH = '/election-2026';
+
+/**
+ * D19: the site-wide analytics hub (/analytics). Same pattern: on in dev and previews, off on production unless SHOW_ANALYTICS_HUB=1.
+ * Inside the page, sections that show figures from another gated feature (grades, President trades, investigation transactions,
+ * campaign money) stay behind that feature's own flag.
+ */
+export function analyticsHubEnabled(env: Env = process.env): boolean {
+  return env.VERCEL_ENV !== 'production' || env.SHOW_ANALYTICS_HUB === '1';
+}
+
+export const ANALYTICS_PATH = '/analytics';
+
+/**
+ * D18: the sector heatmap and top-ticker boards (/data/what-congress-trades, "What Congress is trading"). Counts only, from
+ * congress_trades. Off on production until the Auditor's page check: SHOW_SECTOR_HEATMAP=1.
+ */
+export function sectorHeatmapEnabled(env: Env = process.env): boolean {
+  return env.VERCEL_ENV !== 'production' || env.SHOW_SECTOR_HEATMAP === '1';
+}
+
+/**
+ * D20: the shareable infographic series (/graphics and /graphics/<slug>). Off on production until the Auditor's check (SHOW_INFOGRAPHICS=1).
+ * Each graphic also follows the flag of the feature whose figures it draws, so turning this one on alone never reveals a figure whose
+ * own page is still waiting on its audit (report card -> SHOW_GRADES, receipts -> SHOW_CAMPAIGN_MONEY, days to report ->
+ * SHOW_LATE_FILERS, President -> SHOW_PRESIDENT_TRADES).
+ */
+export function infographicsEnabled(env: Env = process.env): boolean {
+  return env.VERCEL_ENV !== 'production' || env.SHOW_INFOGRAPHICS === '1';
+}
+
+export const GRAPHICS_PATH = '/graphics';
+export const GRAPHIC_SLUGS = ['grading-congress', 'where-the-money-comes-from', 'trading-while-disclosing', 'the-presidents-trades'] as const;
+export type GraphicSlug = (typeof GRAPHIC_SLUGS)[number];
+
+export function graphicEnabled(slug: string, env: Env = process.env): boolean {
+  if (!infographicsEnabled(env)) return false;
+  switch (slug) {
+    case 'grading-congress': return gradesEnabled(env);
+    case 'where-the-money-comes-from': return campaignMoneyEnabled(env);
+    case 'trading-while-disclosing': return lateFilersEnabled(env);
+    case 'the-presidents-trades': return presidentPageEnabled(env);
+    default: return false;
+  }
+}
+
+/**
+ * D21: the "Follow the money" flow graphic on member pages (money in, the member, what their disclosed trades touch) and its
+ * compact money-in variant on voter-page member cards. Off on production until the Auditor's page check: SHOW_MONEY_TRAIL=1.
+ */
+export function moneyTrailEnabled(env: Env = process.env): boolean {
+  return env.VERCEL_ENV !== 'production' || env.SHOW_MONEY_TRAIL === '1';
+}
 export const PRESIDENT_PATH = '/people/executive/donald-trump';
+export const PRESIDENT_HUB_PATH = '/president';
+export const PRESIDENT_TIMING_PATH = '/president/timing';
+export const PRESIDENT_LARGEST_PATH = '/president/largest';
+export const PRESIDENT_QUALITY_PATH = '/president/data-quality';
 export const MOST_ACTIVE_PATH = '/data/most-active-traders';
+export const SECTOR_HEATMAP_PATH = '/data/what-congress-trades';
 export const GRADE_METHOD_PATH = '/about/methodology/report-card';
 export const VOTER_PATH = '/your-members';
 
@@ -103,9 +169,18 @@ export function hiddenByFlag(pathname: string, env: Env = process.env): boolean 
   if (pathname === '/data/late-filers') return !lateFilersEnabled(env);
   if (pathname === ELECTION_PATH) return !electionCenterEnabled(env);
   if (pathname === PRESIDENT_PATH) return !presidentPageEnabled(env);
+  if (pathname === PRESIDENT_HUB_PATH || pathname.startsWith(`${PRESIDENT_HUB_PATH}/`)) return !presidentDeepDiveEnabled(env);
   if (pathname === MOST_ACTIVE_PATH) return !mostActiveEnabled(env);
+  if (pathname === ANALYTICS_PATH) return !analyticsHubEnabled(env);
+  if (pathname === SECTOR_HEATMAP_PATH) return !sectorHeatmapEnabled(env);
   if (pathname === GRADE_METHOD_PATH) return !gradesEnabled(env);
   if (pathname === VOTER_PATH || pathname.startsWith(`${VOTER_PATH}/`)) return !voterPagesEnabled(env);
+  if (pathname === GRAPHICS_PATH) return !infographicsEnabled(env);
+  if (pathname.startsWith(`${GRAPHICS_PATH}/`)) {
+    if (!infographicsEnabled(env)) return true;
+    const slug = pathname.slice(GRAPHICS_PATH.length + 1).split('/')[0];
+    return (GRAPHIC_SLUGS as readonly string[]).includes(slug) ? !graphicEnabled(slug, env) : false;
+  }
   if (pathname.startsWith('/investigations/')) return !investigationsV2Enabled(env);
   if (pathname === '/design' || pathname.startsWith('/design/')) return !designPagesEnabled(env);
   return false;

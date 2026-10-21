@@ -7,12 +7,13 @@ import FilingLink from '@/components/v2/FilingLink';
 import { Card, PageBand, SectionHead, Wrap } from '@/components/v2/PageBand';
 import Pager from '@/components/v2/Pager';
 import { buildHref, one, pageOf, type SP } from '@/lib/v2/explorer';
-import { PRESIDENT_PATH, presidentPageEnabled } from '@/lib/v2/flags';
+import { PRESIDENT_HUB_PATH, PRESIDENT_PATH, presidentDeepDiveEnabled, presidentPageEnabled } from '@/lib/v2/flags';
 import { fmtCount, fmtDate, fmtRange, fmtUsd } from '@/lib/v2/format';
 import { hiddenPageMetadata } from '@/lib/v2/hidden-page';
 import {
   CLASS_LABEL, DAYS_METHOD_SENTENCE, FORM_RULE_SENTENCE, NOT_REQUIRED_SENTENCE, getExecutiveFilings, getPresidentTrades, type ExecFiling, type ExecTrade,
 } from '@/lib/v2/president';
+import { displayAsset } from '@/lib/v2/president-hub-core';
 import { pageMetadata } from '@/lib/v2/seo';
 
 export const revalidate = 1800;
@@ -102,12 +103,12 @@ export default async function PresidentPage({ searchParams }: { searchParams: Pr
     const f = byDoc.get(t.source_doc_id);
     return {
       id: t.id,
-      values: { date: t.transaction_date, asset: t.asset, type: t.transaction_type, band: t.amount_min, notified: t.notification_over_30_days == null ? null : t.notification_over_30_days ? 'Yes' : 'No', days: t.days_to_file, report: f ? reportLabel(f) : t.source_doc_id },
+      values: { date: t.transaction_date, asset: displayAsset(t), type: t.transaction_type, band: t.amount_min, notified: t.notification_over_30_days == null ? null : t.notification_over_30_days ? 'Yes' : 'No', days: t.days_to_file, report: f ? reportLabel(f) : t.source_doc_id },
       cells: {
         date: <span className="whitespace-nowrap font-mono text-[13.5px]">{fmtDate(t.transaction_date)}</span>,
         asset: (
           <span className="block min-w-0 break-words">
-            <span className="font-semibold">{t.asset}</span>
+            <span className="font-semibold">{displayAsset(t)}</span>
             {t.instrument_class && CLASS_LABEL[t.instrument_class] && (
               <span className="ml-1.5 whitespace-nowrap rounded-full bg-neutral-tint px-2 py-0.5 text-[11.5px] font-semibold text-muted">{CLASS_LABEL[t.instrument_class]}</span>
             )}
@@ -148,6 +149,11 @@ export default async function PresidentPage({ searchParams }: { searchParams: Pr
         <p className="mt-3 max-w-[860px] pb-8 text-[17px] text-on-deep max-md:text-[15.5px]">
           President Trump reported {fmtCount(trades.length)} securities transactions in {fmtCount(filings.length)} periodic transaction reports (OGE Form 278-T) signed between {fmtDate(signedDates[0])} and {fmtDate(signedDates[signedDates.length - 1])}, as posted by the U.S. Office of Government Ethics.
         </p>
+        {presidentDeepDiveEnabled() && (
+          <p className="-mt-5 pb-8 text-[15px] max-md:-mt-3">
+            <Link href={PRESIDENT_HUB_PATH} className="font-semibold text-white underline">The President: disclosure timing, the largest transactions and how the data was built</Link>
+          </p>
+        )}
       </PageBand>
 
       <Wrap className="pb-12">
@@ -232,7 +238,7 @@ export default async function PresidentPage({ searchParams }: { searchParams: Pr
             <p className="mt-2 text-[12.5px] text-muted">Reports ranked by the longest gap in days, never by the number of rows.</p>
             {notes.state === 'ok' && feeNotes.length > 0 && (
               <div className="mt-5 max-w-[860px] rounded-2xl bg-neutral-tint px-4 py-3 text-[14.5px]" data-section="reviewer-notes">
-                <p>On {fmtCount(feeNotes.length)} of the {fmtCount(filings.length)} reports, the reviewing official wrote in the comments box: &lsquo;Filer paid late fee(s).&rsquo;</p>
+                <p>On {fmtCount(feeNotes.length)} of the {fmtCount(filings.length)} reports, the reviewing official wrote in the comments box: &ldquo;Filer paid late fee(s).&rdquo;</p>
                 <ul className="mt-2 space-y-1 text-[13.5px]">
                   {feeNotes.map((n) => {
                     const f = byDoc.get(n.source_doc_id);

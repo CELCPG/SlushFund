@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 import { hasPublishedCorrections } from '@/data/corrections';
-import { ELECTION_PATH, GRADE_METHOD_PATH, MOST_ACTIVE_PATH, electionCenterEnabled, PRESIDENT_PATH, VOTER_PATH, gradesEnabled, investigationsV2Enabled, lateFilersEnabled, mostActiveEnabled, presidentPageEnabled, voterPagesEnabled } from '@/lib/v2/flags';
+import { ANALYTICS_PATH, ELECTION_PATH, GRADE_METHOD_PATH, GRAPHIC_SLUGS, GRAPHICS_PATH, MOST_ACTIVE_PATH, PRESIDENT_HUB_PATH, PRESIDENT_LARGEST_PATH, PRESIDENT_PATH, PRESIDENT_QUALITY_PATH, PRESIDENT_TIMING_PATH, SECTOR_HEATMAP_PATH, VOTER_PATH, analyticsHubEnabled, electionCenterEnabled, graphicEnabled, gradesEnabled, infographicsEnabled, investigationsV2Enabled, lateFilersEnabled, mostActiveEnabled, presidentDeepDiveEnabled, presidentPageEnabled, sectorHeatmapEnabled, voterPagesEnabled } from '@/lib/v2/flags';
 import { STATE_CODES } from '@/lib/v2/explorer';
 import { STORIES, storyPath } from '@/lib/v2/story-figures';
 
@@ -33,7 +33,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   if (lateFilersEnabled()) paths.push({ path: '/data/late-filers', changeFrequency: 'daily', priority: 0.7 });
   // D9 / D10, each behind its own flag (flags.ts): off on production until the Auditor's page check and Colin.
   if (presidentPageEnabled()) paths.push({ path: PRESIDENT_PATH, changeFrequency: 'weekly', priority: 0.7 });
+  // D15 President section (SHOW_PRESIDENT_DEEPDIVE): the hub and its three sub-pages.
+  if (presidentDeepDiveEnabled()) for (const path of [PRESIDENT_HUB_PATH, PRESIDENT_TIMING_PATH, PRESIDENT_LARGEST_PATH, PRESIDENT_QUALITY_PATH]) paths.push({ path, changeFrequency: 'weekly', priority: 0.7 });
+  if (analyticsHubEnabled()) paths.push({ path: ANALYTICS_PATH, changeFrequency: 'daily', priority: 0.7 });
   if (mostActiveEnabled()) paths.push({ path: MOST_ACTIVE_PATH, changeFrequency: 'daily', priority: 0.7 });
+  if (sectorHeatmapEnabled()) paths.push({ path: SECTOR_HEATMAP_PATH, changeFrequency: 'daily', priority: 0.7 });
   if (gradesEnabled()) paths.push({ path: GRADE_METHOD_PATH, changeFrequency: 'monthly', priority: 0.6 });
   // D11 voter pages (SHOW_VOTER_PAGES): the index and one page per state, DC and territory with a seat.
   if (voterPagesEnabled()) {
@@ -42,6 +46,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }
   // D17 Election Center (SHOW_ELECTION_CENTER).
   if (electionCenterEnabled()) paths.push({ path: ELECTION_PATH, changeFrequency: 'daily', priority: 0.8 });
+  // D20 infographics (SHOW_INFOGRAPHICS): the index, and each graphic whose own feature flag is on too. The ?card=1 variants are not listed.
+  if (infographicsEnabled()) {
+    paths.push({ path: GRAPHICS_PATH, changeFrequency: 'weekly', priority: 0.6 });
+    for (const s of GRAPHIC_SLUGS) if (graphicEnabled(s)) paths.push({ path: `${GRAPHICS_PATH}/${s}`, changeFrequency: 'daily', priority: 0.6 });
+  }
   // D12 investigation posts (SHOW_INVESTIGATIONS_V2): both pairs, listed together (G8).
   if (investigationsV2Enabled()) for (const s of STORIES) paths.push({ path: storyPath(s.slug), changeFrequency: 'weekly', priority: 0.7 });
 

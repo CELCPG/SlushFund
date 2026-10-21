@@ -30,9 +30,13 @@ export interface ExecTrade {
   row_number_printed: number | null;
   restated: boolean | null;
   restates_original: { amount_range?: string } | null;
+  /** D15: 'Self' unless the line carries (SP)/(JT)/(DC); how the line was re-read (null = first read kept); OCR text-layer cross-check. */
+  owner: string | null;
+  reread: string | null;
+  read_check: string | null;
 }
 
-const COLS = 'id, asset, instrument_class, transaction_type, transaction_date, notification_over_30_days, filed_date, original_filed_date, amount_range, amount_min, amount_max, days_to_file, stock_act_late, late_basis, disclosure_url, source_doc_id, page_number, row_number_printed, restated, restates_original';
+const COLS = 'id, asset, instrument_class, transaction_type, transaction_date, notification_over_30_days, filed_date, original_filed_date, amount_range, amount_min, amount_max, days_to_file, stock_act_late, late_basis, disclosure_url, source_doc_id, page_number, row_number_printed, restated, restates_original, owner, reread, read_check';
 
 export interface ExecFiling {
   docId: string;

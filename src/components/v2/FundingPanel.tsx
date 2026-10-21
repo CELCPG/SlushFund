@@ -20,6 +20,13 @@ export const PARTS: { key: 'pct_small_individual' | 'pct_large_individual' | 'pc
 ];
 
 export const CYCLE = '2025\u201326 FEC cycle';
+// D21: the graphic reuses these sentences, so there is one wording for each state.
+export const FUNDING_COMING_SOON = 'Campaign finance data: coming soon';
+export const FUNDING_UNAVAILABLE = 'Campaign finance data is unavailable right now: the database did not answer.';
+export const fundingNoRecord = (name: string) => `No FEC candidate record confirmed for ${name} yet, so no campaign figures are shown.`;
+export const FUNDING_NO_RECEIPTS = `No receipts reported for the ${CYCLE} (FEC).`;
+export const SHARES_NOT_SHOWN = 'Shares not shown: in this period, refunds or giver-side reports do not line up with the campaign\u2019s own total receipts. See the FEC record.';
+
 export default function FundingPanel({ money, enabled, name }: { money: CampaignMoneyResult; enabled: boolean; name: string }) {
   const comingSoon = !enabled || money.state === 'missing';
   return (
@@ -27,11 +34,11 @@ export default function FundingPanel({ money, enabled, name }: { money: Campaign
       <Card>
         <SectionHead as="h2" title={<span id="p-funds" className="text-[24px] max-md:text-[22px]">Who funds them</span>} />
         {comingSoon ? (
-          <p className="rounded-2xl bg-neutral-tint px-4 py-3 text-[14.5px] text-muted">Campaign finance data: coming soon</p>
+          <p className="rounded-2xl bg-neutral-tint px-4 py-3 text-[14.5px] text-muted">{FUNDING_COMING_SOON}</p>
         ) : money.state === 'error' ? (
-          <p className="rounded-2xl bg-stale-tint px-4 py-3 text-[14.5px] text-stale-ink">Campaign finance data is unavailable right now: the database did not answer.</p>
+          <p className="rounded-2xl bg-stale-tint px-4 py-3 text-[14.5px] text-stale-ink">{FUNDING_UNAVAILABLE}</p>
         ) : money.state === 'none' ? (
-          <p className="rounded-2xl bg-neutral-tint px-4 py-3 text-[14.5px] text-muted">No FEC candidate record confirmed for {name} yet, so no campaign figures are shown.</p>
+          <p className="rounded-2xl bg-neutral-tint px-4 py-3 text-[14.5px] text-muted">{fundingNoRecord(name)}</p>
         ) : (
           <Funding row={money.row} name={name} />
         )}
@@ -55,7 +62,7 @@ function Funding({ row, name }: { row: Extract<CampaignMoneyResult, { state: 'ok
   if (!(raised > 0)) {
     return (
       <>
-        <p className="text-[15.5px]">No receipts reported for the {CYCLE} (FEC).</p>
+        <p className="text-[15.5px]">{FUNDING_NO_RECEIPTS}</p>
         <p className="mt-3 text-[12.5px] text-muted">Source: Federal Election Commission bulk data. This panel carries no grade. {fecLink}</p>
       </>
     );
@@ -99,7 +106,7 @@ function Funding({ row, name }: { row: Extract<CampaignMoneyResult, { state: 'ok
         </>
       ) : (
         <p className="mt-4 rounded-2xl bg-neutral-tint px-4 py-3 text-[14.5px] text-muted" data-field="shares-not-shown">
-          Shares not shown: in this period, refunds or giver-side reports do not line up with the campaign&rsquo;s own total receipts. See the FEC record.
+          {SHARES_NOT_SHOWN}
         </p>
       )}
       <p className="mt-4 text-[14.5px]">

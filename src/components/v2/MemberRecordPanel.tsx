@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import FundingPanel from '@/components/v2/FundingPanel';
+import { MoneyTrailCompact } from '@/components/v2/MoneyTrail';
+import { moneyTrailEnabled } from '@/lib/v2/flags';
 import type { CampaignMoneyResult } from '@/lib/v2/campaign-money';
 import { fmtCount, fmtUsd } from '@/lib/v2/format';
 import { notGradedLine, unreadCaveat } from '@/lib/v2/grade-method';
@@ -90,6 +92,13 @@ export default function MemberRecordPanel({
         <div className="mt-3 [&>section]:pt-0 [&_h2_span]:text-[18px]" data-panel="funding">
           <FundingPanel money={money} enabled name={m.name} />
         </div>
+      )}
+
+      {moneyOn && money && moneyTrailEnabled() && (
+        <MoneyTrailCompact
+          member={{ id, name: m.name, detail: `${partyName(m.party)} · ${seatLabel(m)}`, grade: gradesOn && g ? (g.letter === 'NG' ? 'Not graded' : `Grade ${g.letter}`) : null }}
+          money={money}
+        />
       )}
 
       <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 text-[14px]" aria-label={`Records for ${m.name}`}>
