@@ -149,6 +149,28 @@ export function graphicEnabled(slug: string, env: Env = process.env): boolean {
 export function moneyTrailEnabled(env: Env = process.env): boolean {
   return env.VERCEL_ENV !== 'production' || env.SHOW_MONEY_TRAIL === '1';
 }
+/**
+ * W2: the investigation "The President's securities transactions during the Iran war" (/investigations/president-iran-war, its day
+ * data, downloads and share card). Off on production unless SHOW_IRAN_WAR_STORY=1. While off, every path under the story answers the
+ * site 404, the /investigations index has no card and the sitemap has no entry. Independent of SHOW_INVESTIGATIONS_V2.
+ */
+export function iranWarStoryEnabled(env: Env = process.env): boolean {
+  return env.VERCEL_ENV !== 'production' || env.SHOW_IRAN_WAR_STORY === '1';
+}
+
+export const IRAN_WAR_PATH = '/investigations/president-iran-war';
+
+/**
+ * W2 draft guard: while the copy is DRAFT_UNTIL_AW1 (iran-war-copy.ts), the story refuses to render on the production deployment even
+ * with the flag on. `draft` is passed in so this file keeps no imports. A page is live only when the flag is on and this is false.
+ */
+export function iranWarDraftRefused(draft: boolean, env: Env = process.env): boolean {
+  return draft && env.VERCEL_ENV === 'production';
+}
+export function iranWarStoryLive(draft: boolean, env: Env = process.env): boolean {
+  return iranWarStoryEnabled(env) && !iranWarDraftRefused(draft, env);
+}
+
 export const PRESIDENT_PATH = '/people/executive/donald-trump';
 export const PRESIDENT_HUB_PATH = '/president';
 export const PRESIDENT_TIMING_PATH = '/president/timing';
@@ -181,6 +203,7 @@ export function hiddenByFlag(pathname: string, env: Env = process.env): boolean 
     const slug = pathname.slice(GRAPHICS_PATH.length + 1).split('/')[0];
     return (GRAPHIC_SLUGS as readonly string[]).includes(slug) ? !graphicEnabled(slug, env) : false;
   }
+  if (pathname === IRAN_WAR_PATH || pathname.startsWith(`${IRAN_WAR_PATH}/`)) return !iranWarStoryEnabled(env);
   if (pathname.startsWith('/investigations/')) return !investigationsV2Enabled(env);
   if (pathname === '/design' || pathname.startsWith('/design/')) return !designPagesEnabled(env);
   return false;

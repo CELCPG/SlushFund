@@ -7,6 +7,7 @@
 // found under src/app must be classified here; an unclassified route fails the run, so a new
 // legacy page cannot slip into a preview deploy unnoticed.
 import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { join, relative, sep } from 'node:path';
 import {
   GATED_APIS,
@@ -36,8 +37,10 @@ import { DATE_FLAG_FALLBACK, DATE_FLAG_WORDING, LATENESS_BASIS_WORDING, dateFlag
 import { ALLOWED_VERBATIM, FORBIDDEN_PHRASES } from '../src/lib/v2/forbidden-words.ts';
 import { navItems, shellPath } from '../src/components/v2/shell/nav.ts';
 import {
-  PRESIDENT_HUB_PATH, PRESIDENT_LARGEST_PATH, PRESIDENT_QUALITY_PATH, PRESIDENT_TIMING_PATH, presidentDeepDiveEnabled,
+  IRAN_WAR_PATH, PRESIDENT_HUB_PATH, PRESIDENT_LARGEST_PATH, PRESIDENT_QUALITY_PATH, PRESIDENT_TIMING_PATH, iranWarDraftRefused, iranWarStoryEnabled, iranWarStoryLive, presidentDeepDiveEnabled,
 } from '../src/lib/v2/flags.ts';
+import * as IW from '../src/lib/v2/iran-war-core.ts';
+import * as C from '../src/lib/v2/iran-war-copy.ts';
 import { COMPLIANCE_SENTENCE, binOf, computeHub, displayAsset, isPerpetual } from '../src/lib/v2/president-hub-core.ts';
 import { LARGEST_FLOOR, VERIFIED_LARGEST, isCheckedAgainstPage } from '../src/lib/v2/president-largest-verified.ts';
 import { AUDITS, HISTORY } from '../src/lib/v2/president-audit-record.ts';
@@ -70,6 +73,8 @@ const KEEP_PAGES = new Set([
   '/election-2026',
   // D20 infographic index, behind SHOW_INFOGRAPHICS
   '/graphics',
+  // W2 Iran war story, behind SHOW_IRAN_WAR_STORY and refused on production while its copy is a draft (flags.ts)
+  '/investigations/president-iran-war',
 ]);
 // Dynamic v2 pages, each with a real sample URL that must answer 200.
 const KEEP_DYNAMIC = new Map([
@@ -81,6 +86,8 @@ const KEEP_DYNAMIC = new Map([
   ['/graphics/:slug', '/graphics/grading-congress'],
   // D12 investigation posts, behind SHOW_INVESTIGATIONS_V2
   ['/investigations/:slug', '/investigations/federal-money-musk-companies-fy2024-2026'],
+  // W2 Iran war story: one day of the timeline as JSON (the data route the day panel fetches)
+  ['/investigations/president-iran-war/days/:date', '/investigations/president-iran-war/days/2026-03-02'],
 ]);
 // Public data routes that return raw rows from the audited loaders, or no figures of ours at all.
 const KEEP_ROUTES = new Map([
@@ -97,6 +104,10 @@ const KEEP_ROUTES = new Map([
   ['/latest.xml', 'RSS of new trade reports and awards, data items only, each linking to the official record (D6b)'],
   ['/sitemap.xml', 'live URLs only'],
   ['/opengraph-image', 'site share card'],
+  // W2 Iran war story downloads (the frozen chronology with its sha256, the pre-registration, the issuer map), behind the story's flag
+  ['/investigations/president-iran-war/chronology.csv', 'frozen chronology CSV, served byte for byte (W2)'],
+  ['/investigations/president-iran-war/issuer-map.csv', 'issuer map CSV from issuer_classification (W2)'],
+  ['/investigations/president-iran-war/preregistration.md', 'the pre-registration, embedded verbatim (W2)'],
 ]);
 const SELF_RETIRED = new Map([
   ['/api/sync', '410 from its own code (R5)'],
@@ -165,6 +176,15 @@ if (!base || base === 'inventory') {
 const sample = (p) => p.replace(':id', 'abc123').replace(':code', '097').replace(':slug', 'spacex').replace(':name', 'Pelosi').replace(':c', 'House');
 const rows = [];
 let failed = 0;
+
+// W2: is the server under test a production deployment? The shell always carries VERCEL_ENV=production (the flag rows need it), but the Iran war
+// story refuses to render on production while its copy is a draft (flags.ts), so the draft is served by a NON-production server. Two things
+// follow VERCEL_ENV alone, with no SHOW_ flag: /design (404 on production) and the late-filers "preview only" wording. Those rows, and the
+// Iran war story rows, read SERVER_ENV: the shell's env when the server is a production build, an empty env when it is not. The mode is
+// probed from the server (/design answers 404 only on production); GATE_SERVER_PRODUCTION=1|0 overrides the probe.
+const SERVER_PRODUCTION = process.env.GATE_SERVER_PRODUCTION === '1' ? true : process.env.GATE_SERVER_PRODUCTION === '0' ? false : await fetch(base + '/design', { redirect: 'manual' }).then((r) => r.status === 404, () => true);
+const SERVER_ENV = SERVER_PRODUCTION ? process.env : {};
+const iranLive = iranWarStoryLive(C.DRAFT_UNTIL_AW1, SERVER_ENV);
 
 // D8c (A7c B1, B2): the late-filers board is checked against the database with the same anon key the pages use.
 function anonCreds() {
@@ -318,7 +338,7 @@ await hit('/data/contracts/export?fy=2026&agency=097&amt=1b', 200, { ctype: 'tex
 await hit('/data/contracts/export?fy=2030&agency=%27', 200, { ctype: 'text/csv', startsWith: 'PIID,Parent IDV PIID', group: 'explorers (D4) csv' });
 // Late filers: factual wording only (no verdict words), the STOCK Act's 45 days named, the filing linked.
 if (lateFilersEnabled()) {
-  await hit('/data/late-filers', 200, { bodyAll: ['asks for a report within 45 days', 'View filing', ...(lateFilersPreview() ? ['Preview only'] : [])], noindex: lateFilersPreview(), notBody: ['violation', 'illegal', 'broke the law', 'guilty', 'crime', 'stock_act_late'], group: 'late filers (D4)' });
+  await hit('/data/late-filers', 200, { bodyAll: ['asks for a report within 45 days', 'View filing', ...(lateFilersPreview(SERVER_ENV) ? ['Preview only'] : [])], noindex: lateFilersPreview(SERVER_ENV), notBody: ['violation', 'illegal', 'broke the law', 'guilty', 'crime', 'stock_act_late'], group: 'late filers (D4)' });
   await hit('/data/late-filers?chamber=Senate&over=365&msort=reports&members=all', 200, { notBody: ['unavailable right now'], group: 'late filers (D4)' });
   await hit('/data/late-filers?over=abc&chamber=x&page=-1&msort=zz', 200, { notBody: ['unavailable right now'], group: 'late filers (D4)' });
 } else {
@@ -371,7 +391,7 @@ for (const [env, want] of [[{}, true], [{ VERCEL_ENV: 'preview' }, true], [{ VER
   rows.push({ path: `designPagesEnabled(${JSON.stringify(env)})`, status: String(got), expect: String(want), ok: got === want, note: '', group: 'launch blockers (D8d) L2' });
 }
 for (const p of ['/design', '/design/story']) {
-  if (designPagesEnabled()) await hit(p, 200, { noindex: true, group: 'launch blockers (D8d) L2' });
+  if (designPagesEnabled(SERVER_ENV)) await hit(p, 200, { noindex: true, group: 'launch blockers (D8d) L2' });
   else await hit(p, 404, { group: 'launch blockers (D8d) L2' });
 }
 await hit('/sitemap.xml', 200, { notBody: '/design', group: 'launch blockers (D8d) L2' });
@@ -533,7 +553,7 @@ await hit('/sitemap.xml', 200, { bodyAll: ['/latest', '/data/status'], notBody: 
 for (const p of KEEP_PAGES) {
   if (p === '/withdrawn') { await hit(p, 410, { group: 'keep (v2)' }); continue; }
   if (p === '/search') { await hit('/search?q=Warren', 200, { group: 'keep (v2)' }); continue; }
-  if ((p === '/design' || p === '/design/story') && !designPagesEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // D8d L2
+  if ((p === '/design' || p === '/design/story') && !designPagesEnabled(SERVER_ENV)) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // D8d L2
   if (p === '/data/late-filers' && !lateFilersEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // the board is off (production without SHOW_LATE_FILERS=1)
   if (p === ELECTION_PATH && !electionCenterEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // D17: off on production without SHOW_ELECTION_CENTER=1
   if (p === ANALYTICS_PATH && !analyticsHubEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // D19: off on production without SHOW_ANALYTICS_HUB=1
@@ -541,6 +561,7 @@ for (const p of KEEP_PAGES) {
   if ((p === PRESIDENT_HUB_PATH || p.startsWith(`${PRESIDENT_HUB_PATH}/`)) && !presidentDeepDiveEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // D15: off on production without SHOW_PRESIDENT_DEEPDIVE=1
   if (p === SECTOR_HEATMAP_PATH && !sectorHeatmapEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // D18: off on production without SHOW_SECTOR_HEATMAP=1
   if (p === GRAPHICS_PATH && !infographicsEnabled()) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // D20: off on production without SHOW_INFOGRAPHICS=1
+  if (p === IRAN_WAR_PATH && !iranLive) { await hit(p, 404, { group: 'keep (v2)' }); continue; } // W2: off on production without SHOW_IRAN_WAR_STORY=1, and refused while the copy is a draft
   await hit(p, 200, { group: 'keep (v2)', noindex: p === '/design' || p === '/design/story' || p === '/rebuilding' });
 }
 // The draft corrections entry must not render while its status is 'draft' and the preview flag is off.
@@ -549,7 +570,7 @@ if (process.env.SHOW_DRAFT_CORRECTIONS !== '1') {
   await hit('/about/corrections', 200, { body: 'The corrections log opens with the rebuilt site', group: 'corrections draft hidden' });
   await hit('/sitemap.xml', 200, { notBody: '/about/corrections', group: 'corrections draft hidden' });
 }
-const dynamicOff = (route) => (route.startsWith(VOTER_PATH) && !voterPagesEnabled()) || (route.startsWith(GRAPHICS_PATH) && !graphicEnabled('grading-congress')) || (route.startsWith('/investigations/') && !investigationsV2Enabled());
+const dynamicOff = (route) => (route.startsWith(VOTER_PATH) && !voterPagesEnabled()) || (route.startsWith(GRAPHICS_PATH) && !graphicEnabled('grading-congress')) || (route.startsWith(`${IRAN_WAR_PATH}/`) ? !iranLive : route.startsWith('/investigations/') && !investigationsV2Enabled());
 for (const [route, url] of KEEP_DYNAMIC) await hit(url, dynamicOff(route) ? 404 : 200, { group: `keep (v2) ${route}` });
 await hit('/no-such-page-d5', 404, { body: 'find that page', notBody: 'live trades', group: 'keep (v2)' });
 await hit('/feed.xml', 200, { notBody: '<item>', group: 'keep (v2)' });
@@ -592,6 +613,41 @@ function visibleText(html) {
     .replace(/&([a-z]+);/gi, (m, n) => ENTITIES[n.toLowerCase()] ?? m)
     .replace(/\s+/g, ' ');
 }
+// W2: the first element that carries `attr` (an attribute name, e.g. "data-our-view"), with its tags balanced; null when absent.
+function elementWith(html, attr, from = 0) {
+  const at = html.indexOf(` ${attr}`, from);
+  if (at === -1) return null;
+  const open = html.lastIndexOf('<', at);
+  const tag = /^<([a-zA-Z][\w-]*)/.exec(html.slice(open))?.[1];
+  if (!tag) return null;
+  const re = new RegExp(`<${tag}\\b|</${tag}>`, 'g');
+  re.lastIndex = open + 1;
+  let depth = 1;
+  for (let m; (m = re.exec(html)); ) {
+    depth += m[0].startsWith('</') ? -1 : 1;
+    if (depth === 0) return { html: html.slice(open, m.index + m[0].length), start: open, end: m.index + m[0].length };
+  }
+  return null;
+}
+function withoutElements(html, attrs) {
+  let out = html;
+  for (const a of attrs) for (let el = elementWith(out, a); el; el = elementWith(out, a)) out = out.slice(0, el.start) + out.slice(el.end);
+  return out;
+}
+// A small CSV reader (quoted cells, doubled quotes, CR/LF), for the downloads.
+function csvRows(text) {
+  const out = []; let row = []; let cell = ''; let q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) { if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; continue; }
+    if (ch === '"') q = true;
+    else if (ch === ',') { row.push(cell); cell = ''; }
+    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cell); cell = ''; out.push(row); row = []; }
+    else cell += ch;
+  }
+  if (cell !== '' || row.length) { row.push(cell); out.push(row); }
+  return out;
+}
 function verbatimSource(text, start, end) {
   for (const a of ALLOWED_VERBATIM) {
     for (let i = text.indexOf(a); i !== -1; i = text.indexOf(a, i + 1)) if (i <= start && end <= i + a.length) return a;
@@ -610,7 +666,9 @@ async function wordingGate(path) {
   try { res = await fetch(base + path); } catch { res = null; }
   const status = res ? res.status : 'error';
   const html = res && res.ok ? await res.text() : '';
-  const text = visibleText(html);
+  // W2: the Colin-approved "Our view" box is the one element on the Iran war story where "insider trading" and "illegal" may print; it is
+  // left out of this scan and has its own W2 row, which scans it against the rest of the list with only that approved sentence removed.
+  const text = visibleText(path === IRAN_WAR_PATH ? withoutElements(html, ['data-our-view']) : html);
   if (!path.endsWith('.xml')) seoGate(path, html);
   const hits = [];
   const allowed = new Set();
@@ -663,7 +721,7 @@ const sitemapXml = await (await fetch(base + '/sitemap.xml')).text();
 const sitemapPaths = [...sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname || '/');
 const WORDING_PATHS = [...new Set([
   ...sitemapPaths,
-  ...[...KEEP_DYNAMIC.entries()].filter(([r]) => !dynamicOff(r)).map(([, u]) => u),
+  ...[...KEEP_DYNAMIC.entries()].filter(([r]) => !dynamicOff(r) && r !== `${IRAN_WAR_PATH}/days/:date`).map(([, u]) => u), // W2: the day route is JSON (verbatim posts), checked by the W2 rows
   ...(voterPagesEnabled() ? [`${VOTER_PATH}?zip=00000`, `${VOTER_PATH}?zip=12ab`, `${VOTER_PATH}/ca?zip=94110`, `${VOTER_PATH}/dc`] : []),
   '/people/S001201', '/people/A000383', '/people/M001186',
   '/agencies', '/investigations', '/rebuilding', '/search?q=Warren', '/latest.xml',
@@ -979,7 +1037,7 @@ if (lateFilersEnabled()) {
   await hit('/latest/opengraph-image', 200, { ctype: 'image/png', group: F1 });
 }
 // Audit-status lines carry their dates and scope; the board line follows the switch.
-await hit('/about/methodology/trades', 200, { bodyAll: ['on October 3 and 4, 2026', lateFilersEnabled() && !lateFilersPreview() ? 're-checked against the filings on October 4, 2026' : 'stay preview-only until a review clears them'], group: F1 });
+await hit('/about/methodology/trades', 200, { bodyAll: ['on October 3 and 4, 2026', lateFilersEnabled() && !lateFilersPreview(SERVER_ENV) ? 're-checked against the filings on October 4, 2026' : 'stay preview-only until a review clears them'], group: F1 });
 await hit('/about/methodology/tickers', 200, { body: 'a separate review on October 4, 2026', group: F1 });
 
 // F2 (W2 and the cold read). W2: the board says what it measured, not that a limit was missed, and the calendar-day method line is
@@ -1027,7 +1085,7 @@ const F3 = 'post-launch fixes (F3)';
   const get = async (path) => { const res = await fetch(base + path, { redirect: 'manual' }); return { status: res.status, html: decode(await res.text()) }; };
   const hidden = [
     ...(lateFilersEnabled() ? [] : ['/data/late-filers', '/data/late-filers?page=2']),
-    ...(designPagesEnabled() ? [] : ['/design', '/design/story']),
+    ...(designPagesEnabled(SERVER_ENV) ? [] : ['/design', '/design/story']),
   ];
   if (hidden.length) {
     const generic = await get('/f3-no-such-page');
@@ -1169,11 +1227,12 @@ const F3 = 'post-launch fixes (F3)';
         row(`${p} fee notes are verbatim and each sits beside the compliance opinion`, adjacent && opinions >= (fees > 0 ? 1 : 0) && (p === PRESIDENT_HUB_PATH || p === PRESIDENT_TIMING_PATH ? feeCovers.every((c) => v.text.includes(c.reviewer_comment)) : true), `${fees} mentions of the note text, ${opinions} opinion sentences`);
       }
       // Audit round 2 (M3, S4): the generic fee-note quote is always followed by the compliance sentence within 300 characters, on every page that prints it.
-      for (const p of PAGES) {
-        const t = texts[p].text;
+      // W2: the Iran war story prints the same generic quote (its fee intro), so it is held to the same 300-character rule.
+      for (const p of [...PAGES, ...(iranLive ? [IRAN_WAR_PATH] : [])]) {
+        const t = (texts[p] ?? await visible(p)).text;
         const at = [...t.matchAll(/Filer paid late fee\(s\)/g)].map((m) => m.index);
         const ok = at.every((i) => t.slice(i, i + 300).includes(COMPLIANCE_SENTENCE));
-        row(`${p} generic fee-note quote is followed by the compliance sentence within 300 characters`, ok && (p !== PRESIDENT_HUB_PATH && p !== PRESIDENT_TIMING_PATH || at.length > 0), `${at.length} generic quotes`);
+        row(`${p} generic fee-note quote is followed by the compliance sentence within 300 characters`, ok && (p !== PRESIDENT_HUB_PATH && p !== PRESIDENT_TIMING_PATH && p !== IRAN_WAR_PATH || (p === IRAN_WAR_PATH ? at.length === 0 : at.length > 0)), `${at.length} generic quotes`);
       }
       // Audit round 2 (S5): "one report that day" only where the day has exactly one report; multi-report days say "1 of N reports that day".
       const dayCount = (d) => hub.perReport.filter((r) => r.signed === d).length;
@@ -1238,6 +1297,405 @@ const F3 = 'post-launch fixes (F3)';
   }
   async function htmlOf0(p) { return (await fetch(base + p)).text(); }
 }
+// ---------------------------------------------------------------- W2: the Iran war story (/investigations/president-iran-war)
+// Behind SHOW_IRAN_WAR_STORY (off on production) and refused on production while the copy is DRAFT_UNTIL_AW1 (flags.ts). Style of the D15 block:
+// pure flag rows first, then the page checked against the database with the same code the page runs: iran-war-core.ts and iran-war-copy.ts,
+// fed by this script's OWN dump of the six tables (restAll), compared with every data-sentence the server rendered.
+await (async () => {
+  const G = 'W2 Iran war story';
+  const row = (path, ok, note = '', expect = 'ok') => { if (!ok) failed++; rows.push({ path, status: ok ? 'ok' : 'FAIL', expect, ok, note: String(note).slice(0, 700), group: G }); };
+  const P = IRAN_WAR_PATH;
+  const PROD = { VERCEL_ENV: 'production' };
+  const PROD_ON = { VERCEL_ENV: 'production', SHOW_IRAN_WAR_STORY: '1' };
+  const SUBPATHS = [P, `${P}/days/2026-03-02`, `${P}/chronology.csv`, `${P}/issuer-map.csv`, `${P}/preregistration.md`, `${P}/opengraph-image`, `${P}/anything-else`];
+  const read = (rel) => readFileSync(join(ROOT, rel), 'utf8');
+
+  // ---- the flag and the draft guard (pure)
+  for (const [label, env, want] of [
+    ['VERCEL_ENV unset', {}, true], ['preview', { VERCEL_ENV: 'preview' }, true], ['development', { VERCEL_ENV: 'development' }, true],
+    ['VERCEL_ENV unset, SHOW_IRAN_WAR_STORY=0', { SHOW_IRAN_WAR_STORY: '0' }, true],
+    ['production, flag unset', PROD, false], ['production, SHOW_IRAN_WAR_STORY=0', { ...PROD, SHOW_IRAN_WAR_STORY: '0' }, false],
+    ['production, SHOW_IRAN_WAR_STORY=true', { ...PROD, SHOW_IRAN_WAR_STORY: 'true' }, false], ['production, SHOW_IRAN_WAR_STORY=1', PROD_ON, true],
+  ]) row(`iranWarStoryEnabled(${label}) is ${want}`, iranWarStoryEnabled(env) === want, '', String(want));
+  for (const [label, draft, env, want] of [
+    ['draft, production', true, PROD, true], ['draft, production, flag on', true, PROD_ON, true], ['draft, VERCEL_ENV unset', true, {}, false],
+    ['draft, preview', true, { VERCEL_ENV: 'preview' }, false], ['not draft, production, flag on', false, PROD_ON, false],
+  ]) row(`iranWarDraftRefused(${label}) is ${want}`, iranWarDraftRefused(draft, env) === want, '', String(want));
+  for (const [label, draft, env, want] of [
+    ['draft, production, flag on', true, PROD_ON, false], ['draft, VERCEL_ENV unset', true, {}, true], ['draft, preview', true, { VERCEL_ENV: 'preview' }, true],
+    ['not draft, production, flag on', false, PROD_ON, true], ['not draft, production, flag off', false, PROD, false],
+  ]) row(`iranWarStoryLive(${label}) is ${want}`, iranWarStoryLive(draft, env) === want, '', String(want));
+  row(`production + DRAFT_UNTIL_AW1 (now ${C.DRAFT_UNTIL_AW1}) refuses with the flag on: live on production is ${!C.DRAFT_UNTIL_AW1}`,
+    iranWarDraftRefused(C.DRAFT_UNTIL_AW1, PROD_ON) === C.DRAFT_UNTIL_AW1 && iranWarStoryLive(C.DRAFT_UNTIL_AW1, PROD_ON) === !C.DRAFT_UNTIL_AW1, 'the page, day route, downloads, share card, index card and sitemap all follow iranWarStoryLive (source rows below)');
+  for (const path of SUBPATHS) {
+    for (const [env, want] of [[{}, false], [{ VERCEL_ENV: 'preview' }, false], [PROD, true], [PROD_ON, false], [{ ...PROD, SHOW_IRAN_WAR_STORY: 'true' }, true], [{ ...PROD, SHOW_INVESTIGATIONS_V2: '1' }, true]]) {
+      row(`hiddenByFlag(${JSON.stringify(path)}, ${JSON.stringify(env)}) is ${want}`, hiddenByFlag(path, env) === want, '', String(want));
+    }
+  }
+  row('SHOW_IRAN_WAR_STORY=1 on production does not unhide another investigation', hiddenByFlag('/investigations/federal-money-musk-companies-fy2024-2026', PROD_ON) === true);
+  // Every entry point follows the same function, so production + draft refuses everywhere without a second server (source rows).
+  for (const [file, rx, what] of [
+    ['src/app/investigations/president-iran-war/page.tsx', /if \(!iranWarStoryEnabled\(\)\) notFound\(\);[\s\S]{0,300}if \(iranWarDraftRefused\(C\.DRAFT_UNTIL_AW1\)\) notFound\(\);/, 'page: flag off or draft on production -> site 404'],
+    ['src/app/investigations/president-iran-war/page.tsx', /if \(!iranWarStoryEnabled\(\) \|\| iranWarDraftRefused\(C\.DRAFT_UNTIL_AW1\)\) return hiddenPageMetadata\(\);/, 'page metadata: hidden'],
+    ['src/app/investigations/president-iran-war/days/[date]/route.ts', /if \(!iranWarStoryLive\(DRAFT_UNTIL_AW1\)\) return NOT_FOUND\(\);/, 'day route'],
+    ['src/app/investigations/president-iran-war/chronology.csv/route.ts', /if \(!iranWarStoryLive\(DRAFT_UNTIL_AW1\)\) return new Response\('Not found'/, 'chronology download'],
+    ['src/app/investigations/president-iran-war/issuer-map.csv/route.ts', /iranWarStoryLive\(DRAFT_UNTIL_AW1\)/, 'issuer map download'],
+    ['src/app/investigations/president-iran-war/preregistration.md/route.ts', /iranWarStoryLive\(DRAFT_UNTIL_AW1\)/, 'pre-registration download'],
+    ['src/app/investigations/president-iran-war/opengraph-image.tsx', /if \(!iranWarStoryLive\(DRAFT_UNTIL_AW1\)\) notFound\(\);/, 'share card'],
+    ['src/app/sitemap.ts', /if \(iranWarStoryLive\(DRAFT_UNTIL_AW1\)\) paths\.push\(\{ path: IRAN_WAR_PATH/, 'sitemap entry'],
+    ['src/app/investigations/page.tsx', /const iran = iranWarStoryLive\(DRAFT_UNTIL_AW1\);/, 'index card'],
+  ]) {
+    let ok = false; try { ok = rx.test(read(file)); } catch { /* missing file */ }
+    row(`source guard: ${what} follows the flag and the draft guard`, ok, file);
+  }
+  row('the day panel and the chart both print the fixed line (WarTimeline.tsx carries data-fixed-line twice)', (read('src/components/v2/iran-war/WarTimeline.tsx').match(/data-fixed-line/g) ?? []).length >= 2);
+  // The D15 constants the copy module repeats equal the originals.
+  const pres = read('src/lib/v2/president.ts');
+  row('COMPLIANCE_SENTENCE, FORM_RULE_SENTENCE and NOT_REQUIRED_SENTENCE equal the D15 originals', C.COMPLIANCE_SENTENCE === COMPLIANCE_SENTENCE && pres.includes(C.FORM_RULE_SENTENCE) && pres.includes(C.NOT_REQUIRED_SENTENCE));
+
+  // ---- the server under test
+  const page = await fetch(base + P, { redirect: 'manual' });
+  const html = (await page.text()).replace(/<!-- -->/g, '');
+  const mapHtml = await (await fetch(base + '/investigations')).text();
+  const homeHtml = await (await fetch(base + '/')).text();
+  row(`${P} answers ${iranLive ? 200 : 404} (iranWarStoryLive on the server under test: ${iranLive})`, page.status === (iranLive ? 200 : 404), `status ${page.status}`);
+  row(`/investigations index card [data-iran-war-card] appears iff the story is live (${iranLive})`, mapHtml.includes('data-iran-war-card') === iranLive && (!iranLive || (mapHtml.includes(`href="${P}"`) && mapHtml.includes(C.IRAN_WAR_HEADLINE))));
+  row(`sitemap.xml lists ${P} iff the story is live (${iranLive})`, sitemapPaths.includes(P) === iranLive);
+  row('no home-page or header link to the story', !homeHtml.includes('president-iran-war') && !navItems(true).some((n) => n.href.includes('iran')));
+  if (!iranLive) {
+    for (const path of SUBPATHS.slice(1, 6)) await hit(path.replace('/anything-else', ''), 404, { group: G });
+    return;
+  }
+  // Draft guard, server row: this server is not in production mode, so the draft renders with its banner (a production server would 404).
+  row('draft guard: the non-production server renders the draft with the "Draft: not audited" banner', (html.includes('data-draft-banner') && html.includes(C.DRAFT_BANNER) && html.includes('data-draft="true"')) === C.DRAFT_UNTIL_AW1, `DRAFT_UNTIL_AW1 ${C.DRAFT_UNTIL_AW1}`);
+  row('non-production page carries noindex', /<meta name="robots" content="[^"]*noindex/.test(html) === (SERVER_ENV.VERCEL_ENV !== 'production'));
+  row('page has one h1 with the headline and the kicker', (html.match(/<h1\b/g) ?? []).length === 1 && visibleText(html).includes(C.IRAN_WAR_HEADLINE) && visibleText(html).includes(C.IRAN_WAR_KICKER));
+
+  // ---- the downloads and the data route
+  const FREEZE_SHA = '323ef4531cf8cac0bae91a750a58916690df8a6f4b9f139a7d006abfac29a818'; // the A4 re-freeze (401 rows); the first freeze (399 rows) was 81f6f9c0...
+  const sha = (buf) => createHash('sha256').update(buf).digest('hex');
+  const get = async (p) => { const r = await fetch(base + p); return { status: r.status, type: r.headers.get('content-type') || '', buf: Buffer.from(await r.arrayBuffer()) }; };
+  const chronDl = await get(`${P}/chronology.csv`);
+  const issuerDl = await get(`${P}/issuer-map.csv`);
+  const preDl = await get(`${P}/preregistration.md`);
+  const ogImg = await get(`${P}/opengraph-image`);
+  row(`${P}/chronology.csv is the frozen file: sha256 ${FREEZE_SHA.slice(0, 12)}...`, chronDl.status === 200 && chronDl.type.includes('text/csv') && sha(chronDl.buf) === FREEZE_SHA, `${chronDl.status} ${sha(chronDl.buf).slice(0, 12)}`);
+  row(`${P}/preregistration.md is the pre-registration with its dated amendments (A0 to A4-pending) and the chronology freeze section`, preDl.status === 200 && /^# W pre-registration/m.test(preDl.buf.toString('utf8')) && /^## Amendments/m.test(preDl.buf.toString('utf8')) && ['A0', 'A1', 'A2', 'A3', 'A4', 'A4-pending'].every((a) => new RegExp(`\\*\\*${a} `).test(preDl.buf.toString('utf8'))) && /^## Chronology freeze/m.test(preDl.buf.toString('utf8')), `${preDl.status} ${preDl.type} sha ${sha(preDl.buf).slice(0, 12)} ${preDl.buf.length} bytes`);
+  row(`${P}/opengraph-image answers a PNG`, ogImg.status === 200 && ogImg.type.includes('image/png') && ogImg.buf.length > 5000, `${ogImg.status} ${ogImg.type} ${ogImg.buf.length} bytes`);
+
+  // ---- the gate's own dump of the six tables (restAll), then the same-code rebuild
+  let dump; let f;
+  // The anon read path answers an occasional 500 (3 s statement timeout on a busy instance): retry each table read, then fail loudly, never read a zero.
+  const dumpRead = async (path) => { for (let i = 0; ; i++) { try { return await restAll(path); } catch (e) { if (i >= 3) throw e; await new Promise((r) => setTimeout(r, 2000 * (i + 1))); } } };
+  try {
+    dump = {
+      exec: await dumpRead(`executive_trades?select=${IW.EXEC_COLS}&office=eq.President&report_type=eq.278-T&order=id`),
+      congress: await dumpRead(`congress_trades?select=${IW.CONGRESS_COLS}&transaction_date=gte.2026-01-02&transaction_date=lte.2026-07-31&order=id`),
+      filings: await dumpRead(`executive_filings?select=${IW.FILING_COLS}&order=source_doc_id`),
+      chron: await dumpRead(`story_chronology?select=${IW.CHRON_COLS}&order=id`),
+      eia: await dumpRead(`eia_spot_prices?select=${IW.EIA_COLS}&order=series,price_date`),
+      issuers: await dumpRead(`issuer_classification?select=${IW.ISSUER_COLS}&order=source_table,instrument,issuer_key`),
+    };
+    f = IW.computeIranWar(dump);
+    row('gate dump: all six tables read and computeIranWar ran', Object.values(dump).every((r) => r.length > 0), Object.entries(dump).map(([k, v]) => `${k} ${v.length}`).join(', '));
+  } catch (e) { row('gate dump of the six tables', false, `could not run: ${String(e.message).slice(0, 200)}`); return; }
+  const p = f.president; const cg = f.congress;
+  const fmt = IW.fmtInt;
+
+  // rendered data-sentence values
+  const S = new Map();
+  for (const m of html.matchAll(/<([a-z0-9]+)\b[^>]*?\bdata-sentence="([^"]+)"[^>]*>([\s\S]*?)<\/\1>/g)) S.set(m[2], visibleText(m[3]).trim());
+  const norm = (s) => String(s).replace(/\s+/g, ' ').trim();
+  const sentRow = (label, pairs) => {
+    const bad = pairs.filter(([k, w]) => S.get(k) !== norm(w));
+    row(label, bad.length === 0 && pairs.length > 0, bad.length ? bad.slice(0, 3).map(([k, w]) => `${k}: page "${(S.get(k) ?? '(absent)').slice(0, 100)}" vs rebuild "${norm(w).slice(0, 100)}"`).join(' | ') : `${pairs.length} data-sentence value(s) equal the same-code rebuild from the gate's own dump`);
+  };
+  const text = visibleText(html);
+  const has = (s) => text.includes(norm(s));
+  const hasAll = (label, list) => { const miss = list.filter((s) => !has(s)); row(label, miss.length === 0 && list.length > 0, miss.length ? `missing "${norm(miss[0]).slice(0, 110)}" (${miss.length} of ${list.length})` : `${list.length} present`); };
+
+  // ---- sentences: sections 1 to 10
+  sentRow('dek: trade count and first/last trade dates', [['dek', C.dek(f)]]);
+  sentRow('accountLines (278-T, bands, the 45-day rule)', C.accountLines(f).map((t, i) => [`account-${i}`, t]));
+  sentRow('beforeLines + volumeLine (P1 counts, band range, kinds, groups; 2025 context)', [...C.beforeLines(f).map((t, i) => [`before-${i}`, t]), ['volume', C.volumeLine(f)]]);
+  sentRow('firstMonthLines + STRIKES_LINE (P2 counts, band range, kinds, groups)', [['strikes', C.STRIKES_LINE], ...C.firstMonthLines(f).map((t, i) => [`first-${i}`, t])]);
+  sentRow('chronologyLines (entries by lane, labelled, outside the axis)', C.chronologyLines(f).map((t, i) => [`chron-${i}`, t]));
+  sentRow('m3Result for the President', [['m3', C.m3Result(p.m3, '')]]);
+  sentRow('m3Sales for the President (A7)', [['m3-sales', C.m3Sales(p.m3Sales, '')]]);
+  // W3: the six required sentences and the allowed sentences A2, A3, A7, A8, A11 and A13 from AW1's audit (audit-2026-10-23-slushfund-aw1.md), character for character, on the rendered page.
+  {
+    const AUDIT = {
+        "R1": "The President's reports list 10,093 securities transactions with trade dates from Jan 21, 2025 to Jul 31, 2026. This page sets out what they list, when the public could see them, and a dated chronology of the war from official sources for Dec 1, 2025 to Jul 31, 2026.",
+        "R2": "By our pre-registered test, the share of energy and defense purchases in the war's first month was higher than in the two months before: 98 of 1,420 stock purchases in issuers we could classify (6.9 percent) against 33 of 734 (4.5 percent) (two-sided Fisher exact test, p = 0.029, significant at the 0.05 level); 136 stock purchases in issuers we could not classify sit out of the test, and if all of them are counted as not energy or defense, p = 0.029 and the result is still significant, while if all are counted as energy or defense, p = 0.063 and the result is not significant.",
+        "R3I": "On 3 of the 8 reports that hold transactions from these windows, the reviewing official wrote a late-fee note in the comments box. Each note is quoted below exactly as printed.",
+        "R4": "By our pre-registered test, the share of energy and defense purchases by members of Congress in the war's first month was not different from the two months before: 39 of 586 stock purchases in issuers we could classify (6.7 percent) against 23 of 316 (7.3 percent) (two-sided Fisher exact test, p = 0.783); 300 stock purchases in issuers we could not classify sit out of the test, and if all of them are counted as not energy or defense, p = 0.080 and the result is still not significant, while if all are counted as energy or defense, p < 0.001 and the difference would be significant at the 0.05 level, but 288 of those 300 are in one member's report (see the table).",
+        "A2": "In the two months before the strikes (Jan 2 to Feb 27, 2026), the reports list 1,614 securities transactions: 925 purchases and 689 sales.",
+        "A3": "In the war's first month (Feb 28 to Mar 31, 2026), the reports list 2,352 securities transactions: 1,731 purchases and 621 sales.",
+        "A7": "The same test on sales, reported as a secondary result: 17 of 560 sales of stock in issuers we could classify (3.0 percent) in the first month against 22 of 647 (3.4 percent) in the two months before (p = 0.747, not significant at the 0.05 level).",
+        "A8": "In the war's first month, 1,582 of the 2,279 transactions with a computed gap were reported more than 45 days after the trade.",
+        "A11": "Together they reported 687 securities transactions in the two months before the strikes, 1,070 in the war's first month and 1,043 from Apr 1 to Jul 31, 2026.",
+        "A13H": "The same test on sales by House members: 5 of 126 sales of stock in issuers we could classify (4.0 percent) in the first month against 27 of 259 (10.4 percent) in the two months before (p = 0.031; descriptive, not a test result)."
+    };
+    const lit = (label, key, want, prefixOnly = false) => row(label, prefixOnly ? (S.get(key) ?? '').startsWith(want) : S.get(key) === want, `page "${(S.get(key) ?? '(absent)').slice(0, 90)}"`);
+    lit('AW1 R1 (the dek) is on the page character for character', 'dek', AUDIT.R1);
+    lit('AW1 R2 (the President test, both A2 bounds) is on the page character for character', 'm3', AUDIT.R2);
+    lit('AW1 R3 intro ("3 of the 8", no quoted paraphrase) is on the page character for character', 'fee-intro', AUDIT.R3I);
+    lit('AW1 R4 (Congress pooled test, both bounds, the one-member clause) is on the page character for character', 'congress-test-0-0', AUDIT.R4);
+    lit('AW1 A2 (P1 counts)', 'before-0', AUDIT.A2);
+    lit('AW1 A3 (P2 counts)', 'first-0', AUDIT.A3);
+    lit('AW1 A7 (President sales)', 'm3-sales', AUDIT.A7);
+    lit('AW1 A8 (war first month, more than 45 days)', 'over45-P2', AUDIT.A8, true);
+    lit('AW1 A11 (Congress window counts)', 'congress-1', AUDIT.A11);
+    lit('AW1 A13 (House sales, descriptive)', 'congress-test-1-1', AUDIT.A13H);
+    row('the retired sentences are gone: no "only significance test", no "less than 0.001", no "every one as energy or defense", no m3Unclassified sentence, no \'Filer paid late fee(s).\'', !/only significance test|less than 0\.001|counting every one|are left out of the test:|Filer paid late fee\(s\)/.test(text));
+    const optsRaw = [0, 0, 0]; const wk = ['P1', 'P2', 'P3'];
+    for (const r of dump.congress) { const w = IW.windowOf(r.transaction_date); const i = wk.indexOf(w); if (i >= 0 && r.instrument === 'option') optsRaw[i] += 1; }
+    row(`Congress option lines by window equal the raw dump's instrument = 'option' counts (${optsRaw.join(' / ')}) and are not in the Stocks row`, JSON.stringify(wk.map((k) => cg.pooled.windows[k].options.n)) === JSON.stringify(optsRaw) && wk.every((k) => cg.pooled.windows[k].byInstrument.stock.n + cg.pooled.windows[k].options.n === cg.pooled.windows[k].all.n - cg.pooled.windows[k].byInstrument.bond.n - cg.pooled.windows[k].byInstrument['fund/ETF'].n - cg.pooled.windows[k].byInstrument.unmapped.n), optsRaw.join('/'));
+    const ncRaw = wk.map((k) => cg.pooled.disclosure[k].notComputed);
+    row('the Congress lateness note matches the data: exactly one line is not computed in each window', JSON.stringify(ncRaw) === '[1,1,1]' && has(C.CONGRESS_LATENESS_NOTE), ncRaw.join('/'));
+    const inWinDocs = new Set(dump.exec.filter((r) => ['P1', 'P2', 'P3'].includes(IW.windowOf(r.transaction_date))).map((r) => r.source_doc_id));
+    const feeDocs = dump.filings.filter((x) => x.reviewer_comment_kind === 'late_fee_note' && x.reviewer_comment && inWinDocs.has(x.source_doc_id));
+    row(`the fee intro counts come from the dump, independent of the page code: ${feeDocs.length} of the ${inWinDocs.size} reports`, (S.get('fee-intro') ?? '').startsWith(`On ${feeDocs.length} of the ${inWinDocs.size} reports that hold transactions from these windows, the reviewing official wrote a late-fee note in the comments box.`), `${feeDocs.length} of ${inWinDocs.size}`);
+  }
+
+  sentRow('TEST_QUESTION, TEST_SCOPE and TEST_ONLY', [['test-question', C.TEST_QUESTION], ['test-scope', C.TEST_SCOPE], ['test-only', C.TEST_ONLY]]);
+  sentRow('oilLines (the oversight count)', C.oilLines(f).map((t, i) => [`oil-${i}`, t]));
+  row(`OIL_KICKER "${C.OIL_KICKER}" prints, and every oversight entry (${f.chronology.byLane.oversight ?? 0}) is listed with its source`, has(C.OIL_KICKER) && (elementWith(html, 'data-oil-list')?.html.match(/data-chron=/g) ?? []).length === (f.chronology.byLane.oversight ?? 0));
+  sentRow('PUBLIC_INTRO and over45Line for all three windows', [['public-intro', C.PUBLIC_INTRO], ...['P1', 'P2', 'P3'].map((k) => [`over45-${k}`, C.over45Line(p.disclosure[k], k)])]);
+  hasAll('postingLine for every trade month, and each month heading', [...p.posting.map((m) => C.postingLine(m)), ...p.posting.map((m) => `${IW.fmtMonth(m.month)}: ${fmt(m.total)} transactions`)]);
+  // fee covers: feeIntro, the cover rows, verbatim comments, each followed by the signed compliance opinion
+  sentRow('feeIntro', [['fee-intro', C.feeIntro(p.fees, p.reportsInWindows)]]);
+  {
+    const feeEl = elementWith(html, 'data-fee-covers');
+    const t = visibleText(feeEl?.html ?? '');
+    const fees = p.fees;
+    const bad = [];
+    for (const c of fees) {
+      const i = t.indexOf(norm(C.feeRows(c)));
+      if (i === -1) { bad.push(`no feeRows for ${c.label}`); continue; }
+      const seg = t.slice(i, i + 700);
+      if (!seg.includes(c.comment) || !seg.includes(C.FEE_LABEL.trim())) bad.push(`comment/label missing for ${c.label}`);
+      const at = seg.indexOf(c.comment);
+      if (!seg.slice(at, at + c.comment.length + 300).includes(C.COMPLIANCE_SENTENCE)) bad.push(`no compliance sentence beside ${c.label}`);
+      if (C.feeOpinion(c.opinionDate) && !seg.includes(norm(C.feeOpinion(c.opinionDate)))) bad.push(`opinion date missing for ${c.label}`);
+    }
+    // Independent of feeCovers(): the late-fee-note covers whose report holds a transaction dated in a window (P1 to P3), straight from the dump.
+    const inWin = (docId, ks) => dump.exec.some((r) => r.source_doc_id === docId && ks.includes(IW.windowOf(r.transaction_date)));
+    const want = dump.filings.filter((x) => x.reviewer_comment_kind === 'late_fee_note' && x.reviewer_comment && inWin(x.source_doc_id, ['P1', 'P2', 'P3']));
+    const want12 = want.filter((x) => inWin(x.source_doc_id, ['P1', 'P2']));
+    row(`feeRows: the ${want.length} cover notes on reports that hold transactions from the windows (${want12.length} of them on reports with P1 or P2 lines, W1b section 1 "2 of 4") are printed verbatim, each followed within 300 characters by COMPLIANCE_SENTENCE`,
+      fees.length === want.length && want.every((x) => fees.some((c) => c.docId === x.source_doc_id && c.comment === x.reviewer_comment)) && want12.length === 2 && bad.length === 0, bad.join('; ') || `${fees.length} cover notes: ${fees.map((c) => c.label).join(' | ').slice(0, 200)}`);
+  }
+  // Congress
+  sentRow('congressLines (who is covered, window counts)', C.congressLines(f).map((t, i) => [`congress-${i}`, t]));
+  {
+    const groups = [cg.pooled, cg.house, cg.senate];
+    sentRow('congressTestLines for pooled, House and Senate (m3Result + m3Sales each)', groups.flatMap((g, gi) => C.congressTestLines(g).map((t, i) => [`congress-test-${gi}-${i}`, t])));
+    row('the three Congress test groups are headed All members / House / Senate', groups.every((g) => html.includes(`data-congress-test="${g.label}"`)));
+  }
+  sentRow('CONGRESS_NOTE', [['congress-note', C.CONGRESS_NOTE]]);
+  {
+    const tbl = elementWith(html, 'data-members-table');
+    const ids = [...(tbl?.html.matchAll(/data-member="([^"]+)"/g) ?? [])].map((m) => m[1]);
+    const distinct = [...new Set(dump.congress.map((r) => r.member_id))];
+    const expectIds = f.congress.members.map((m) => m.memberId);
+    const trs = [...(tbl?.html.matchAll(/<tr\b[^>]*data-member="([^"]+)"[^>]*>([\s\S]*?)<\/tr>/g) ?? [])];
+    const badRows = f.congress.members.filter((m) => {
+      const tr = trs.find((x) => x[1] === m.memberId);
+      const want = norm([m.name, m.chamber, m.party, m.state, fmt(m.byWindow.P1), fmt(m.byWindow.P2), fmt(m.byWindow.P3), fmt(m.edByWindow.P1 + m.edByWindow.P2 + m.edByWindow.P3), fmt(m.purchases), fmt(m.sales), fmt(m.over45)].join(' '));
+      return !tr || norm(visibleText(tr[2])) !== want;
+    });
+    row(`CONGRESS_TABLE_CAPTION prints and the members table has ${distinct.length} rows = the distinct members in the gate's dump window, in alphabetical order, every cell equal to the rebuild`,
+      has(C.CONGRESS_TABLE_CAPTION) && ids.length === distinct.length && new Set(ids).size === ids.length && new Set(ids).size === new Set(distinct).size && distinct.every((id) => ids.includes(id)) && ids.join() === expectIds.join() && badRows.length === 0,
+      `${ids.length} rows, ${distinct.length} distinct member_id in ${dump.congress.length} dumped rows, ${badRows.length} unequal rows${badRows[0] ? ` (${badRows[0].name})` : ''}`);
+    const classes = new Set([...(tbl?.html.matchAll(/class="([^"]*)"/g) ?? [])].flatMap((m) => m[1].split(/\s+/)));
+    row('party is a text label in the members table (no party colour classes)', !!tbl && ![...classes].some((c) => /(^|-)(dem|democrat|democratic|rep|republican|gop|party)(-|$)/i.test(c)), `${classes.size} distinct classes`);
+    const alpha = f.congress.members.map((m) => IW.surnameKey(m.name));
+    row('members are in alphabetical order by last name', alpha.every((k, i) => i === 0 || alpha[i - 1].localeCompare(k) <= 0));
+  }
+  // limits, method, downloads
+  hasAll('LIMITS: all ten present (the tenth is the Route B "Not every government act" limit)', C.LIMITS);
+  row('IRAN_WAR_FIXED_LINE is the last limit', C.LIMITS[C.LIMITS.length - 1] === C.IRAN_WAR_FIXED_LINE);
+  sentRow('PREREG_LINE and CHRONOLOGY_LINES', [['prereg', C.PREREG_LINE], ...C.CHRONOLOGY_LINES.map((t, i) => [`method-chron-${i}`, t])]);
+  hasAll('GROUPS_LINES and MEASURES_LINES', [...C.GROUPS_LINES, ...C.MEASURES_LINES]);
+  {
+    const dl = elementWith(html, 'data-downloads')?.html ?? '';
+    const links = [[`${P}/preregistration.md`, C.DOWNLOADS.prereg], [`${P}/chronology.csv`, C.DOWNLOADS.chronology], [`${P}/issuer-map.csv`, C.DOWNLOADS.issuers]];
+    row('DOWNLOADS: three links to the three routes, each with its label', links.every(([href, label]) => new RegExp(`<a [^>]*href="${href.replace(/[.\/]/g, '\\$&')}"[^>]*>${label.replace(/[.()\/]/g, '\\$&')}</a>`).test(dl.replace(/&amp;/g, '&'))), links.map(([h]) => h.split('/').pop()).join(', '));
+    const shaText = visibleText(elementWith(html, 'data-chronology-sha')?.html ?? '').trim();
+    row(`chronology sha row prints the freeze sha ${FREEZE_SHA.slice(0, 12)}... (and the download hashes to it)`, shaText === C.chronologyShaLine(FREEZE_SHA), shaText.slice(0, 90));
+    const chronCsv = csvRows(chronDl.buf.toString('utf8').replace(/^\uFEFF/, ''));
+    row(`chronology download has ${dump.chron.length} data rows = the story_chronology table, and the label says ${/ (\d+) rows/.exec(C.DOWNLOADS.chronology)?.[1]}`, chronCsv.length - 1 === dump.chron.length && C.DOWNLOADS.chronology.includes(`${dump.chron.length} rows`), `${chronCsv.length - 1} CSV rows, ${dump.chron.length} table rows`);
+    const issuerCsv = csvRows(issuerDl.buf.toString('utf8').replace(/^\uFEFF/, ''));
+    const issuerWant = dump.issuers.filter((r) => r.source_table === 'executive_trades' || r.source_table === 'congress_trades').length;
+    const srcCol = issuerCsv[0].indexOf('source_table');
+    const issuerOther = issuerCsv.slice(1).filter((r) => r[srcCol] !== 'executive_trades' && r[srcCol] !== 'congress_trades').length;
+    row(`issuer map download has ${issuerWant} rows = the executive_trades and congress_trades rows of issuer_classification (the table holds ${dump.issuers.length}), and no other-officials row`, issuerDl.status === 200 && issuerDl.type.includes('text/csv') && issuerCsv.length - 1 === issuerWant && issuerOther === 0, `${issuerCsv.length - 1} CSV rows, ${issuerOther} rows from other source tables`);
+  }
+  // selection line, Our view box, asked lines (hard-coded approved text, so the page cannot drift)
+  {
+    // Colin's ruling of 2026-10-23 16:02 EDT (w3-colin-rulings.txt, option a): AW1's allowed sentences R5 and R6, verbatim from the audit file.
+    const APPROVED_SELECTION = "SlushFund's founder asked for this story because the President's own disclosure reports list thousands of securities transactions in an account in his name while he was making decisions on war, oil and tariffs that move markets. We lay out what those reports list, day by day, beside what the government did and said, and apply the same yardstick to every member of Congress, of every party, who reported trades in these months.";
+    const sel = visibleText(elementWith(html, 'data-selection-line')?.html ?? '').trim();
+    row('IRAN_WAR_SELECTION_LINE equals AW1 R5 verbatim (Colin, 16:02 EDT), and prints (once) in the header', C.IRAN_WAR_SELECTION_LINE === APPROVED_SELECTION && sel === APPROVED_SELECTION && text.split(APPROVED_SELECTION).length === 2);
+    const APPROVED_VIEW = [
+      "The people who decide on war, tariffs and sanctions should not be trading individual stocks.",
+      "When an official's own decisions can move markets, the public has no way to know whether that official's trades use information no one else has.",
+      "On the other side of every trade are ordinary investors, including the retirement savings of millions of Americans.",
+      "That is why we support a ban on individual stock trading by the President, the Vice President, members of Congress and senior officials, whatever their party.",
+    ];
+    const APPROVED_CARD_TAIL = " grades each member of Congress's own reported trading over the last 24 months against such a ban: an A means no individual-stock trades were reported.";
+    const box = elementWith(html, 'data-our-view');
+    const bt = visibleText(box?.html ?? '').trim();
+    const want = `Our view ${APPROVED_VIEW.join(' ')} Our report card${APPROVED_CARD_TAIL}`;
+    row('Our view box [data-our-view]: label, the four R6 sentences in order (AW1, Colin 16:02 EDT), then the report-card link sentence', !!box && bt === want && JSON.stringify(C.IRAN_WAR_OUR_VIEW_SENTENCES) === JSON.stringify(APPROVED_VIEW) && C.IRAN_WAR_OUR_VIEW_LABEL === 'Our view', bt.slice(0, 120));
+    row(`Our view box links "Our report card" to ${GRADE_METHOD_PATH}`, !!box && new RegExp(`<a [^>]*href="${GRADE_METHOD_PATH.replace(/\//g, '\\/')}"[^>]*>Our report card</a>`).test(box.html));
+    row('the Our view box is separate from the reporting: one box, after the method and right-of-reply sections', (() => { const dom = html.replace(/<script[\s\S]*?<\/script>/g, ''); const at = (a) => dom.indexOf(` ${a}`); return dom.split(' data-our-view').length === 2 && at('data-our-view') > at('data-responses') && at('data-our-view') > at('data-downloads'); })());
+    row('R6 removed "insider": the Our view box holds neither "insider" nor "illegal", is clean against the whole A7b list, and neither word is anywhere else on the page', (() => {
+      return !!box && !/insider|illegal/i.test(norm(bt)) && WORDING_RES.every((r) => !new RegExp(r.re, 'i').test(norm(bt))) && !/insider trading|illegal/i.test(norm(text.replace(bt, '')));
+    })());
+    const asked = C.IRAN_WAR_ASKED.map((who) => visibleText(elementWith(html, `data-response="${who.replace(/&/g, '&amp;').replace(/'/g, '&#x27;')}"`)?.html ?? '').trim());
+    row(`asked lines: one per recipient, "We asked ... for comment on ${C.IRAN_WAR_STORY_DATE}"`, C.IRAN_WAR_ASKED.length === 2 && C.IRAN_WAR_ASKED.every((who, i) => asked[i] === C.iranWarAskedLine(who)) && has(C.RESPONSES_INTRO), asked.join(' | ').slice(0, 220));
+  }
+  // the fixed line: above the chart, in the timeline's text object, again in the limits
+  {
+    const above = html.indexOf('data-above-chart');
+    const chartAt = Math.min(...['data-timeline-svg', 'data-timeline-focus'].map((a) => html.indexOf(a)).filter((i) => i > -1));
+    const fixedEl = visibleText(elementWith(html, 'data-above-chart')?.html ?? '').trim();
+    row('IRAN_WAR_FIXED_LINE sits directly above the chart', above > -1 && above < chartAt && fixedEl === C.IRAN_WAR_FIXED_LINE, `fixed line at ${above}, chart at ${chartAt}`);
+    row('IRAN_WAR_FIXED_LINE is in the timeline text object (the day panel prints it from there)', new RegExp(`fixedLine\\\\*":\\\\*"${C.IRAN_WAR_FIXED_LINE.replace(/[.]/g, '\\.')}`).test(html));
+  }
+  // timeline: no arrow/connector language, keyboard and table toggle present
+  {
+    const tl = elementWith(html, 'data-war-timeline')?.html ?? '';
+    row('timeline [data-war-timeline] renders, with the table toggle, the keyboard line and the legend', !!tl && tl.includes('data-timeline-toggle') && visibleText(tl).includes(C.TABLE_TOGGLE_ON) && visibleText(tl).includes(C.TIMELINE_KEYBOARD.slice(0, 40)) && tl.includes('data-legend'));
+    row('timeline draws no arrow, connector or annotation between a post and a trade (no marker/arrow/line elements outside the axes)', !/<marker\b|marker-end|marker-start|<line [^>]*data-link|data-connector|data-arrow/.test(tl));
+  }
+
+  // ---- tables: every figure vs the rebuild
+  {
+    const cellsOf = (attr) => { const el = elementWith(html, attr); return el ? [...el.html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/g)].map((m) => [...m[1].matchAll(/<t[hd]\b[^>]*>([\s\S]*?)<\/t[hd]>/g)].map((c) => visibleText(c[1]).trim())) : null; };
+    const WROWS = [
+      ['Securities transactions', (t) => fmt(t.all.n)], ['Purchases', (t) => fmt(t.all.purchases)], ['Sales', (t) => fmt(t.all.sales)],
+      ['Amount bands: sum of the bottoms', (t) => IW.usd(t.all.minSum)], ['Amount bands: sum of the tops', (t) => IW.usd(t.all.maxSum)],
+      ['Stocks', (t) => fmt(t.byInstrument.stock.n)], ['Bonds', (t) => fmt(t.byInstrument.bond.n)], ['Funds', (t) => fmt(t.byInstrument['fund/ETF'].n)],
+      ['In our energy or defense groups', (t) => fmt(t.ED.n)], ['Energy (SEC industry code, or a fund named for it)', (t) => fmt(t.E.n)], ['Defense by industry code', (t) => fmt(t.DSic.n)],
+      ['Defense by federal money', (t) => fmt(t.DDod.n)], ['Other issuers', (t) => fmt(t.other.n)], ['Unclassified issuers', (t) => fmt(t.unclassified.n)],
+    ];
+    const windowsCheck = (label, attr, cols, tables, disc, congress = false) => {
+      const rowsWanted = congress ? [...WROWS.slice(0, 6), ['Options', (t) => fmt(t.options.n)], ...WROWS.slice(6)] : WROWS;
+      const got = cellsOf(attr);
+      const want = [['Measure', ...cols.map((c) => c.head)], ...rowsWanted.map(([l, g]) => [l, ...cols.map((c) => g(tables[c.key]))]),
+        ['Reported more than 45 days after the trade', ...cols.map((c) => fmt(disc[c.key].over45))], [congress ? C.CONGRESS_LATENESS_LABEL : 'Not computed (holding type not required on a 278-T)', ...cols.map((c) => fmt(disc[c.key].notComputed))]];
+      const bad = got ? want.filter((w, i) => JSON.stringify(w) !== JSON.stringify(got[i])) : want;
+      row(label, !!got && got.length === want.length && bad.length === 0, bad.length ? `row "${bad[0][0]}": page ${JSON.stringify(got?.[want.indexOf(bad[0])] ?? null).slice(0, 120)} vs rebuild ${JSON.stringify(bad[0]).slice(0, 120)}` : `${want.length} rows x ${cols.length} windows equal the rebuild`);
+    };
+    const C4 = [['P0', '2025 (context)'], ['P1', 'Jan 2 to Feb 27'], ['P2', 'Feb 28 to Mar 31'], ['P3', 'Apr 1 to Jul 31']].map(([key, head]) => ({ key, head }));
+    windowsCheck('windows table (President, 2025 context + 3 windows): every cell equals the rebuild', 'data-windows-table="windows"', C4, p.windows, p.disclosure);
+    windowsCheck('windows table (all members of Congress, 3 windows): every cell equals the rebuild', 'data-windows-table="congress-windows"', C4.slice(1), cg.pooled.windows, cg.pooled.disclosure, true);
+    for (const [id, kind] of [['bins-sign', 'signBins'], ['bins-post', 'postBins']]) {
+      const got = cellsOf(`data-bins-table="${id}"`);
+      const first = p.disclosure.P1[kind];
+      const want = first.map((b, i) => [`${b.label}${b.over45 && id === 'bins-sign' ? ' (more than 45)' : ''}`, ...['P1', 'P2', 'P3'].map((k) => fmt(p.disclosure[k][kind][i].count))]); // W3 (AW1 should-fix 3): the 45-day mark belongs to the signature bins only
+      row(`${id} table (days to the signature / OGE posting): every bin equals the rebuild`, !!got && JSON.stringify(got.slice(1)) === JSON.stringify(want), `${want.length} bins`);
+    }
+    for (const k of ['P1', 'P2']) {
+      const got = cellsOf(`data-sic-table="sic-${k.toLowerCase()}"`);
+      const want = p.sicMix[k].map((r) => [r.major === 'unclassified' ? 'None' : r.major, r.label, fmt(r.purchases), fmt(r.sales), fmt(r.n), r.ed ? 'Yes' : 'No']);
+      row(`SIC table ${k}: every industry row equals the rebuild`, !!got && JSON.stringify(got.slice(1)) === JSON.stringify(want), `${want.length} rows`);
+    }
+    const monthEl = visibleText(elementWith(html, 'data-month-bars')?.html ?? '');
+    row('trade-month bars: every month and its count (the 2025 months and the 2026 months) are printed', p.monthly.every((m) => monthEl.includes(IW.fmtMonth(m.month)) && monthEl.includes(fmt(m.table.all.n))), `${p.monthly.length} months`);
+  }
+
+  // ---- numbers spot rows (W1b record, figure for figure)
+  {
+    const m3t = S.get('m3') ?? '';
+    row('P2 energy-or-defense lines after D1: 121 of the 2,352 securities transactions (AW1 D1; W1b section 3 said 112 before the nine issuer corrections)', p.windows.P2.ED.n === 121 && p.windows.P2.all.n === 2352 && (S.get('first-3') ?? '').startsWith('121 of the 2,352 are in issuers in our energy or defense groups.'), (S.get('first-3') ?? '').slice(0, 100));
+    row('M3 primary after D1 (AW1 R2): P2 stock purchases 98 of 1,420 classified (6.9%) against 33 of 734 (4.5%), p = 0.029, significant; A2 lower bound p = 0.029 still significant, upper bound p = 0.063 not significant (W1b section 4.1 said 93/1,415 vs 31/732, p = 0.031, before D1)',
+      m3t.includes('98 of 1,420 stock purchases in issuers we could classify (6.9 percent)') && m3t.includes('against 33 of 734 (4.5 percent)') && m3t.includes('p = 0.029, significant at the 0.05 level') && m3t.includes('p = 0.029 and the result is still significant') && m3t.includes('p = 0.063 and the result is not significant') && m3t.includes('higher than in the two months before') && Math.abs(p.m3.p - 0.02851) < 5e-5,
+      m3t.slice(0, 260));
+    const evDates = new Set(dump.chron.map((c) => c.event_date)); const labDates = new Set(dump.chron.filter((c) => c.labelled_marker).map((c) => c.event_date));
+    row('chronology: 401 rows / 162 dates / 53 labelled-marker dates (story_chronology table, anon read; A4 adds two posts on existing dates)', dump.chron.length === 401 && evDates.size === 162 && labDates.size === 53 && f.chronology.total === 401 && (f.chronology.byLane.president_post ?? 0) === 340 && (f.chronology.byLane.government ?? 0) === 51 && (f.chronology.byLane.oversight ?? 0) === 10, `${dump.chron.length} rows, ${evDates.size} dates, ${labDates.size} labelled-marker dates, ${f.chronology.labelled} labelled rows`);
+    row('President totals vs raw dump: transactions, reports, first/last trade date', p.total === dump.exec.length && p.reports === new Set(dump.exec.map((r) => r.source_doc_id)).size && p.firstTrade === dump.exec.map((r) => r.transaction_date).sort()[0], `${p.total} transactions in ${p.reports} reports, ${p.firstTrade} to ${p.lastTrade}`);
+    row('every President trade date falls in a pre-registered window; unmapped issuers are counted, never guessed', p.outsideWindows === 0, `outside windows ${p.outsideWindows}, unmapped ${p.unmapped}, ambiguous ${p.ambiguous}, Congress unmapped ${cg.unmapped}`);
+  }
+  // day route
+  {
+    const day = await get(`${P}/days/2026-03-02`);
+    let j = null; try { j = JSON.parse(day.buf.toString('utf8')); } catch { /* not JSON */ }
+    const nTx = dump.exec.filter((r) => r.transaction_date === '2026-03-02').length;
+    const nCh = dump.chron.filter((c) => c.event_date === '2026-03-02').length;
+    const fd = f.days.find((d) => d.date === '2026-03-02');
+    row(`day route 2026-03-02 returns JSON whose transaction count (${nTx}) and chronology count (${nCh}) equal the gate's dump and the rebuild`, day.status === 200 && day.type.includes('application/json') && j?.date === '2026-03-02' && j.tx.length === nTx && j.chron.length === nCh && fd?.total === nTx, `${day.status} tx ${j?.tx?.length} chron ${j?.chron?.length}, rebuild total ${fd?.total}`);
+    const dates = IW.dateRange(IW.AXIS_START, IW.AXIS_END);
+    let ok200 = 0; let txSum = 0; let chSum = 0; let badAsset = 0;
+    for (let i = 0; i < dates.length; i += 25) {
+      const batch = await Promise.all(dates.slice(i, i + 25).map((d) => get(`${P}/days/${d}`)));
+      for (const r of batch) {
+        if (r.status !== 200) continue;
+        ok200++;
+        const t = r.buf.toString('utf8'); const b = JSON.parse(t);
+        txSum += b.tx.length; chSum += b.chron.length;
+        if (/12\/31\/(?:49|2049)/.test(t)) badAsset++;
+      }
+    }
+    const inAxis = (d) => d >= IW.AXIS_START && d <= IW.AXIS_END;
+    row(`all ${dates.length} day routes answer 200; transactions (${dump.exec.filter((r) => inAxis(r.transaction_date)).length}) and chronology entries (${dump.chron.filter((c) => inAxis(c.event_date)).length}) sum to the dump's; none prints 12/31/49`, ok200 === dates.length && txSum === dump.exec.filter((r) => inAxis(r.transaction_date)).length && chSum === dump.chron.filter((c) => inAxis(c.event_date)).length && badAsset === 0, `${ok200}/${dates.length} ok, tx ${txSum}, chron ${chSum}, ${badAsset} with a placeholder maturity`);
+    for (const bad of ['2026-08-01', '2025-11-30', 'not-a-date']) await hit(`${P}/days/${bad}`, 404, { group: G });
+  }
+
+  // ---- wording rows
+  {
+    const QUOTED = ['data-our-view', 'data-war-timeline', 'data-oil-list', 'data-rules-box'];
+    const reporting = visibleText(withoutElements(html, QUOTED).replace(/<q\b[^>]*>[\s\S]*?<\/q>/g, ' '));
+    const sentences = [...S.entries()].filter(([k]) => !k.startsWith('our-view')).map(([, v]) => v);
+    // every string the copy module can print, with live slots filled by the rebuild (the verbatim 5 CFR quotes and the Our view lines are left out)
+    const copy = [];
+    const walk = (v) => { if (typeof v === 'string') copy.push(v); else if (Array.isArray(v)) v.forEach(walk); else if (v && typeof v === 'object') Object.values(v).forEach(walk); };
+    for (const [k, v] of Object.entries(C)) if (!/^(QUALIFIED_TRUST_QUOTES|IRAN_WAR_OUR_VIEW)/.test(k)) walk(v);
+    copy.push(C.dek(f), ...C.accountLines(f), ...C.beforeLines(f), ...C.firstMonthLines(f), C.volumeLine(f), ...C.chronologyLines(f), C.m3Result(p.m3, ''), C.m3Sales(p.m3Sales, ''), ...C.oilLines(f),
+      ...['P1', 'P2', 'P3'].map((k) => C.over45Line(p.disclosure[k], k)), ...p.posting.map((m) => C.postingLine(m)), C.feeIntro(p.fees, p.reportsInWindows), ...p.fees.map((c) => C.feeRows(c)), ...C.congressLines(f),
+      ...[cg.pooled, cg.house, cg.senate].flatMap((g) => C.congressTestLines(g)));
+    const corpora = { 'rendered reporting text': reporting, 'rendered data-sentence values': sentences.join(' \n '), 'copy module strings': copy.join(' \n ') };
+    const deVerbatim = (s) => s.replace(/Filer paid late fee\(s\)\.?/g, ' ').replace(/wrote a late-fee note in the comments box/g, ' '); // the R3 intro (AW1 P12) is the one place the page says "late-fee note"
+    const rx = (re, flags = 'i') => new RegExp(re, flags);
+    const scan = (label, re, opts = {}) => {
+      const hits = [];
+      for (const [name, t] of Object.entries(corpora)) { const m = rx(re).exec(opts.verbatim ? deVerbatim(t) : t); if (m) hits.push(`${name}: "${t.slice(Math.max(0, m.index - 30), m.index + 40).replace(/\s+/g, ' ')}"`); }
+      row(label, hits.length === 0, hits.join(' | '));
+    };
+    row('wording: reporting text uses "securities transactions"', reporting.includes('securities transactions'));
+    scan('wording: no "stock trades" (it is "securities transactions")', String.raw`\bstock trades?\b`);
+    scan('wording: no "late" or "on time" as a characterization (only the R3 intro "a late-fee note in the comments box" uses the word; the verbatim cover notes are quoted by element)', String.raw`\blate\b|\bon[- ]time\b|\bfiled late\b|\bwere late\b|\blate filers?\b`, { verbatim: true });
+    scan('wording: no "manipulat..." in the reporting', String.raw`manipulat`);
+    scan('wording: no "insider trading" in the reporting (it is allowed only inside the data-our-view box)', String.raw`insider trading`);
+    // "all amounts are 'between X and Y'": a dollar figure in a sentence is a band bound or a range, never a point amount
+    {
+      const pointAmount = (s) => s.replace(/between \$[\d,]+ and \$[\d,]+/g, ' ').replace(/\$[\d,]+ to \$[\d,]+/g, ' ').replace(/below the \$1,000 reporting threshold/g, ' '); // A7b's allowed NULL text names the legal reporting threshold, which is not a transaction amount
+      const hits = Object.entries(corpora).filter(([n]) => n !== 'rendered reporting text').map(([n, t]) => [n, /\$[\d]/.exec(pointAmount(t))]).filter(([, m]) => m);
+      const total = /\btotal(?:ing|led)? \$|\bworth \$/i.test(reporting);
+      row('wording: no dollar figure printed as a point amount in any sentence (every amount is "between X and Y" or a band), no "total $"', hits.length === 0 && !total, hits.map(([n, m]) => `${n}: "${m.input.slice(Math.max(0, m.index - 30), m.index + 30)}"`).join(' | '));
+    }
+    row('wording: no "12/31/49" or "due 12/31" anywhere in the rendered text (whole page, timeline included)', !/12\/31\/(?:49|2049)|\bdue 12\/31/.test(text));
+    const glued = /(?<![\w#.$%/-])\d[\d,]*[A-Za-z]{3,}\b/.exec(reporting);
+    row('wording: no number glued to a word in the reporting text', !glued, glued ? `"${glued[0]}" in "...${reporting.slice(Math.max(0, glued.index - 30), glued.index + 40)}..."` : '');
+    row('no "Figures unavailable" and no raw column or enum name in the rendered page', !/Figures unavailable/.test(reporting) && !/stock_act_late|late_basis|not_required_on_278T|undefined|\[object|NaN\b/.test(reporting));
+    const forbid = [];
+    for (const r of WORDING_RES) { const m = new RegExp(r.re, 'i').exec(reporting); if (m) forbid.push(`"${m[0]}" (${r.from})`); }
+    row('wording: the A7b forbidden list is absent from the reporting text (the Our view box and verbatim quotes are whitelisted by element)', forbid.length === 0, forbid.slice(0, 4).join(' · '));
+  }
+  // generic fee rule on this page (also run by the D15 loop above when that flag is on)
+  {
+    // W3 (AW1 P12 / R3): the intro no longer quotes a paraphrase; the generic 'Filer paid late fee(s).' must be absent, and every verbatim cover note
+    // ('Filer paid late fee' / 'fees', as printed) is followed within the SAME 300-character limit by the signed compliance sentence.
+    const generic = [...text.matchAll(/Filer paid late fee\(s\)/g)].length;
+    const at = [...text.matchAll(/Filer paid late fee/g)].map((m) => m.index);
+    const ends = at.map((i) => { const j = text.indexOf(C.COMPLIANCE_SENTENCE, i); return j === -1 ? -1 : j - i + C.COMPLIANCE_SENTENCE.length; });
+    row(`the page prints no generic "Filer paid late fee(s)" paraphrase (${generic}), and each of the ${at.length} verbatim cover notes is followed within 300 characters by the signed compliance sentence`, generic === 0 && at.length === 3 && at.every((i) => text.slice(i, i + 300).includes(C.COMPLIANCE_SENTENCE)),
+      `${generic} generic; ${at.length} verbatim note(s); the compliance sentence ends ${ends.join(', ')} characters after each note starts (limit 300)`);
+  }
+})();
 // ---------------------------------------------------------------- D19: analytics hub (/analytics)
 {
   const G = 'D19 analytics hub';
@@ -1625,7 +2083,7 @@ const F3 = 'post-launch fixes (F3)';
     row(`hiddenByFlag(${JSON.stringify(ELECTION_PATH)}, ${JSON.stringify(env)})`, hiddenByFlag(ELECTION_PATH, env) === want, '', String(want));
   }
   row('hiddenByFlag("/election-2026-results", production)', hiddenByFlag('/election-2026-results', { VERCEL_ENV: 'production' }) === false, 'exact path only', 'false');
-  row('navItems(false) is the five sections; navItems(true) adds Election 2026 before About', navItems(false).length === 5 && !navItems(false).some((i) => i.href === ELECTION_PATH) && navItems(true).map((i) => i.href).join(',') === ['/investigations', '/people', '/companies', '/data', ELECTION_PATH, '/about'].join(','), '');
+  row('navItems(false) is the five sections; navItems(true) adds Election 2026 before About', navItems(false).length === 5 && !navItems(false).some((i) => i.href === ELECTION_PATH) && navItems(false, true).map((i) => i.href).join(',') === ['/investigations', '/people', '/companies', '/data', ELECTION_PATH, '/about'].join(','), '');
   // Pure arithmetic.
   row('daysUntil(Nov 3, Oct 20) = 14, same day 0, after -1', daysUntil(ELECTION_DAY, '2026-10-20') === 14 && daysUntil(ELECTION_DAY, ELECTION_DAY) === 0 && daysUntil(ELECTION_DAY, '2026-11-04') === -1, '');
   row('averageLetter: A,A,B = A; A,B = A (3.5 rounds up); B,C = B; all NG = none; NG left out', averageLetter(['A', 'A', 'B'])?.letter === 'A' && averageLetter(['A', 'B'])?.letter === 'A' && averageLetter(['B', 'C'])?.letter === 'B' && averageLetter(['NG', 'NG']) === null && averageLetter(['F', 'NG'])?.letter === 'F', '');

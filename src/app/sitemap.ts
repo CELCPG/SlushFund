@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { hasPublishedCorrections } from '@/data/corrections';
-import { ANALYTICS_PATH, ELECTION_PATH, GRADE_METHOD_PATH, GRAPHIC_SLUGS, GRAPHICS_PATH, MOST_ACTIVE_PATH, PRESIDENT_HUB_PATH, PRESIDENT_LARGEST_PATH, PRESIDENT_PATH, PRESIDENT_QUALITY_PATH, PRESIDENT_TIMING_PATH, SECTOR_HEATMAP_PATH, VOTER_PATH, analyticsHubEnabled, electionCenterEnabled, graphicEnabled, gradesEnabled, infographicsEnabled, investigationsV2Enabled, lateFilersEnabled, mostActiveEnabled, presidentDeepDiveEnabled, presidentPageEnabled, sectorHeatmapEnabled, voterPagesEnabled } from '@/lib/v2/flags';
+import { DRAFT_UNTIL_AW1 } from '@/lib/v2/iran-war-copy';
+import { ANALYTICS_PATH, ELECTION_PATH, GRADE_METHOD_PATH, GRAPHIC_SLUGS, GRAPHICS_PATH, IRAN_WAR_PATH, iranWarStoryLive, MOST_ACTIVE_PATH, PRESIDENT_HUB_PATH, PRESIDENT_LARGEST_PATH, PRESIDENT_PATH, PRESIDENT_QUALITY_PATH, PRESIDENT_TIMING_PATH, SECTOR_HEATMAP_PATH, VOTER_PATH, analyticsHubEnabled, electionCenterEnabled, graphicEnabled, gradesEnabled, infographicsEnabled, investigationsV2Enabled, lateFilersEnabled, mostActiveEnabled, presidentDeepDiveEnabled, presidentPageEnabled, sectorHeatmapEnabled, voterPagesEnabled } from '@/lib/v2/flags';
 import { STATE_CODES } from '@/lib/v2/explorer';
 import { STORIES, storyPath } from '@/lib/v2/story-figures';
 
@@ -53,6 +54,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }
   // D12 investigation posts (SHOW_INVESTIGATIONS_V2): both pairs, listed together (G8).
   if (investigationsV2Enabled()) for (const s of STORIES) paths.push({ path: storyPath(s.slug), changeFrequency: 'weekly', priority: 0.7 });
+  // W2 Iran war story (SHOW_IRAN_WAR_STORY): listed only while it is live, which excludes production with draft copy.
+  if (iranWarStoryLive(DRAFT_UNTIL_AW1)) paths.push({ path: IRAN_WAR_PATH, changeFrequency: 'weekly', priority: 0.7 });
 
   return paths.map((p) => ({
     url: `${base}${p.path}`,

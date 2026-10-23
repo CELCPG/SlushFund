@@ -16,6 +16,8 @@ export interface OgCardOptions {
   stat?: string;
   statLabel?: string;
   type?: MoneyType;
+  /** Replaces the type pill's wording (the colour still follows `type`). */
+  typeLabel?: string;
   source?: string;
   asOf?: string;
 }
@@ -92,7 +94,7 @@ export async function renderOgCard(opts: OgCardOptions): Promise<ImageResponse> 
                 borderRadius: 28, backgroundColor: m ? m.hex : '#FFFFFF', color: m ? '#FFFFFF' : '#14142B',
               }}
             >
-              {m && <div style={{ display: 'flex', fontSize: 20, letterSpacing: 1, textTransform: 'uppercase', opacity: 0.95 }}>{m.label}</div>}
+              {m && <div style={{ display: 'flex', fontSize: 20, letterSpacing: 1, textTransform: 'uppercase', opacity: 0.95 }}>{opts.typeLabel ?? m.label}</div>}
               <div style={{ display: 'flex', fontFamily: 'Bricolage', fontSize: 72, lineHeight: 1.05, marginTop: 6 }}>{opts.stat!.slice(0, 12)}</div>
               {opts.statLabel && <div style={{ display: 'flex', fontSize: 22, marginTop: 6, lineHeight: 1.25 }}>{clipWords(opts.statLabel, 60)}</div>}
             </div>

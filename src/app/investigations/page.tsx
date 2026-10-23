@@ -3,7 +3,8 @@ import { reportErrorHref } from '@/lib/v2/error-reports';
 import EmptyState from '@/components/v2/EmptyState';
 import { Card } from '@/components/v2/PageBand';
 import SimplePage from '@/components/v2/SimplePage';
-import { investigationsV2Enabled } from '@/lib/v2/flags';
+import { IRAN_WAR_PATH, investigationsV2Enabled, iranWarStoryLive } from '@/lib/v2/flags';
+import { DRAFT_UNTIL_AW1, IRAN_WAR_BYLINE, IRAN_WAR_HEADLINE, IRAN_WAR_STORY_DATE } from '@/lib/v2/iran-war-copy';
 import { STORY_PAIRS, STORY_PUBLISHED, storyBySlug, storyPath } from '@/lib/v2/story-figures';
 
 // D5: the old index listed the 17 withdrawn stories as cards. Until a story passes the audit
@@ -18,12 +19,23 @@ const RULES = [
 
 export default function InvestigationsPage() {
   const on = investigationsV2Enabled();
+  // W2: the Iran war story has its own flag and card; it also stays off while its copy is a draft on production.
+  const iran = iranWarStoryLive(DRAFT_UNTIL_AW1);
   return (
     <SimplePage
       eyebrow="Investigations"
       title="Stories return only after every figure is checked"
       dek="We took our earlier stories down to re-verify them against official records. Each comes back only when its numbers have a cited public source."
     >
+      {iran && (
+        <section aria-labelledby="iran-war-story" className="mb-8" data-iran-war-card>
+          <h2 id="iran-war-story" className="mb-1 font-display text-[26px] font-extrabold max-md:text-[22px]">OGE financial disclosure records</h2>
+          <Card as="section">
+            <Link href={IRAN_WAR_PATH} className="font-display text-[19px] font-extrabold leading-tight text-trades-ink hover:underline">{IRAN_WAR_HEADLINE}</Link>
+            <p className="mt-1 text-[13.5px] text-muted">By {IRAN_WAR_BYLINE} · {IRAN_WAR_STORY_DATE}</p>
+          </Card>
+        </section>
+      )}
       {on ? (
         <section aria-labelledby="published-stories">
           <h2 id="published-stories" className="mb-1 font-display text-[26px] font-extrabold max-md:text-[22px]">Federal contract records, fiscal years 2024–2026</h2>
@@ -47,7 +59,7 @@ export default function InvestigationsPage() {
             ))}
           </div>
         </section>
-      ) : (
+      ) : iran ? null : (
         <EmptyState
           title="No stories are published right now"
           icon="✎"

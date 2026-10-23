@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node --no-warnings scripts/iran-war-parity.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
